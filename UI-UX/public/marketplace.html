@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thị trường tín chỉ carbon - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .bg-primary-green { background-color: #27AE60; }
+        .text-primary-green { color: #27AE60; }
+        .border-primary-green { border-color: #27AE60; }
+        .bg-light-green { background-color: #E8F8F5; }
+        .bg-blue { background-color: #3498DB; }
+        .text-blue { color: #3498DB; }
+        
+        /* Gradients */
+        .gradient-green {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        .gradient-blue {
+            background: linear-gradient(135deg, #3498DB 0%, #5DADE2 100%);
+        }
+        
+        .gradient-light-green {
+            background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+        }
+        
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.95) 0%, rgba(52, 152, 219, 0.9) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/><circle cx="100" cy="100" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="200" r="1.5" fill="rgba(255,255,255,0.4)"/><circle cx="500" cy="150" r="2.5" fill="rgba(255,255,255,0.2)"/><circle cx="700" cy="300" r="1" fill="rgba(255,255,255,0.5)"/><circle cx="900" cy="250" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="1100" cy="180" r="1.5" fill="rgba(255,255,255,0.4)"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+        }
+        
+        /* Trading Card Animations */
+        .trading-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trading-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .trading-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .trading-card:hover::before {
+            left: 100%;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-available {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .status-auction {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .status-sold {
+            background-color: #F3F4F6;
+            color: #6B7280;
+        }
+        
+        /* Verified Badge */
+        .verified-badge {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        /* Filter Dropdown */
+        .filter-dropdown {
+            position: relative;
+        }
+        
+        .filter-dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .filter-dropdown.active .filter-dropdown-content {
+            display: block;
+        }
+        
+        /* Price Animation */
+        .price-animation {
+            animation: priceGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes priceGlow {
+            0%, 100% { color: #27AE60; }
+            50% { color: #2ECC71; text-shadow: 0 0 10px rgba(39, 174, 96, 0.3); }
+        }
+        
+        /* Hover Effects */
+        .btn-hover {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-hover:hover::before {
+            left: 100%;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        /* Intersection Observer Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Navigation Styles */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: #27AE60;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Stats Cards */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+        
+        .stats-card.green::before {
+            background: linear-gradient(90deg, #27AE60, #2ECC71);
+        }
+        
+        .stats-card.blue::before {
+            background: linear-gradient(90deg, #3498DB, #5DADE2);
+        }
+        
+        .stats-card.purple::before {
+            background: linear-gradient(90deg, #9333EA, #A855F7);
+        }
+        
+        .stats-card.orange::before {
+            background: linear-gradient(90deg, #F59E0B, #FBBF24);
+        }
+        
+        /* Process Steps */
+        .process-step {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .process-step:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #27AE60;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #229954;
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27AE60;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Auction Timer */
+        .auction-timer {
+            background: linear-gradient(135deg, #F59E0B, #FBBF24);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Market Trend Indicator */
+        .trend-up {
+            color: #10B981;
+        }
+        
+        .trend-down {
+            color: #EF4444;
+        }
+        
+        .trend-stable {
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Carbon Credit</h1>
+                            <p class="text-xs text-gray-600">Marketplace</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="nav-link text-gray-600 hover:text-primary-green font-medium">Trang chủ</a>
+                        <a href="#about" class="nav-link text-gray-600 hover:text-primary-green font-medium">Giới thiệu</a>
+                        <a href="#marketplace" class="nav-link text-gray-900 hover:text-primary-green font-medium">Thị trường tín chỉ</a>
+                        <a href="#how-it-works" class="nav-link text-gray-600 hover:text-primary-green font-medium">Cách hoạt động</a>
+                        <a href="#blog" class="nav-link text-gray-600 hover:text-primary-green font-medium">Blog / Tin tức</a>
+                        <a href="#contact" class="nav-link text-gray-600 hover:text-primary-green font-medium">Liên hệ</a>
+                    </div>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <button onclick="showLogin()" class="text-gray-600 hover:text-primary-green font-medium transition-colors">
+                        Đăng nhập
+                    </button>
+                    <button onclick="showRegister()" class="bg-primary-green text-white px-6 py-2 rounded-lg font-semibold btn-hover">
+                        Đăng ký
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 gradient-green rounded-lg flex items-center justify-center mr-2">
+                            <span class="text-white font-bold">🌱</span>
+                        </div>
+                        <span class="font-bold text-gray-900">Carbon Credit</span>
+                    </div>
+                    <button onclick="toggleMobileMenu()" class="text-gray-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#home" class="block text-gray-600 font-medium py-2">Trang chủ</a>
+                    <a href="#about" class="block text-gray-600 font-medium py-2">Giới thiệu</a>
+                    <a href="#marketplace" class="block text-gray-900 font-medium py-2">Thị trường tín chỉ</a>
+                    <a href="#how-it-works" class="block text-gray-600 font-medium py-2">Cách hoạt động</a>
+                    <a href="#blog" class="block text-gray-600 font-medium py-2">Blog / Tin tức</a>
+                    <a href="#contact" class="block text-gray-600 font-medium py-2">Liên hệ</a>
+                    <div class="pt-4 border-t border-gray-200">
+                        <button onclick="showLogin()" class="block w-full text-left text-gray-600 font-medium py-2">Đăng nhập</button>
+                        <button onclick="showRegister()" class="block w-full bg-primary-green text-white px-4 py-2 rounded-lg font-semibold mt-2">Đăng ký</button>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="marketplace-hero" class="hero-bg min-h-screen flex items-center pt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Hero Content -->
+                <div class="text-white slide-in-left">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                        Khám phá 
+                        <span class="text-yellow-300">thị trường tín chỉ carbon</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed">
+                        Xem và theo dõi các tín chỉ carbon được niêm yết từ chủ sở hữu xe điện — 
+                        minh bạch, xác minh và sẵn sàng giao dịch.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="scrollToMarketplace()" class="bg-white text-primary-green px-8 py-4 rounded-lg font-bold text-lg btn-hover shadow-lg">
+                            📊 Xem thị trường ngay
+                        </button>
+                        <button onclick="showLogin()" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg btn-hover">
+                            🔐 Đăng nhập để giao dịch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="slide-in-right">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8 border border-white border-opacity-20">
+                        <div class="text-center mb-6">
+                            <h3 class="text-2xl font-bold text-white mb-4">Thống kê thị trường hôm nay</h3>
+                        </div>
+                        
+                        <!-- Live Market Stats -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-yellow-300 mb-1">247</div>
+                                <div class="text-sm text-gray-200">Tín chỉ đang bán</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-yellow-300 mb-1">1,523</div>
+                                <div class="text-sm text-gray-200">Tấn CO₂ giảm</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-yellow-300 mb-1">$45</div>
+                                <div class="text-sm text-gray-200">Giá trung bình</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                                <div class="text-3xl font-bold text-yellow-300 mb-1">89%</div>
+                                <div class="text-sm text-gray-200">Đã xác minh</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Market Trend -->
+                        <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white font-medium">Xu hướng giá</span>
+                                <span class="trend-up text-green-300 font-bold">↗ +12.5%</span>
+                            </div>
+                            <div class="text-sm text-gray-200">So với tuần trước</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <section id="filter-bar" class="bg-white shadow-sm py-6 sticky top-16 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-4 items-center">
+                <!-- Search Box -->
+                <div class="flex-1 w-full lg:w-auto">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Tìm theo tên EV Owner hoặc ID tín chỉ..."
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent"
+                            id="searchInput"
+                            onkeyup="filterCredits()"
+                        >
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Dropdowns -->
+                <div class="flex flex-wrap gap-3">
+                    <!-- Region Filter -->
+                    <div class="filter-dropdown">
+                        <button onclick="toggleFilter('region')" class="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                            <span>🌍 Khu vực</span>
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="filter-dropdown-content">
+                            <div class="p-2">
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="hanoi" onchange="filterCredits()"> Hà Nội
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="hcm" onchange="filterCredits()"> TP.HCM
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="danang" onchange="filterCredits()"> Đà Nẵng
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div class="filter-dropdown">
+                        <button onclick="toggleFilter('price')" class="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                            <span>💰 Giá</span>
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="filter-dropdown-content">
+                            <div class="p-2">
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="0-25" onchange="filterCredits()"> $0 - $25
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="25-50" onchange="filterCredits()"> $25 - $50
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="50-100" onchange="filterCredits()"> $50 - $100
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="100+" onchange="filterCredits()"> $100+
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Type Filter -->
+                    <div class="filter-dropdown">
+                        <button onclick="toggleFilter('type')" class="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                            <span>🏷️ Loại</span>
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="filter-dropdown-content">
+                            <div class="p-2">
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="fixed" onchange="filterCredits()"> Giá cố định
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="auction" onchange="filterCredits()"> Đấu giá
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="filter-dropdown">
+                        <button onclick="toggleFilter('status')" class="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                            <span>📊 Trạng thái</span>
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="filter-dropdown-content">
+                            <div class="p-2">
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="available" onchange="filterCredits()"> Đang bán
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="auction" onchange="filterCredits()"> Đấu giá
+                                </label>
+                                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                    <input type="checkbox" class="mr-2" value="sold" onchange="filterCredits()"> Đã bán
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-600 text-sm">Sắp xếp:</span>
+                    <select onchange="sortCredits(this.value)" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent">
+                        <option value="newest">Mới nhất</option>
+                        <option value="price-low">Giá thấp → cao</option>
+                        <option value="price-high">Giá cao → thấp</option>
+                        <option value="amount-high">Số lượng nhiều nhất</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Carbon Credit Listings -->
+    <section id="credit-listings" class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Results Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Danh sách tín chỉ carbon</h2>
+                    <p class="text-gray-600 mt-1">Hiển thị <span id="resultCount">247</span> kết quả</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleView('grid')" id="gridView" class="p-2 rounded-lg bg-primary-green text-white">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                    <button onclick="toggleView('list')" id="listView" class="p-2 rounded-lg bg-gray-200 text-gray-600">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Credit Cards Grid -->
+            <div id="creditGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Credit Card 1 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="hanoi" data-price="42" data-type="fixed" data-status="available" data-owner="Nguyễn Văn A">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-001</h3>
+                            <p class="text-gray-600 text-sm">Nguyễn Văn A</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">2.5 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá:</span>
+                            <span class="font-bold text-2xl price-animation">$42</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ Hà Nội</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">GreenCert Vietnam</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-available">Đang bán</span>
+                        <span class="text-sm text-gray-500">Loại: Giá cố định</span>
+                    </div>
+                    
+                    <button onclick="viewDetails('CC-2025-001')" class="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover">
+                        Xem chi tiết
+                    </button>
+                </div>
+
+                <!-- Credit Card 2 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="hcm" data-price="38" data-type="auction" data-status="auction" data-owner="Trần Thị B">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-002</h3>
+                            <p class="text-gray-600 text-sm">Trần Thị B</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">1.8 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá hiện tại:</span>
+                            <span class="font-bold text-2xl price-animation">$38</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ TP.HCM</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">EcoVerify Asia</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-auction">Đấu giá</span>
+                        <div class="auction-timer">
+                            ⏰ 2h 15m
+                        </div>
+                    </div>
+                    
+                    <button onclick="viewDetails('CC-2025-002')" class="w-full bg-blue text-white py-3 rounded-lg font-semibold btn-hover">
+                        Tham gia đấu giá
+                    </button>
+                </div>
+
+                <!-- Credit Card 3 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="danang" data-price="55" data-type="fixed" data-status="available" data-owner="Lê Minh C">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-003</h3>
+                            <p class="text-gray-600 text-sm">Lê Minh C</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">3.2 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá:</span>
+                            <span class="font-bold text-2xl price-animation">$55</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ Đà Nẵng</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">CarbonCheck VN</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-available">Đang bán</span>
+                        <span class="text-sm text-gray-500">Loại: Giá cố định</span>
+                    </div>
+                    
+                    <button onclick="viewDetails('CC-2025-003')" class="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover">
+                        Xem chi tiết
+                    </button>
+                </div>
+
+                <!-- Credit Card 4 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="hanoi" data-price="28" data-type="auction" data-status="auction" data-owner="Phạm Văn D">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-004</h3>
+                            <p class="text-gray-600 text-sm">Phạm Văn D</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">1.5 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá hiện tại:</span>
+                            <span class="font-bold text-2xl price-animation">$28</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ Hà Nội</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">GreenCert Vietnam</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-auction">Đấu giá</span>
+                        <div class="auction-timer">
+                            ⏰ 5h 42m
+                        </div>
+                    </div>
+                    
+                    <button onclick="viewDetails('CC-2025-004')" class="w-full bg-blue text-white py-3 rounded-lg font-semibold btn-hover">
+                        Tham gia đấu giá
+                    </button>
+                </div>
+
+                <!-- Credit Card 5 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="hcm" data-price="75" data-type="fixed" data-status="available" data-owner="Hoàng Thị E">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-005</h3>
+                            <p class="text-gray-600 text-sm">Hoàng Thị E</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">4.1 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá:</span>
+                            <span class="font-bold text-2xl price-animation">$75</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ TP.HCM</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">EcoVerify Asia</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-available">Đang bán</span>
+                        <span class="text-sm text-gray-500">Loại: Giá cố định</span>
+                    </div>
+                    
+                    <button onclick="viewDetails('CC-2025-005')" class="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover">
+                        Xem chi tiết
+                    </button>
+                </div>
+
+                <!-- Credit Card 6 -->
+                <div class="trading-card bg-white rounded-xl shadow-lg border border-gray-100 p-6 credit-item" 
+                     data-region="danang" data-price="0" data-type="fixed" data-status="sold" data-owner="Vũ Minh F">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">CC-2025-006</h3>
+                            <p class="text-gray-600 text-sm">Vũ Minh F</p>
+                        </div>
+                        <div class="verified-badge">
+                            ✓ Đã xác minh
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">2.8 tấn CO₂</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Đã bán với giá:</span>
+                            <span class="font-bold text-2xl text-gray-500">$48</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Khu vực:</span>
+                            <span class="font-medium">🏙️ Đà Nẵng</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">CVA:</span>
+                            <span class="font-medium">CarbonCheck VN</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="status-badge status-sold">Đã bán</span>
+                        <span class="text-sm text-gray-500">Bán ngày 15/01</span>
+                    </div>
+                    
+                    <button class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold cursor-not-allowed" disabled>
+                        Đã bán
+                    </button>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="text-center mt-12">
+                <button onclick="loadMoreCredits()" class="bg-primary-green text-white px-8 py-3 rounded-lg font-semibold btn-hover">
+                    Xem thêm tín chỉ
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Description -->
+    <section id="process-description" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 animate-on-scroll">
+                <div class="bg-light-green rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">💡 Quy trình giao dịch tín chỉ carbon</h3>
+                    <p class="text-lg text-gray-600 mb-8 max-w-4xl mx-auto">
+                        Mỗi tín chỉ carbon tương đương với 1 tấn CO₂ giảm phát thải. 
+                        Dữ liệu được xác minh bởi tổ chức kiểm toán (CVA) và niêm yết minh bạch trên nền tảng.
+                    </p>
+                    
+                    <!-- Process Steps -->
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="process-step">
+                            <div class="text-4xl mb-3">🚗</div>
+                            <h4 class="font-bold text-gray-900 mb-2">1. EV Owner tạo tín chỉ</h4>
+                            <p class="text-sm text-gray-600">Từ dữ liệu hành trình xe điện</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="text-4xl mb-3">🔍</div>
+                            <h4 class="font-bold text-gray-900 mb-2">2. CVA xác minh</h4>
+                            <p class="text-sm text-gray-600">Kiểm tra và chứng nhận tín chỉ</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="text-4xl mb-3">🏪</div>
+                            <h4 class="font-bold text-gray-900 mb-2">3. Niêm yết Marketplace</h4>
+                            <p class="text-sm text-gray-600">Đăng bán hoặc đấu giá công khai</p>
+                        </div>
+                        <div class="process-step">
+                            <div class="text-4xl mb-3">🤝</div>
+                            <h4 class="font-bold text-gray-900 mb-2">4. Buyer giao dịch</h4>
+                            <p class="text-sm text-gray-600">Mua và nhận chứng nhận carbon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Statistics -->
+    <section id="market-stats" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 animate-on-scroll">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Thống Kê Thị Trường</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Những con số ấn tượng về hoạt động giao dịch tín chỉ carbon trên nền tảng
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Credits -->
+                <div class="animate-on-scroll stats-card green">
+                    <div class="text-5xl mb-4">📊</div>
+                    <div class="text-4xl font-bold text-primary-green mb-2">247</div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Tín chỉ đang niêm yết</h4>
+                    <p class="text-gray-600 text-sm">Sẵn sàng giao dịch ngay</p>
+                </div>
+
+                <!-- Total CO2 Reduced -->
+                <div class="animate-on-scroll stats-card blue" style="animation-delay: 0.1s;">
+                    <div class="text-5xl mb-4">🌱</div>
+                    <div class="text-4xl font-bold text-blue mb-2">1,523</div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Tấn CO₂ giảm phát thải</h4>
+                    <p class="text-gray-600 text-sm">Đóng góp cho môi trường</p>
+                </div>
+
+                <!-- CVA Partners -->
+                <div class="animate-on-scroll stats-card purple" style="animation-delay: 0.2s;">
+                    <div class="text-5xl mb-4">🏢</div>
+                    <div class="text-4xl font-bold text-purple-600 mb-2">12</div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Tổ chức xác minh</h4>
+                    <p class="text-gray-600 text-sm">CVA đối tác tin cậy</p>
+                </div>
+
+                <!-- Total Transaction Value -->
+                <div class="animate-on-scroll stats-card orange" style="animation-delay: 0.3s;">
+                    <div class="text-5xl mb-4">💰</div>
+                    <div class="text-4xl font-bold text-orange-500 mb-2">$68,450</div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Tổng giá trị giao dịch</h4>
+                    <p class="text-gray-600 text-sm">Trong tháng này</p>
+                </div>
+            </div>
+
+            <!-- Additional Market Insights -->
+            <div class="mt-12 animate-on-scroll">
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Thông tin thị trường chi tiết</h3>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-primary-green mb-2">$45.2</div>
+                            <div class="text-gray-600 mb-1">Giá trung bình</div>
+                            <div class="text-sm text-green-600 flex items-center justify-center">
+                                <span class="mr-1">↗</span> +12.5% tuần này
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue mb-2">89%</div>
+                            <div class="text-gray-600 mb-1">Tỷ lệ xác minh</div>
+                            <div class="text-sm text-blue-600">Chất lượng cao</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">2.3</div>
+                            <div class="text-gray-600 mb-1">Ngày bán trung bình</div>
+                            <div class="text-sm text-purple-600">Thanh khoản tốt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section id="final-cta" class="py-20 bg-light-green">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="animate-on-scroll">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                    Bạn muốn tham gia giao dịch carbon?
+                </h2>
+                <p class="text-xl text-gray-600 mb-4">
+                    Đăng ký ngay để theo dõi, mua hoặc bán tín chỉ carbon của bạn.
+                </p>
+                <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Tham gia cộng đồng giao dịch carbon lớn nhất Việt Nam. 
+                    Mua bán minh bạch, an toàn và có lợi cho môi trường.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="showRegister()" class="bg-primary-green text-white px-10 py-4 rounded-lg font-bold text-xl btn-hover shadow-lg">
+                        📝 Đăng ký ngay
+                    </button>
+                    <button onclick="showLogin()" class="bg-white text-primary-green border-2 border-primary-green px-10 py-4 rounded-lg font-bold text-xl btn-hover">
+                        🔐 Đăng nhập để giao dịch
+                    </button>
+                </div>
+
+                <!-- Quick Benefits -->
+                <div class="grid md:grid-cols-3 gap-6 mt-12">
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <div class="text-3xl mb-3">🔒</div>
+                        <div class="font-bold text-gray-900 mb-2">An toàn & Minh bạch</div>
+                        <div class="text-gray-600 text-sm">Mọi giao dịch được xác minh</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <div class="text-3xl mb-3">⚡</div>
+                        <div class="font-bold text-gray-900 mb-2">Giao dịch nhanh chóng</div>
+                        <div class="text-gray-600 text-sm">Thanh toán tức thời</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <div class="text-3xl mb-3">🌱</div>
+                        <div class="font-bold text-gray-900 mb-2">Tác động tích cực</div>
+                        <div class="text-gray-600 text-sm">Góp phần bảo vệ môi trường</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện. 
+                        Kết nối công nghệ và bền vững.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên kết</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-primary-green transition-colors">Trang chủ</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-primary-green transition-colors">Giới thiệu</a></li>
+                        <li><a href="#marketplace" class="text-gray-400 hover:text-primary-green transition-colors">Thị trường</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-primary-green transition-colors">Cách hoạt động</a></li>
+                        <li><a href="#blog" class="text-gray-400 hover:text-primary-green transition-colors">Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Policies -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Chính sách</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#terms" class="text-gray-400 hover:text-primary-green transition-colors">Điều khoản sử dụng</a></li>
+                        <li><a href="#privacy" class="text-gray-400 hover:text-primary-green transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-primary-green transition-colors">FAQ</a></li>
+                        <li><a href="#support" class="text-gray-400 hover:text-primary-green transition-colors">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Social -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400 mb-4">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>contact@carbonmarketplace.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 123 456 789</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📍</span>
+                            <span>Hà Nội, Việt Nam</span>
+                        </li>
+                    </ul>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">💼</span>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">📘</span>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">📧</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace – All rights reserved.
+                    <span class="text-primary-green ml-2">Giao dịch xanh cho tương lai bền vững 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            mobileMenu.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Filter Dropdown Toggle
+        function toggleFilter(filterType) {
+            const dropdown = document.querySelector(`.filter-dropdown button[onclick="toggleFilter('${filterType}')"]`).parentElement;
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('active');
+                }
+            });
+            
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.filter-dropdown')) {
+                document.querySelectorAll('.filter-dropdown').forEach(d => {
+                    d.classList.remove('active');
+                });
+            }
+        });
+
+        // Filter Credits Function
+        function filterCredits() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const creditItems = document.querySelectorAll('.credit-item');
+            let visibleCount = 0;
+
+            // Get selected filters
+            const selectedRegions = Array.from(document.querySelectorAll('input[value="hanoi"], input[value="hcm"], input[value="danang"]'))
+                .filter(cb => cb.checked).map(cb => cb.value);
+            
+            const selectedPrices = Array.from(document.querySelectorAll('input[value="0-25"], input[value="25-50"], input[value="50-100"], input[value="100+"]'))
+                .filter(cb => cb.checked).map(cb => cb.value);
+            
+            const selectedTypes = Array.from(document.querySelectorAll('input[value="fixed"], input[value="auction"]'))
+                .filter(cb => cb.checked).map(cb => cb.value);
+            
+            const selectedStatuses = Array.from(document.querySelectorAll('input[value="available"], input[value="auction"], input[value="sold"]'))
+                .filter(cb => cb.checked).map(cb => cb.value);
+
+            creditItems.forEach(item => {
+                const owner = item.dataset.owner.toLowerCase();
+                const creditId = item.querySelector('h3').textContent.toLowerCase();
+                const region = item.dataset.region;
+                const price = parseFloat(item.dataset.price);
+                const type = item.dataset.type;
+                const status = item.dataset.status;
+
+                let show = true;
+
+                // Search filter
+                if (searchTerm && !owner.includes(searchTerm) && !creditId.includes(searchTerm)) {
+                    show = false;
+                }
+
+                // Region filter
+                if (selectedRegions.length > 0 && !selectedRegions.includes(region)) {
+                    show = false;
+                }
+
+                // Price filter
+                if (selectedPrices.length > 0) {
+                    let priceMatch = false;
+                    selectedPrices.forEach(priceRange => {
+                        if (priceRange === '0-25' && price >= 0 && price <= 25) priceMatch = true;
+                        if (priceRange === '25-50' && price > 25 && price <= 50) priceMatch = true;
+                        if (priceRange === '50-100' && price > 50 && price <= 100) priceMatch = true;
+                        if (priceRange === '100+' && price > 100) priceMatch = true;
+                    });
+                    if (!priceMatch) show = false;
+                }
+
+                // Type filter
+                if (selectedTypes.length > 0 && !selectedTypes.includes(type)) {
+                    show = false;
+                }
+
+                // Status filter
+                if (selectedStatuses.length > 0 && !selectedStatuses.includes(status)) {
+                    show = false;
+                }
+
+                if (show) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update result count
+            document.getElementById('resultCount').textContent = visibleCount;
+        }
+
+        // Sort Credits Function
+        function sortCredits(sortBy) {
+            const creditGrid = document.getElementById('creditGrid');
+            const creditItems = Array.from(document.querySelectorAll('.credit-item'));
+
+            creditItems.sort((a, b) => {
+                switch(sortBy) {
+                    case 'price-low':
+                        return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    case 'price-high':
+                        return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    case 'amount-high':
+                        const amountA = parseFloat(a.querySelector('.font-semibold').textContent);
+                        const amountB = parseFloat(b.querySelector('.font-semibold').textContent);
+                        return amountB - amountA;
+                    case 'newest':
+                    default:
+                        return 0; // Keep original order for newest
+                }
+            });
+
+            // Re-append sorted items
+            creditItems.forEach(item => creditGrid.appendChild(item));
+        }
+
+        // Toggle View Function
+        function toggleView(viewType) {
+            const gridView = document.getElementById('gridView');
+            const listView = document.getElementById('listView');
+            const creditGrid = document.getElementById('creditGrid');
+
+            if (viewType === 'grid') {
+                gridView.classList.add('bg-primary-green', 'text-white');
+                gridView.classList.remove('bg-gray-200', 'text-gray-600');
+                listView.classList.add('bg-gray-200', 'text-gray-600');
+                listView.classList.remove('bg-primary-green', 'text-white');
+                creditGrid.className = 'grid md:grid-cols-2 lg:grid-cols-3 gap-6';
+            } else {
+                listView.classList.add('bg-primary-green', 'text-white');
+                listView.classList.remove('bg-gray-200', 'text-gray-600');
+                gridView.classList.add('bg-gray-200', 'text-gray-600');
+                gridView.classList.remove('bg-primary-green', 'text-white');
+                creditGrid.className = 'grid grid-cols-1 gap-4';
+            }
+        }
+
+        // Intersection Observer for Animations
+        function setupScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Smooth Scrolling for Navigation Links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Close mobile menu if open
+                        const mobileMenu = document.getElementById('mobileMenu');
+                        const overlay = document.getElementById('mobileMenuOverlay');
+                        mobileMenu.classList.remove('open');
+                        overlay.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Button Click Handlers
+        function showLogin() {
+            showNotification('🔐 Chuyển hướng đến trang đăng nhập...', 'info');
+            setTimeout(() => {
+                showNotification('✅ Tính năng đăng nhập sẽ được triển khai sớm!', 'success');
+            }, 1000);
+        }
+
+        function showRegister() {
+            showNotification('📝 Chuyển hướng đến trang đăng ký...', 'info');
+            setTimeout(() => {
+                showNotification('🎉 Trang đăng ký sẽ được mở sớm!', 'success');
+            }, 1000);
+        }
+
+        function scrollToMarketplace() {
+            const marketplaceSection = document.getElementById('credit-listings');
+            marketplaceSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+            showNotification('📊 Xem danh sách tín chỉ carbon bên dưới!', 'info');
+        }
+
+        function viewDetails(creditId) {
+            showNotification(`🔍 Xem chi tiết tín chỉ ${creditId}...`, 'info');
+            setTimeout(() => {
+                showNotification('🔐 Vui lòng đăng nhập để xem chi tiết và giao dịch!', 'warning');
+            }, 1500);
+        }
+
+        function loadMoreCredits() {
+            showNotification('⏳ Đang tải thêm tín chỉ carbon...', 'info');
+            setTimeout(() => {
+                showNotification('📊 Đã tải thêm 12 tín chỉ carbon mới!', 'success');
+            }, 2000);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 px-6 py-4 rounded-lg text-white font-semibold shadow-lg transform translate-x-full transition-transform duration-300`;
+            
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-orange-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Update Auction Timers
+        function updateAuctionTimers() {
+            const timers = document.querySelectorAll('.auction-timer');
+            timers.forEach(timer => {
+                const timeText = timer.textContent.replace('⏰ ', '');
+                // This is a simple demo - in real app, you'd calculate from actual end time
+                if (Math.random() > 0.95) { // Randomly update some timers
+                    const hours = Math.floor(Math.random() * 10);
+                    const minutes = Math.floor(Math.random() * 60);
+                    timer.textContent = `⏰ ${hours}h ${minutes}m`;
+                }
+            });
+        }
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupScrollAnimations();
+            setupSmoothScrolling();
+            
+            // Close mobile menu when clicking overlay
+            document.getElementById('mobileMenuOverlay').addEventListener('click', toggleMobileMenu);
+            
+            // Update auction timers every 30 seconds
+            setInterval(updateAuctionTimers, 30000);
+            
+            // Welcome message
+            setTimeout(() => {
+                showNotification('🏪 Chào mừng đến với Thị trường tín chỉ carbon!', 'success');
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.remove('open');
+                overlay.classList.add('hidden');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de64fcd1a03f71',t:'MTc2MDM1Mzg2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

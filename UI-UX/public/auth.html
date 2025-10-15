@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập / Đăng ký - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .bg-primary-green { background-color: #27AE60; }
+        .text-primary-green { color: #27AE60; }
+        .border-primary-green { border-color: #27AE60; }
+        .bg-light-green { background-color: #E8F8F5; }
+        .bg-blue { background-color: #3498DB; }
+        .text-blue { color: #3498DB; }
+        
+        /* Gradients */
+        .gradient-green {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        .gradient-blue {
+            background: linear-gradient(135deg, #3498DB 0%, #5DADE2 100%);
+        }
+        
+        .gradient-light-green {
+            background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+        }
+        
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.95) 0%, rgba(52, 152, 219, 0.9) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/><circle cx="100" cy="100" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="200" r="1.5" fill="rgba(255,255,255,0.4)"/><circle cx="500" cy="150" r="2.5" fill="rgba(255,255,255,0.2)"/><circle cx="700" cy="300" r="1" fill="rgba(255,255,255,0.5)"/><circle cx="900" cy="250" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="1100" cy="180" r="1.5" fill="rgba(255,255,255,0.4)"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+        }
+        
+        /* Role Card Animations */
+        .role-card {
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            border-color: #27AE60;
+        }
+        
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(39, 174, 96, 0.05), transparent);
+            transition: left 0.6s;
+        }
+        
+        .role-card:hover::before {
+            left: 100%;
+        }
+        
+        /* Button Animations */
+        .btn-hover {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-hover:hover::before {
+            left: 100%;
+        }
+        
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27AE60;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.25);
+        }
+        
+        /* Icon Animations */
+        .role-icon {
+            transition: all 0.4s ease;
+            display: inline-block;
+        }
+        
+        .role-card:hover .role-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        /* Intersection Observer Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Navigation Styles */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: #27AE60;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Feature Icons */
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .role-card:hover .feature-icon {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
+        }
+        
+        /* Benefits List */
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #F3F4F6;
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-item:hover {
+            background-color: #F9FAFB;
+            padding-left: 0.5rem;
+        }
+        
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27AE60;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #27AE60;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #229954;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .role-card {
+                margin-bottom: 2rem;
+            }
+            
+            .feature-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+        }
+        
+        /* Success/Error States */
+        .success-message {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        /* Particle Background Effect */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(-10px) rotate(240deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Carbon Credit</h1>
+                            <p class="text-xs text-gray-600">Marketplace</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="nav-link text-gray-600 hover:text-primary-green font-medium">Trang chủ</a>
+                        <a href="#about" class="nav-link text-gray-600 hover:text-primary-green font-medium">Giới thiệu</a>
+                        <a href="#marketplace" class="nav-link text-gray-600 hover:text-primary-green font-medium">Thị trường</a>
+                        <a href="#how-it-works" class="nav-link text-gray-600 hover:text-primary-green font-medium">Cách hoạt động</a>
+                        <a href="#contact" class="nav-link text-gray-600 hover:text-primary-green font-medium">Liên hệ</a>
+                    </div>
+                </div>
+
+                <!-- Back to Marketplace -->
+                <div class="hidden md:flex items-center">
+                    <a href="#marketplace" class="text-gray-600 hover:text-primary-green font-medium transition-colors mr-4">
+                        ← Quay lại thị trường
+                    </a>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 gradient-green rounded-lg flex items-center justify-center mr-2">
+                            <span class="text-white font-bold">🌱</span>
+                        </div>
+                        <span class="font-bold text-gray-900">Carbon Credit</span>
+                    </div>
+                    <button onclick="toggleMobileMenu()" class="text-gray-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#home" class="block text-gray-600 font-medium py-2">Trang chủ</a>
+                    <a href="#about" class="block text-gray-600 font-medium py-2">Giới thiệu</a>
+                    <a href="#marketplace" class="block text-gray-600 font-medium py-2">Thị trường</a>
+                    <a href="#how-it-works" class="block text-gray-600 font-medium py-2">Cách hoạt động</a>
+                    <a href="#contact" class="block text-gray-600 font-medium py-2">Liên hệ</a>
+                    <div class="pt-4 border-t border-gray-200">
+                        <a href="#marketplace" class="block text-primary-green font-medium py-2">← Quay lại thị trường</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center pt-16 relative">
+        <!-- Particle Background -->
+        <div class="particles">
+            <div class="particle" style="left: 10%; top: 20%; width: 4px; height: 4px; animation-delay: 0s;"></div>
+            <div class="particle" style="left: 20%; top: 80%; width: 6px; height: 6px; animation-delay: 1s;"></div>
+            <div class="particle" style="left: 60%; top: 30%; width: 3px; height: 3px; animation-delay: 2s;"></div>
+            <div class="particle" style="left: 80%; top: 70%; width: 5px; height: 5px; animation-delay: 3s;"></div>
+            <div class="particle" style="left: 30%; top: 50%; width: 4px; height: 4px; animation-delay: 4s;"></div>
+            <div class="particle" style="left: 70%; top: 10%; width: 6px; height: 6px; animation-delay: 5s;"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+            <!-- Header Content -->
+            <div class="text-center mb-16 slide-in-left">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                    Tham gia nền tảng 
+                    <span class="text-yellow-300">Giao dịch Tín chỉ Carbon</span>
+                    <br>cho Chủ sở hữu Xe điện
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    Đăng nhập hoặc đăng ký để bắt đầu quản lý và giao dịch tín chỉ carbon. 
+                    Chọn vai trò phù hợp với bạn để truy cập vào hệ thống.
+                </p>
+                
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">1,247</div>
+                        <div class="text-sm text-gray-200">EV Owners</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">856</div>
+                        <div class="text-sm text-gray-200">Buyers</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">3,521</div>
+                        <div class="text-sm text-gray-200">Tín chỉ đã bán</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">$158K</div>
+                        <div class="text-sm text-gray-200">Tổng giao dịch</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Selection Cards -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <!-- EV Owner Card -->
+                <div class="role-card p-8 animate-on-scroll">
+                    <div class="text-center">
+                        <div class="feature-icon role-icon">
+                            🚗
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Chủ sở hữu xe điện</h2>
+                        <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                            Tạo và bán tín chỉ carbon từ việc sử dụng xe điện của bạn. 
+                            Kiếm thu nhập từ việc bảo vệ môi trường.
+                        </p>
+                    </div>
+                    
+                    <!-- Benefits -->
+                    <div class="mb-8">
+                        <h4 class="font-semibold text-gray-900 mb-4">✨ Lợi ích dành cho bạn:</h4>
+                        <div class="space-y-2">
+                            <div class="benefit-item">
+                                <span class="text-green-500 mr-3">✓</span>
+                                <span class="text-gray-700">Tạo tín chỉ carbon từ hành trình xe điện</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-green-500 mr-3">✓</span>
+                                <span class="text-gray-700">Theo dõi thu nhập từ bán tín chỉ</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-green-500 mr-3">✓</span>
+                                <span class="text-gray-700">Quản lý hồ sơ xe và chứng nhận</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-green-500 mr-3">✓</span>
+                                <span class="text-gray-700">Nhận thông báo về giá thị trường</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="space-y-4">
+                        <button onclick="redirectToLogin('ev-owner')" class="w-full bg-primary-green text-white py-4 px-6 rounded-lg font-bold text-lg btn-hover">
+                            🔐 Đăng nhập EV Owner
+                        </button>
+                        <button onclick="redirectToSignup('ev-owner')" class="w-full bg-transparent border-2 border-primary-green text-primary-green py-4 px-6 rounded-lg font-bold text-lg btn-secondary">
+                            📝 Đăng ký làm EV Owner
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Info -->
+                    <div class="mt-6 p-4 bg-light-green rounded-lg">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <span class="mr-2">💡</span>
+                            <span>Cần có xe điện và giấy tờ chứng minh sở hữu để đăng ký</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buyer Card -->
+                <div class="role-card p-8 animate-on-scroll" style="animation-delay: 0.2s;">
+                    <div class="text-center">
+                        <div class="feature-icon role-icon">
+                            🏢
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Người mua tín chỉ carbon</h2>
+                        <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                            Mua tín chỉ carbon để bù đắp phát thải CO₂ của doanh nghiệp hoặc cá nhân. 
+                            Đóng góp vào mục tiêu Net Zero.
+                        </p>
+                    </div>
+                    
+                    <!-- Benefits -->
+                    <div class="mb-8">
+                        <h4 class="font-semibold text-gray-900 mb-4">✨ Lợi ích dành cho bạn:</h4>
+                        <div class="space-y-2">
+                            <div class="benefit-item">
+                                <span class="text-blue mr-3">✓</span>
+                                <span class="text-gray-700">Mua tín chỉ carbon đã xác minh</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-blue mr-3">✓</span>
+                                <span class="text-gray-700">Theo dõi danh mục tín chỉ sở hữu</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-blue mr-3">✓</span>
+                                <span class="text-gray-700">Nhận chứng nhận bù đắp carbon</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="text-blue mr-3">✓</span>
+                                <span class="text-gray-700">Tham gia đấu giá tín chỉ premium</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="space-y-4">
+                        <button onclick="redirectToLogin('buyer')" class="w-full bg-blue text-white py-4 px-6 rounded-lg font-bold text-lg btn-hover">
+                            🔐 Đăng nhập Buyer
+                        </button>
+                        <button onclick="redirectToSignup('buyer')" class="w-full bg-transparent border-2 border-blue text-blue py-4 px-6 rounded-lg font-bold text-lg btn-secondary">
+                            📝 Đăng ký làm Buyer
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Info -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <span class="mr-2">💡</span>
+                            <span>Dành cho doanh nghiệp và cá nhân muốn bù đắp carbon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="text-center mt-16 animate-on-scroll" style="animation-delay: 0.4s;">
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-bold text-white mb-4">🔒 Bảo mật & Tin cậy</h3>
+                    <p class="text-gray-100 mb-6">
+                        Tất cả giao dịch được mã hóa và bảo mật. Tín chỉ carbon được xác minh bởi các tổ chức kiểm toán uy tín.
+                    </p>
+                    
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <div class="text-3xl mb-2">🛡️</div>
+                            <div class="font-semibold text-white">Bảo mật SSL</div>
+                            <div class="text-sm text-gray-200">Mã hóa 256-bit</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl mb-2">✅</div>
+                            <div class="font-semibold text-white">Xác minh CVA</div>
+                            <div class="text-sm text-gray-200">Kiểm toán độc lập</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl mb-2">📊</div>
+                            <div class="font-semibold text-white">Minh bạch</div>
+                            <div class="text-sm text-gray-200">Theo dõi real-time</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="animate-on-scroll">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">🤝 Cần hỗ trợ?</h3>
+                <p class="text-lg text-gray-600 mb-8">
+                    Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp bạn bắt đầu hành trình giao dịch carbon.
+                </p>
+                
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <div class="p-6 bg-gray-50 rounded-lg">
+                        <div class="text-3xl mb-3">📞</div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Hotline hỗ trợ</h4>
+                        <p class="text-gray-600">1900 1234</p>
+                        <p class="text-sm text-gray-500">8:00 - 18:00 (T2-T6)</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-lg">
+                        <div class="text-3xl mb-3">💬</div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Live Chat</h4>
+                        <p class="text-gray-600">Trò chuyện trực tiếp</p>
+                        <p class="text-sm text-gray-500">24/7 online</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-lg">
+                        <div class="text-3xl mb-3">📧</div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Email hỗ trợ</h4>
+                        <p class="text-gray-600">support@carbonmarket.vn</p>
+                        <p class="text-sm text-gray-500">Phản hồi trong 2h</p>
+                    </div>
+                </div>
+                
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện tại Việt Nam.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên kết nhanh</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-primary-green transition-colors">Trang chủ</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-primary-green transition-colors">Giới thiệu</a></li>
+                        <li><a href="#marketplace" class="text-gray-400 hover:text-primary-green transition-colors">Thị trường</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-primary-green transition-colors">Cách hoạt động</a></li>
+                    </ul>
+                </div>
+
+                <!-- User Roles -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Dành cho</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#ev-owner" class="text-gray-400 hover:text-primary-green transition-colors">Chủ sở hữu xe điện</a></li>
+                        <li><a href="#buyer" class="text-gray-400 hover:text-primary-green transition-colors">Người mua tín chỉ</a></li>
+                        <li><a href="#cva" class="text-gray-400 hover:text-primary-green transition-colors">Tổ chức kiểm toán</a></li>
+                        <li><a href="#support" class="text-gray-400 hover:text-primary-green transition-colors">Hỗ trợ khách hàng</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>contact@carbonmarket.vn</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 123 456 789</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📍</span>
+                            <span>Hà Nội, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace – All rights reserved.
+                    <span class="text-primary-green ml-2">Kết nối xe điện với tương lai xanh 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <!-- Login/Signup Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 id="modalTitle" class="text-2xl font-bold text-gray-900">Đăng nhập EV Owner</h2>
+                        <p id="modalSubtitle" class="text-gray-600 mt-1">Truy cập vào tài khoản của bạn</p>
+                    </div>
+                    <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6">
+                <!-- Role Icon -->
+                <div class="text-center mb-6">
+                    <div id="modalIcon" class="w-20 h-20 mx-auto gradient-green rounded-2xl flex items-center justify-center text-4xl mb-4">
+                        🚗
+                    </div>
+                    <div id="modalRoleDescription" class="text-gray-600">
+                        Chủ sở hữu xe điện - Tạo và bán tín chỉ carbon
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="your.email@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                        <input type="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-primary-green focus:ring-primary-green">
+                            <span class="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
+                        </label>
+                        <a href="#" class="text-sm text-primary-green hover:underline">Quên mật khẩu?</a>
+                    </div>
+                    <button type="submit" class="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover">
+                        🔐 Đăng nhập
+                    </button>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
+                        <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="your.email@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
+                        <input type="tel" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="0123 456 789">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                        <input type="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</label>
+                        <input type="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    
+                    <!-- EV Owner specific fields -->
+                    <div id="evOwnerFields" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biển số xe điện</label>
+                            <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="30A-12345">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hãng xe</label>
+                            <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent">
+                                <option value="">Chọn hãng xe</option>
+                                <option value="vinfast">VinFast</option>
+                                <option value="tesla">Tesla</option>
+                                <option value="bmw">BMW</option>
+                                <option value="mercedes">Mercedes</option>
+                                <option value="audi">Audi</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Model xe</label>
+                            <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="VF8, Model 3, iX3...">
+                        </div>
+                    </div>
+
+                    <!-- Buyer specific fields -->
+                    <div id="buyerFields" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Loại tài khoản</label>
+                            <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent">
+                                <option value="">Chọn loại tài khoản</option>
+                                <option value="individual">Cá nhân</option>
+                                <option value="company">Doanh nghiệp</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tên công ty (nếu có)</label>
+                            <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="Công ty ABC">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mã số thuế (nếu có)</label>
+                            <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" placeholder="0123456789">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" required class="rounded border-gray-300 text-primary-green focus:ring-primary-green">
+                        <span class="ml-2 text-sm text-gray-600">Tôi đồng ý với <a href="#" class="text-primary-green hover:underline">Điều khoản sử dụng</a> và <a href="#" class="text-primary-green hover:underline">Chính sách bảo mật</a></span>
+                    </div>
+                    <button type="submit" class="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover">
+                        📝 Đăng ký tài khoản
+                    </button>
+                </form>
+
+                <!-- Toggle between Login/Signup -->
+                <div class="mt-6 text-center">
+                    <div id="loginToggle">
+                        <span class="text-gray-600">Chưa có tài khoản? </span>
+                        <button onclick="toggleAuthForm('signup')" class="text-primary-green font-semibold hover:underline">Đăng ký ngay</button>
+                    </div>
+                    <div id="signupToggle" class="hidden">
+                        <span class="text-gray-600">Đã có tài khoản? </span>
+                        <button onclick="toggleAuthForm('login')" class="text-primary-green font-semibold hover:underline">Đăng nhập</button>
+                    </div>
+                </div>
+
+                <!-- Social Login -->
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <button class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="mr-2">📧</span>
+                            Google
+                        </button>
+                        <button class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="mr-2">📘</span>
+                            Facebook
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            mobileMenu.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Intersection Observer for Animations
+        function setupScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Modal Functions
+        let currentRole = 'ev-owner';
+        let currentForm = 'login';
+
+        function openAuthModal(role, formType) {
+            currentRole = role;
+            currentForm = formType;
+            
+            const modal = document.getElementById('authModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalRoleDescription = document.getElementById('modalRoleDescription');
+            
+            // Update modal content based on role
+            if (role === 'ev-owner') {
+                modalIcon.innerHTML = '🚗';
+                modalIcon.className = 'w-20 h-20 mx-auto gradient-green rounded-2xl flex items-center justify-center text-4xl mb-4';
+                modalRoleDescription.textContent = 'Chủ sở hữu xe điện - Tạo và bán tín chỉ carbon';
+                
+                if (formType === 'login') {
+                    modalTitle.textContent = 'Đăng nhập EV Owner';
+                    modalSubtitle.textContent = 'Truy cập vào tài khoản chủ xe điện';
+                } else {
+                    modalTitle.textContent = 'Đăng ký EV Owner';
+                    modalSubtitle.textContent = 'Tạo tài khoản chủ xe điện mới';
+                }
+            } else {
+                modalIcon.innerHTML = '🏢';
+                modalIcon.className = 'w-20 h-20 mx-auto gradient-blue rounded-2xl flex items-center justify-center text-4xl mb-4';
+                modalRoleDescription.textContent = 'Người mua tín chỉ carbon - Bù đắp phát thải CO₂';
+                
+                if (formType === 'login') {
+                    modalTitle.textContent = 'Đăng nhập Buyer';
+                    modalSubtitle.textContent = 'Truy cập vào tài khoản người mua';
+                } else {
+                    modalTitle.textContent = 'Đăng ký Buyer';
+                    modalSubtitle.textContent = 'Tạo tài khoản người mua mới';
+                }
+            }
+            
+            // Show appropriate form
+            toggleAuthForm(formType);
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleAuthForm(formType) {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const loginToggle = document.getElementById('loginToggle');
+            const signupToggle = document.getElementById('signupToggle');
+            const evOwnerFields = document.getElementById('evOwnerFields');
+            const buyerFields = document.getElementById('buyerFields');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            
+            currentForm = formType;
+            
+            if (formType === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                loginToggle.classList.remove('hidden');
+                signupToggle.classList.add('hidden');
+                
+                if (currentRole === 'ev-owner') {
+                    modalTitle.textContent = 'Đăng nhập EV Owner';
+                    modalSubtitle.textContent = 'Truy cập vào tài khoản chủ xe điện';
+                } else {
+                    modalTitle.textContent = 'Đăng nhập Buyer';
+                    modalSubtitle.textContent = 'Truy cập vào tài khoản người mua';
+                }
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                loginToggle.classList.add('hidden');
+                signupToggle.classList.remove('hidden');
+                
+                // Show/hide role-specific fields
+                if (currentRole === 'ev-owner') {
+                    evOwnerFields.classList.remove('hidden');
+                    buyerFields.classList.add('hidden');
+                    modalTitle.textContent = 'Đăng ký EV Owner';
+                    modalSubtitle.textContent = 'Tạo tài khoản chủ xe điện mới';
+                } else {
+                    evOwnerFields.classList.add('hidden');
+                    buyerFields.classList.remove('hidden');
+                    modalTitle.textContent = 'Đăng ký Buyer';
+                    modalSubtitle.textContent = 'Tạo tài khoản người mua mới';
+                }
+            }
+        }
+
+        // Updated redirect functions to open modal
+        function redirectToLogin(role) {
+            openAuthModal(role, 'login');
+        }
+
+        function redirectToSignup(role) {
+            openAuthModal(role, 'signup');
+        }
+
+        // Form submission handlers
+        function handleLogin(event) {
+            event.preventDefault();
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<div class="loading-spinner"></div>Đang đăng nhập...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                showNotification(`✅ Đăng nhập thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'}!`, 'success');
+                closeAuthModal();
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // In real app, redirect to dashboard
+                setTimeout(() => {
+                    if (currentRole === 'ev-owner') {
+                        showNotification('🚗 Chuyển hướng đến Dashboard EV Owner...', 'info');
+                    } else {
+                        showNotification('🏢 Chuyển hướng đến Dashboard Buyer...', 'info');
+                    }
+                }, 1000);
+            }, 2000);
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<div class="loading-spinner"></div>Đang tạo tài khoản...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                showNotification(`🎉 Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`, 'success');
+                closeAuthModal();
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Show verification message
+                setTimeout(() => {
+                    showNotification('📧 Vui lòng kiểm tra email để xác minh tài khoản!', 'info');
+                }, 1000);
+            }, 3000);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 px-6 py-4 rounded-lg text-white font-semibold shadow-lg transform translate-x-full transition-transform duration-300`;
+            
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-orange-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 4000);
+        }
+
+        // Smooth Scrolling for Navigation Links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Close mobile menu if open
+                        const mobileMenu = document.getElementById('mobileMenu');
+                        const overlay = document.getElementById('mobileMenuOverlay');
+                        mobileMenu.classList.remove('open');
+                        overlay.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupScrollAnimations();
+            setupSmoothScrolling();
+            
+            // Close mobile menu when clicking overlay
+            document.getElementById('mobileMenuOverlay').addEventListener('click', toggleMobileMenu);
+            
+            // Add form event listeners
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            
+            // Close modal when clicking outside
+            document.getElementById('authModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAuthModal();
+                }
+            });
+            
+            // Welcome message
+            setTimeout(() => {
+                showNotification('🏠 Chào mừng đến với Carbon Credit Marketplace!', 'success');
+            }, 1000);
+            
+            // Show role selection tip
+            setTimeout(() => {
+                showNotification('💡 Chọn vai trò phù hợp để bắt đầu giao dịch carbon!', 'info');
+            }, 3000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.remove('open');
+                overlay.classList.add('hidden');
+            }
+        });
+
+        // Add some interactive effects
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-12px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Particle animation
+        function createParticles() {
+            const particles = document.querySelector('.particles');
+            
+            setInterval(() => {
+                if (particles.children.length < 10) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.width = (Math.random() * 4 + 2) + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    
+                    particles.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particles.contains(particle)) {
+                            particles.removeChild(particle);
+                        }
+                    }, 6000);
+                }
+            }, 2000);
+        }
+
+        // Start particle animation
+        createParticles();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de84e717bece4b',t:'MTc2MDM1NTE3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Credit Marketplace - Nền tảng giao dịch tín chỉ carbon cho xe điện</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .bg-primary-green { background-color: #27AE60; }
+        .text-primary-green { color: #27AE60; }
+        .border-primary-green { border-color: #27AE60; }
+        .bg-light-green { background-color: #E8F8F5; }
+        
+        /* Gradients */
+        .gradient-green {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        .gradient-light-green {
+            background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+        }
+        
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.9) 0%, rgba(46, 204, 113, 0.8) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:rgba(135,206,235,0.3);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" /></linearGradient></defs><rect width="100%" height="100%" fill="url(%23skyGrad)"/><circle cx="200" cy="150" r="3" fill="rgba(255,255,255,0.4)"/><circle cx="800" cy="200" r="2" fill="rgba(255,255,255,0.5)"/><circle cx="1000" cy="400" r="4" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="600" r="2" fill="rgba(255,255,255,0.4)"/><circle cx="600" cy="100" r="3" fill="rgba(255,255,255,0.35)"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+        }
+        
+        /* Hover Effects */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-hover:hover::before {
+            left: 100%;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        /* Intersection Observer Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Navigation Styles */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: #27AE60;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Feature Cards */
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+        }
+        
+        /* Step Cards */
+        .step-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: #27AE60;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        /* Community Cards */
+        .community-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .community-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .community-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #27AE60;
+        }
+        
+        /* Stats Animation */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* EV Car Animation */
+        .ev-car {
+            width: 120px;
+            height: 60px;
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            border-radius: 30px 30px 10px 10px;
+            position: relative;
+            margin: 0 auto 2rem;
+        }
+        
+        .ev-car::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            top: 8px;
+            left: 20px;
+        }
+        
+        .ev-car::after {
+            content: '⚡';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #27AE60;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #229954;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Carbon Credit</h1>
+                            <p class="text-xs text-gray-600">Marketplace</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="nav-link text-gray-900 hover:text-primary-green font-medium">Trang chủ</a>
+                        <a href="#about" class="nav-link text-gray-600 hover:text-primary-green font-medium">Giới thiệu</a>
+                        <a href="#marketplace" class="nav-link text-gray-600 hover:text-primary-green font-medium">Thị trường tín chỉ</a>
+                        <a href="#how-it-works" class="nav-link text-gray-600 hover:text-primary-green font-medium">Cách hoạt động</a>
+                        <a href="#blog" class="nav-link text-gray-600 hover:text-primary-green font-medium">Tin tức</a>
+                        <a href="#contact" class="nav-link text-gray-600 hover:text-primary-green font-medium">Liên hệ</a>
+                    </div>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="hidden md:flex items-center space-x-4">
+                  <button 
+    onclick="showLogin()" 
+    class="bg-white text-primary-green border border-green-300 px-6 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+>
+    Đăng nhập
+</button>
+
+
+<button 
+    onclick="showRegister()" 
+    class="bg-primary-green text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-colors"
+>
+    Đăng ký
+</button>
+
+
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 gradient-green rounded-lg flex items-center justify-center mr-2">
+                            <span class="text-white font-bold">🌱</span>
+                        </div>
+                        <span class="font-bold text-gray-900">Carbon Credit</span>
+                    </div>
+                    <button onclick="toggleMobileMenu()" class="text-gray-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#home" class="block text-gray-900 font-medium py-2">Trang chủ</a>
+                    <a href="#about" class="block text-gray-600 font-medium py-2">Giới thiệu</a>
+                    <a href="#marketplace" class="block text-gray-600 font-medium py-2">Thị trường tín chỉ</a>
+                    <a href="#how-it-works" class="block text-gray-600 font-medium py-2">Cách hoạt động</a>
+                    <a href="#blog" class="block text-gray-600 font-medium py-2">Tin tức</a>
+                    <a href="#contact" class="block text-gray-600 font-medium py-2">Liên hệ</a>
+                    <div class="pt-4 border-t border-gray-200">
+                        <button onclick="showLogin()" class="block w-full text-left text-gray-600 font-medium py-2">Đăng nhập</button>
+                        <button onclick="showRegister()" class="block w-full bg-primary-green text-white px-4 py-2 rounded-lg font-semibold mt-2">Đăng ký</button>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-bg min-h-screen flex items-center pt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Hero Content -->
+                <div class="text-white slide-in-left">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                        Biến mỗi km xe điện thành 
+                        <span class="text-yellow-300">giá trị carbon xanh</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed">
+                        Theo dõi lượng phát thải CO₂ giảm, nhận tín chỉ carbon và tham gia giao dịch minh bạch.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="startNow()" class="bg-white text-primary-green px-8 py-4 rounded-lg font-bold text-lg btn-hover shadow-lg">
+                            🚀 Bắt đầu ngay
+                        </button>
+                        <button onclick="learnMore()" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg btn-hover">
+                            📖 Tìm hiểu thêm
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="slide-in-right">
+                    <div class="relative">
+                        <!-- EV Car Illustration -->
+                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8 border border-white border-opacity-20">
+                            <div class="text-center mb-6">
+                                <div class="ev-car floating"></div>
+                                <h3 class="text-2xl font-bold text-white mb-2">Xe điện → Tín chỉ Carbon</h3>
+                                <p class="text-gray-200">Chuyển đổi hành trình thành giá trị</p>
+                            </div>
+                            
+                            <!-- Process Preview -->
+                            <div class="space-y-3">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3 flex items-center">
+                                    <span class="text-2xl mr-3">📊</span>
+                                    <span class="text-white text-sm">Theo dõi tự động CO₂ giảm phát thải</span>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3 flex items-center">
+                                    <span class="text-2xl mr-3">🏆</span>
+                                    <span class="text-white text-sm">Nhận tín chỉ carbon được xác minh</span>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3 flex items-center">
+                                    <span class="text-2xl mr-3">💰</span>
+                                    <span class="text-white text-sm">Giao dịch và tạo thu nhập</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating Elements -->
+                        <div class="absolute -top-4 -right-4 w-16 h-16 bg-green-400 rounded-full flex items-center justify-center floating pulse-green" style="animation-delay: 0.5s;">
+                            <span class="text-2xl">🌱</span>
+                        </div>
+                        <div class="absolute -bottom-4 -left-4 w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center floating" style="animation-delay: 1s;">
+                            <span class="text-xl">⚡</span>
+                        </div>
+                        <div class="absolute top-1/2 -left-8 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center floating" style="animation-delay: 1.5s;">
+                            <span class="text-lg">🌍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 animate-on-scroll">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Lợi Ích Chính</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Những giá trị cốt lõi mà Carbon Credit Marketplace mang lại cho cộng đồng xe điện
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Benefit 1 -->
+                <div class="animate-on-scroll feature-card">
+                    <div class="w-20 h-20 mx-auto gradient-green rounded-full flex items-center justify-center mb-6">
+                        <span class="text-3xl text-white">💚</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Thu nhập từ xe sạch</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Giúp chủ xe điện tạo thêm thu nhập từ việc lái xe sạch. 
+                        Mỗi km di chuyển đều được quy đổi thành giá trị thực.
+                    </p>
+                </div>
+
+                <!-- Benefit 2 -->
+                <div class="animate-on-scroll feature-card" style="animation-delay: 0.1s;">
+                    <div class="w-20 h-20 mx-auto gradient-green rounded-full flex items-center justify-center mb-6">
+                        <span class="text-3xl text-white">🌍</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Giảm phát thải toàn cầu</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Góp phần giảm phát thải toàn cầu thông qua việc khuyến khích sử dụng xe điện 
+                        và tạo động lực cho giao thông bền vững.
+                    </p>
+                </div>
+
+                <!-- Benefit 3 -->
+                <div class="animate-on-scroll feature-card" style="animation-delay: 0.2s;">
+                    <div class="w-20 h-20 mx-auto gradient-green rounded-full flex items-center justify-center mb-6">
+                        <span class="text-3xl text-white">🔒</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Giao dịch minh bạch</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Giao dịch minh bạch, xác minh bởi tổ chức độc lập (CVA). 
+                        Đảm bảo tính chính xác và đáng tin cậy của mọi tín chỉ carbon.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 animate-on-scroll">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Cách Hoạt Động</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Quy trình đơn giản 4 bước để biến xe điện của bạn thành nguồn thu nhập xanh
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="animate-on-scroll step-card">
+                    <div class="step-number">1</div>
+                    <div class="text-6xl mb-6 mt-4">🔗</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Kết nối dữ liệu hành trình</h3>
+                    <p class="text-gray-600">
+                        Kết nối ứng dụng với xe điện của bạn để tự động theo dõi 
+                        quãng đường di chuyển và mức tiêu thụ năng lượng.
+                    </p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="animate-on-scroll step-card" style="animation-delay: 0.1s;">
+                    <div class="step-number">2</div>
+                    <div class="text-6xl mb-6 mt-4">🔄</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Quy đổi CO₂ thành tín chỉ</h3>
+                    <p class="text-gray-600">
+                        Hệ thống tự động tính toán lượng CO₂ giảm phát thải 
+                        và quy đổi thành tín chỉ carbon theo tiêu chuẩn quốc tế.
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="animate-on-scroll step-card" style="animation-delay: 0.2s;">
+                    <div class="step-number">3</div>
+                    <div class="text-6xl mb-6 mt-4">✅</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Xác minh & phê duyệt</h3>
+                    <p class="text-gray-600">
+                        Tổ chức xác minh carbon độc lập (CVA) kiểm tra 
+                        và xác nhận tính chính xác của tín chỉ carbon.
+                    </p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="animate-on-scroll step-card" style="animation-delay: 0.3s;">
+                    <div class="step-number">4</div>
+                    <div class="text-6xl mb-6 mt-4">🏪</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Niêm yết và giao dịch</h3>
+                    <p class="text-gray-600">
+                        Niêm yết tín chỉ carbon trên thị trường và bán cho 
+                        các doanh nghiệp cần bù đắp phát thải carbon.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Section -->
+    <section id="community" class="py-20 gradient-light-green">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 animate-on-scroll">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Cộng Đồng Người Dùng</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Nền tảng kết nối 3 nhóm đối tượng chính trong hệ sinh thái carbon credit
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <!-- EV Owners -->
+                <div class="animate-on-scroll community-card">
+                    <div class="text-6xl mb-6">🚗</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Chủ xe điện (EV Owner)</h3>
+                    <p class="text-gray-600 mb-6">
+                        Chủ sở hữu xe điện tạo tín chỉ carbon từ việc giảm phát thải CO₂ 
+                        và kiếm thu nhập từ giao dịch tín chỉ.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2 text-left">
+                        <li>• Theo dõi hành trình tự động</li>
+                        <li>• Nhận tín chỉ carbon</li>
+                        <li>• Bán trên thị trường</li>
+                        <li>• Thu nhập thụ động</li>
+                    </ul>
+                </div>
+
+                <!-- Buyers -->
+                <div class="animate-on-scroll community-card" style="animation-delay: 0.1s;">
+                    <div class="text-6xl mb-6">🏢</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Người mua tín chỉ (Buyer)</h3>
+                    <p class="text-gray-600 mb-6">
+                        Doanh nghiệp và tổ chức mua tín chỉ carbon để bù đắp phát thải 
+                        và đạt mục tiêu phát triển bền vững.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2 text-left">
+                        <li>• Tìm kiếm tín chỉ chất lượng</li>
+                        <li>• So sánh giá cả minh bạch</li>
+                        <li>• Mua và thanh toán dễ dàng</li>
+                        <li>• Nhận chứng nhận bù đắp</li>
+                    </ul>
+                </div>
+
+                <!-- CVA -->
+                <div class="animate-on-scroll community-card" style="animation-delay: 0.2s;">
+                    <div class="text-6xl mb-6">🔍</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Tổ chức xác minh (CVA)</h3>
+                    <p class="text-gray-600 mb-6">
+                        Tổ chức xác minh carbon độc lập đảm bảo tính chính xác 
+                        và minh bạch của tín chỉ carbon.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2 text-left">
+                        <li>• Xác minh dữ liệu chính xác</li>
+                        <li>• Cấp chứng nhận tín chỉ</li>
+                        <li>• Kiểm toán định kỳ</li>
+                        <li>• Đảm bảo chất lượng</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="text-center animate-on-scroll">
+                <button onclick="joinPlatform()" class="bg-primary-green text-white px-8 py-4 rounded-lg font-bold text-lg btn-hover shadow-lg">
+                    🌱 Đăng ký để tham gia nền tảng
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="stats" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 animate-on-scroll">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Số Liệu & Tác Động</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Những con số ấn tượng thể hiện tác động tích cực của nền tảng đến môi trường
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="animate-on-scroll stats-card">
+                    <div class="text-5xl mb-4">🏆</div>
+                    <div class="stat-number text-4xl font-bold text-primary-green mb-2" data-target="12000">0</div>
+                    <p class="text-gray-600 font-semibold text-lg">Tín chỉ carbon đã giao dịch</p>
+                    <p class="text-sm text-gray-500 mt-2">Và con số này đang tăng mỗi ngày</p>
+                </div>
+
+                <div class="animate-on-scroll stats-card" style="animation-delay: 0.1s;">
+                    <div class="text-5xl mb-4">🌍</div>
+                    <div class="stat-number text-4xl font-bold text-primary-green mb-2" data-target="250">0</div>
+                    <p class="text-gray-600 font-semibold text-lg">Tấn CO₂ được bù đắp</p>
+                    <p class="text-sm text-gray-500 mt-2">Góp phần giảm phát thải toàn cầu</p>
+                </div>
+
+                <div class="animate-on-scroll stats-card" style="animation-delay: 0.2s;">
+                    <div class="text-5xl mb-4">🏢</div>
+                    <div class="stat-number text-4xl font-bold text-primary-green mb-2" data-target="50">0</div>
+                    <p class="text-gray-600 font-semibold text-lg">Tổ chức CVA tham gia</p>
+                    <p class="text-sm text-gray-500 mt-2">Đảm bảo xác minh chất lượng cao</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section id="final-cta" class="py-20 bg-light-green">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="animate-on-scroll">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                    Tham gia nền tảng giao dịch carbon dành cho xe điện
+                </h2>
+                <p class="text-xl text-gray-600 mb-4">
+                    Vì hành tinh xanh
+                </p>
+                <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Hãy là một phần của cuộc cách mạng giao thông xanh. 
+                    Bắt đầu tạo thu nhập từ xe điện và góp phần bảo vệ môi trường ngay hôm nay.
+                </p>
+                
+                <button onclick="registerNow()" class="bg-primary-green text-white px-10 py-4 rounded-lg font-bold text-xl btn-hover shadow-lg">
+                    🚀 Đăng ký ngay
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện. 
+                        Kết nối công nghệ và bền vững.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên kết</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#about" class="text-gray-400 hover:text-primary-green transition-colors">Giới thiệu</a></li>
+                        <li><a href="#marketplace" class="text-gray-400 hover:text-primary-green transition-colors">Thị trường</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-primary-green transition-colors">Cách hoạt động</a></li>
+                        <li><a href="#blog" class="text-gray-400 hover:text-primary-green transition-colors">Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Policies -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Chính sách</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#terms" class="text-gray-400 hover:text-primary-green transition-colors">Điều khoản sử dụng</a></li>
+                        <li><a href="#privacy" class="text-gray-400 hover:text-primary-green transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-primary-green transition-colors">FAQ</a></li>
+                        <li><a href="#support" class="text-gray-400 hover:text-primary-green transition-colors">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Social -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400 mb-4">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>contact@carbonmarketplace.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 123 456 789</span>
+                        </li>
+                    </ul>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">💼</span>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">📘</span>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-green transition-colors">
+                            <span class="text-2xl">📧</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace. Tất cả quyền được bảo lưu.
+                    <span class="text-primary-green ml-2">Phát triển bền vững cho tương lai xanh 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            mobileMenu.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Intersection Observer for Animations
+        function setupScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Counter Animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const increment = target / 100;
+                let current = 0;
+                
+                const updateCounter = () => {
+                    if (current < target) {
+                        current += increment;
+                        counter.textContent = Math.ceil(current).toLocaleString() + '+';
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target.toLocaleString() + '+';
+                    }
+                };
+                
+                // Start animation when element is visible
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            updateCounter();
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                });
+                
+                observer.observe(counter);
+            });
+        }
+
+        // Smooth Scrolling for Navigation Links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Close mobile menu if open
+                        const mobileMenu = document.getElementById('mobileMenu');
+                        const overlay = document.getElementById('mobileMenuOverlay');
+                        mobileMenu.classList.remove('open');
+                        overlay.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Button Click Handlers
+        function showLogin() {
+            showNotification('🔐 Chuyển hướng đến trang đăng nhập...', 'info');
+            setTimeout(() => {
+                showNotification('✅ Tính năng đăng nhập sẽ được triển khai sớm!', 'success');
+            }, 1000);
+        }
+
+        function showRegister() {
+            showNotification('📝 Chuyển hướng đến trang đăng ký...', 'info');
+            setTimeout(() => {
+                showNotification('🎉 Trang đăng ký sẽ được mở sớm!', 'success');
+            }, 1000);
+        }
+
+        function startNow() {
+            showNotification('🚀 Bắt đầu hành trình carbon xanh...', 'info');
+            setTimeout(() => {
+                showNotification('🌱 Chào mừng bạn đến với Carbon Credit Marketplace!', 'success');
+            }, 1500);
+        }
+
+        function learnMore() {
+            showNotification('📖 Tìm hiểu thêm về nền tảng...', 'info');
+            setTimeout(() => {
+                showNotification('💡 Cuộn xuống để khám phá các tính năng!', 'success');
+            }, 1000);
+        }
+
+        function joinPlatform() {
+            showNotification('🌱 Đăng ký tham gia nền tảng...', 'info');
+            setTimeout(() => {
+                showNotification('🎉 Cảm ơn bạn đã quan tâm! Chúng tôi sẽ liên hệ sớm.', 'success');
+            }, 1500);
+        }
+
+        function registerNow() {
+            showNotification('🚀 Đăng ký tài khoản...', 'info');
+            setTimeout(() => {
+                showNotification('✅ Đăng ký thành công! Chào mừng bạn đến với cộng đồng xanh!', 'success');
+            }, 1500);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 px-6 py-4 rounded-lg text-white font-semibold shadow-lg transform translate-x-full transition-transform duration-300`;
+            
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-orange-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupScrollAnimations();
+            setupSmoothScrolling();
+            animateCounters();
+            
+            // Close mobile menu when clicking overlay
+            document.getElementById('mobileMenuOverlay').addEventListener('click', toggleMobileMenu);
+            
+            // Welcome message
+            setTimeout(() => {
+                showNotification('🌱 Chào mừng đến với Carbon Credit Marketplace!', 'success');
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.remove('open');
+                overlay.classList.add('hidden');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de1a77d4109cf6',t:'MTc2MDM1MDgxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

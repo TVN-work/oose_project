@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ & Hỗ trợ - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .bg-primary-green { background-color: #27AE60; }
+        .text-primary-green { color: #27AE60; }
+        .border-primary-green { border-color: #27AE60; }
+        .bg-light-green { background-color: #E8F8F5; }
+        .bg-dark-green { background-color: #1E8449; }
+        
+        /* Gradients */
+        .gradient-green {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        .gradient-light-green {
+            background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+        }
+        
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.95) 0%, rgba(46, 204, 113, 0.9) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/><circle cx="100" cy="80" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="120" r="1.5" fill="rgba(255,255,255,0.4)"/><circle cx="500" cy="100" r="2.5" fill="rgba(255,255,255,0.2)"/><circle cx="700" cy="150" r="1" fill="rgba(255,255,255,0.5)"/><circle cx="900" cy="130" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="1100" cy="110" r="1.5" fill="rgba(255,255,255,0.4)"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Form Styles */
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+            transition: all 0.3s ease;
+        }
+        
+        .form-container:hover {
+            box-shadow: 0 25px 60px rgba(39, 174, 96, 0.15);
+            border-color: #27AE60;
+        }
+        
+        .form-input {
+            transition: all 0.3s ease;
+            border: 2px solid #E5E7EB;
+        }
+        
+        .form-input:focus {
+            border-color: #27AE60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            outline: none;
+        }
+        
+        .form-input:hover {
+            border-color: #D1D5DB;
+        }
+        
+        /* Button Animations */
+        .btn-primary {
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        /* Contact Cards */
+        .contact-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #F3F4F6;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(39, 174, 96, 0.15);
+            border-color: #27AE60;
+        }
+        
+        .contact-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #27AE60, #2ECC71);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .contact-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        /* CVA Section */
+        .cva-section {
+            background: linear-gradient(135deg, #F8FFFE 0%, #E8F8F5 100%);
+            border: 2px solid #27AE60;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cva-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(39, 174, 96, 0.05) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #D1D5DB;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-upload:hover {
+            border-color: #27AE60;
+            background-color: #F9FAFB;
+        }
+        
+        .file-upload.dragover {
+            border-color: #27AE60;
+            background-color: #E8F8F5;
+            transform: scale(1.02);
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27AE60;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Social Icons */
+        .social-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Navigation Styles */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: #27AE60;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        /* Intersection Observer Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Success/Error Messages */
+        .success-message {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            display: none;
+            animation: slideInDown 0.5s ease;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            display: none;
+            animation: slideInDown 0.5s ease;
+        }
+        
+        @keyframes slideInDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #27AE60;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #229954;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .contact-card {
+                margin-bottom: 1.5rem;
+            }
+            
+            .form-container {
+                margin: 1rem;
+                border-radius: 16px;
+            }
+        }
+        
+        /* Floating Elements */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27AE60, #2ECC71);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">Carbon Credit</h1>
+                            <p class="text-xs text-gray-600">Marketplace</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="nav-link text-gray-600 hover:text-primary-green font-medium">Trang chủ</a>
+                        <a href="#about" class="nav-link text-gray-600 hover:text-primary-green font-medium">Giới thiệu</a>
+                        <a href="#marketplace" class="nav-link text-gray-600 hover:text-primary-green font-medium">Thị trường</a>
+                        <a href="#how-it-works" class="nav-link text-gray-600 hover:text-primary-green font-medium">Cách hoạt động</a>
+                        <a href="#contact" class="nav-link text-primary-green font-medium">Liên hệ</a>
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="hidden md:flex items-center">
+                    <a href="#login" class="bg-primary-green text-white px-6 py-2 rounded-lg font-medium hover:bg-dark-green transition-colors">
+                        Đăng nhập
+                    </a>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 gradient-green rounded-lg flex items-center justify-center mr-2">
+                            <span class="text-white font-bold">🌱</span>
+                        </div>
+                        <span class="font-bold text-gray-900">Carbon Credit</span>
+                    </div>
+                    <button onclick="toggleMobileMenu()" class="text-gray-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#home" class="block text-gray-600 font-medium py-2">Trang chủ</a>
+                    <a href="#about" class="block text-gray-600 font-medium py-2">Giới thiệu</a>
+                    <a href="#marketplace" class="block text-gray-600 font-medium py-2">Thị trường</a>
+                    <a href="#how-it-works" class="block text-gray-600 font-medium py-2">Cách hoạt động</a>
+                    <a href="#contact" class="block text-primary-green font-medium py-2">Liên hệ</a>
+                    <div class="pt-4 border-t border-gray-200">
+                        <a href="#login" class="block bg-primary-green text-white text-center py-2 rounded-lg font-medium">Đăng nhập</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-bg pt-16 pb-12 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+            <div class="text-center slide-in-left">
+                <div class="inline-flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 mb-6">
+                    <span class="text-2xl mr-3">📞</span>
+                    <span class="text-white font-medium">Liên hệ & Hỗ trợ 24/7</span>
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                    Chúng tôi luôn sẵn sàng 
+                    <span class="text-yellow-300">hỗ trợ bạn</span>
+                </h1>
+                
+                <p class="text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    Gửi yêu cầu hỗ trợ, đăng ký hợp tác, hoặc xác minh tài khoản. 
+                    Đội ngũ chuyên gia của chúng tôi sẽ phản hồi nhanh chóng và chuyên nghiệp.
+                </p>
+                
+                <!-- Quick Contact Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">< 2h</div>
+                        <div class="text-sm text-gray-200">Thời gian phản hồi</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">24/7</div>
+                        <div class="text-sm text-gray-200">Hỗ trợ trực tuyến</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">98%</div>
+                        <div class="text-sm text-gray-200">Độ hài lòng</div>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-yellow-300">5★</div>
+                        <div class="text-sm text-gray-200">Đánh giá dịch vụ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-16 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Contact Form -->
+                <div class="animate-on-scroll">
+                    <div class="form-container p-8">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 gradient-green rounded-2xl flex items-center justify-center mx-auto mb-4 floating">
+                                <span class="text-white text-3xl">📝</span>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 mb-4">Gửi yêu cầu hỗ trợ</h2>
+                            <p class="text-gray-600">
+                                Điền thông tin chi tiết để chúng tôi có thể hỗ trợ bạn một cách tốt nhất
+                            </p>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-bar mb-8">
+                            <div id="formProgress" class="progress-fill" style="width: 0%"></div>
+                        </div>
+
+                        <form id="contactForm" class="space-y-6">
+                            <!-- Personal Information -->
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Họ và tên <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        name="fullName"
+                                        required 
+                                        class="form-input w-full px-4 py-3 rounded-lg" 
+                                        placeholder="Nguyễn Văn A"
+                                        oninput="updateProgress()"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Email <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="email" 
+                                        name="email"
+                                        required 
+                                        class="form-input w-full px-4 py-3 rounded-lg" 
+                                        placeholder="your.email@example.com"
+                                        oninput="updateProgress()"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Số điện thoại <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="tel" 
+                                        name="phone"
+                                        required 
+                                        class="form-input w-full px-4 py-3 rounded-lg" 
+                                        placeholder="0123 456 789"
+                                        oninput="updateProgress()"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Vai trò <span class="text-red-500">*</span>
+                                    </label>
+                                    <select 
+                                        name="role" 
+                                        required 
+                                        class="form-input w-full px-4 py-3 rounded-lg"
+                                        onchange="updateProgress(); toggleCVAInfo()"
+                                    >
+                                        <option value="">Chọn vai trò của bạn</option>
+                                        <option value="ev-owner">🚗 Chủ sở hữu xe điện</option>
+                                        <option value="buyer">🏢 Người mua tín chỉ carbon</option>
+                                        <option value="cva">✅ Tổ chức xác minh (CVA)</option>
+                                        <option value="admin">⚙️ Quản trị viên</option>
+                                        <option value="partner">🤝 Đối tác tiềm năng</option>
+                                        <option value="media">📰 Báo chí/Truyền thông</option>
+                                        <option value="other">❓ Khác</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Request Type -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Loại yêu cầu <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid md:grid-cols-2 gap-3">
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-primary-green transition-colors">
+                                        <input type="radio" name="requestType" value="support" class="text-primary-green" onchange="updateProgress()">
+                                        <span class="ml-3">🛠️ Hỗ trợ kỹ thuật</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-primary-green transition-colors">
+                                        <input type="radio" name="requestType" value="verification" class="text-primary-green" onchange="updateProgress()">
+                                        <span class="ml-3">✅ Xác minh tài khoản</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-primary-green transition-colors">
+                                        <input type="radio" name="requestType" value="partnership" class="text-primary-green" onchange="updateProgress()">
+                                        <span class="ml-3">🤝 Hợp tác kinh doanh</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-primary-green transition-colors">
+                                        <input type="radio" name="requestType" value="other" class="text-primary-green" onchange="updateProgress()">
+                                        <span class="ml-3">❓ Khác</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Message -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Nội dung yêu cầu <span class="text-red-500">*</span>
+                                </label>
+                                <textarea 
+                                    name="message"
+                                    required 
+                                    rows="6" 
+                                    class="form-input w-full px-4 py-3 rounded-lg resize-none" 
+                                    placeholder="Mô tả chi tiết yêu cầu của bạn. Bao gồm thông tin cần thiết để chúng tôi có thể hỗ trợ bạn tốt nhất..."
+                                    oninput="updateProgress()"
+                                ></textarea>
+                                <div class="text-sm text-gray-500 mt-2">
+                                    <span id="charCount">0</span>/1000 ký tự
+                                </div>
+                            </div>
+
+                            <!-- File Upload -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Tệp đính kèm (tùy chọn)
+                                </label>
+                                <div class="file-upload p-6 text-center" id="fileUpload">
+                                    <input type="file" id="fileInput" name="attachment" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden">
+                                    <div class="text-4xl mb-4">📎</div>
+                                    <p class="text-gray-600 mb-2">Kéo thả tệp vào đây hoặc <button type="button" onclick="document.getElementById('fileInput').click()" class="text-primary-green font-medium hover:underline">chọn tệp</button></p>
+                                    <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, JPG, PNG (tối đa 10MB mỗi tệp)</p>
+                                    <div id="fileList" class="mt-4 space-y-2"></div>
+                                </div>
+                            </div>
+
+                            <!-- CVA Information -->
+                            <div id="cvaInfo" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <span class="text-2xl mr-3">ℹ️</span>
+                                    <div>
+                                        <h4 class="font-semibold text-blue-900 mb-2">Thông tin dành cho CVA/Quản trị viên</h4>
+                                        <p class="text-blue-800 text-sm">
+                                            Vui lòng đính kèm các tài liệu pháp lý và chứng nhận liên quan đến tổ chức của bạn. 
+                                            Đội ngũ kỹ thuật sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Privacy Notice -->
+                            <div class="flex items-start space-x-3">
+                                <input type="checkbox" id="privacy" name="privacy" required class="mt-1 rounded border-gray-300 text-primary-green focus:ring-primary-green">
+                                <label for="privacy" class="text-sm text-gray-600">
+                                    Tôi đồng ý với <a href="#" class="text-primary-green hover:underline">Chính sách bảo mật</a> 
+                                    và cho phép Carbon Credit Marketplace xử lý thông tin cá nhân của tôi để phục vụ mục đích hỗ trợ.
+                                </label>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn-primary w-full py-4 px-6 text-white font-bold text-lg rounded-lg">
+                                <span id="submitText">🚀 Gửi yêu cầu hỗ trợ</span>
+                            </button>
+
+                            <!-- Success/Error Messages -->
+                            <div id="successMessage" class="success-message">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">✅</span>
+                                    <div>
+                                        <h4 class="font-semibold">Gửi yêu cầu thành công!</h4>
+                                        <p class="text-sm mt-1">Chúng tôi đã nhận được yêu cầu của bạn và sẽ phản hồi trong vòng 2 giờ.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="errorMessage" class="error-message">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">❌</span>
+                                    <div>
+                                        <h4 class="font-semibold">Có lỗi xảy ra!</h4>
+                                        <p class="text-sm mt-1">Vui lòng thử lại hoặc liên hệ trực tiếp qua hotline.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="animate-on-scroll" style="animation-delay: 0.2s;">
+                    <div class="space-y-8">
+                        <!-- Company Info -->
+                        <div class="contact-card p-8">
+                            <div class="text-center mb-6">
+                                <div class="w-16 h-16 gradient-green rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-white text-3xl">🏢</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 mb-2">Thông tin công ty</h3>
+                                <p class="text-gray-600">Carbon Credit Marketplace Vietnam</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                    <span class="text-2xl mr-4">📍</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Địa chỉ</h4>
+                                        <p class="text-gray-600">Tầng 15, Tòa nhà Keangnam<br>Phạm Hùng, Nam Từ Liêm, Hà Nội</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                    <span class="text-2xl mr-4">📧</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Email hỗ trợ</h4>
+                                        <a href="mailto:support@carbonmarket.vn" class="text-primary-green hover:underline">support@carbonmarket.vn</a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                    <span class="text-2xl mr-4">📞</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Hotline</h4>
+                                        <a href="tel:+84123456789" class="text-primary-green hover:underline">+84 123 456 789</a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                    <span class="text-2xl mr-4">🕒</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Giờ làm việc</h4>
+                                        <p class="text-gray-600">Thứ 2 - Thứ 6: 8:00 - 18:00<br>Thứ 7: 8:00 - 12:00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="contact-card p-8">
+                            <h3 class="text-xl font-bold text-gray-900 mb-6 text-center">Kết nối với chúng tôi</h3>
+                            <div class="flex justify-center space-x-4">
+    <a href="#" class="social-icon bg-blue-500 text-white hover:bg-blue-600 p-3 rounded-full" title="Facebook">
+        <i class="fab fa-facebook-f"></i>
+    </a>
+    <a href="#" class="social-icon bg-blue-400 text-white hover:bg-blue-500 p-3 rounded-full" title="Twitter">
+        <i class="fab fa-twitter"></i>
+    </a>
+    <a href="#" class="social-icon bg-blue-700 text-white hover:bg-blue-800 p-3 rounded-full" title="LinkedIn">
+        <i class="fab fa-linkedin-in"></i>
+    </a>
+    <a href="#" class="social-icon bg-red-500 text-white hover:bg-red-600 p-3 rounded-full" title="YouTube">
+        <i class="fab fa-youtube"></i>
+    </a>
+</div>
+
+                        </div>
+
+                        <!-- Quick Support -->
+                        <div class="contact-card p-8">
+                            <h3 class="text-xl font-bold text-gray-900 mb-6 text-center">Hỗ trợ nhanh</h3>
+                            <div class="space-y-4">
+                                <a href="#" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                                    <span class="text-2xl mr-4">💬</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Live Chat</h4>
+                                        <p class="text-sm text-gray-600">Trò chuyện trực tiếp với chuyên viên</p>
+                                    </div>
+                                </a>
+
+                                <a href="#" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                    <span class="text-2xl mr-4">❓</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">FAQ</h4>
+                                        <p class="text-sm text-gray-600">Câu hỏi thường gặp</p>
+                                    </div>
+                                </a>
+
+                                <a href="#" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                                    <span class="text-2xl mr-4">📚</span>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Hướng dẫn</h4>
+                                        <p class="text-sm text-gray-600">Tài liệu và video hướng dẫn</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CVA Special Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="cva-section p-8 animate-on-scroll relative z-10">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-primary-green rounded-2xl flex items-center justify-center mx-auto mb-6 floating">
+                        <span class="text-white text-4xl">🏛️</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        Dành cho Tổ chức Xác minh (CVA) & Quản trị viên
+                    </h2>
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        Bạn là tổ chức kiểm toán, xác minh carbon credit hoặc quản trị viên hệ thống? 
+                        Chúng tôi có quy trình đặc biệt để cấp quyền truy cập cho bạn.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <span class="text-2xl mr-3">📋</span>
+                            Yêu cầu tài liệu
+                        </h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-3">✓</span>
+                                Giấy phép kinh doanh/Chứng nhận tổ chức
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-3">✓</span>
+                                Chứng chỉ ISO 14064 hoặc tương đương
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-3">✓</span>
+                                Danh sách chuyên viên kiểm toán
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-3">✓</span>
+                                Thư giới thiệu từ cơ quan có thẩm quyền
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <span class="text-2xl mr-3">⚡</span>
+                            Quy trình xử lý
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-primary-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <span class="text-gray-700">Gửi yêu cầu + tài liệu</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-primary-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <span class="text-gray-700">Xem xét và xác minh (24-48h)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-primary-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <span class="text-gray-700">Cấp quyền truy cập qua email</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-center">
+                            <span class="text-2xl mr-3">⚠️</span>
+                            <p class="text-yellow-800 font-medium">
+                                Vui lòng gửi yêu cầu xác minh quyền truy cập cùng tài liệu pháp lý của bạn. 
+                                Đội ngũ kỹ thuật sẽ phản hồi qua email trong vòng 24-48 giờ.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openCVAForm()" class="btn-primary px-8 py-4 text-white font-bold text-lg rounded-lg">
+                        🏛️ Gửi yêu cầu xác minh CVA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện tại Việt Nam.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên kết nhanh</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-primary-green transition-colors">Trang chủ</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-primary-green transition-colors">Giới thiệu</a></li>
+                        <li><a href="#marketplace" class="text-gray-400 hover:text-primary-green transition-colors">Thị trường</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-primary-green transition-colors">Cách hoạt động</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Hỗ trợ</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#contact" class="text-gray-400 hover:text-primary-green transition-colors">Liên hệ</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-primary-green transition-colors">FAQ</a></li>
+                        <li><a href="#guide" class="text-gray-400 hover:text-primary-green transition-colors">Hướng dẫn</a></li>
+                        <li><a href="#privacy" class="text-gray-400 hover:text-primary-green transition-colors">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>support@carbonmarket.vn</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 123 456 789</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📍</span>
+                            <span>Hà Nội, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace – All rights reserved.
+                    <span class="text-primary-green ml-2">Kết nối xe điện với tương lai xanh 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            mobileMenu.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Progress Bar Update
+        function updateProgress() {
+            const form = document.getElementById('contactForm');
+            const requiredFields = form.querySelectorAll('[required]');
+            let filledFields = 0;
+            
+            requiredFields.forEach(field => {
+                if (field.type === 'radio') {
+                    if (form.querySelector(`input[name="${field.name}"]:checked`)) {
+                        filledFields++;
+                    }
+                } else if (field.value.trim() !== '') {
+                    filledFields++;
+                }
+            });
+            
+            const progress = (filledFields / requiredFields.length) * 100;
+            document.getElementById('formProgress').style.width = progress + '%';
+        }
+
+        // Character Counter
+        function setupCharacterCounter() {
+            const textarea = document.querySelector('textarea[name="message"]');
+            const charCount = document.getElementById('charCount');
+            
+            textarea.addEventListener('input', function() {
+                const count = this.value.length;
+                charCount.textContent = count;
+                
+                if (count > 1000) {
+                    charCount.style.color = '#EF4444';
+                    this.value = this.value.substring(0, 1000);
+                } else {
+                    charCount.style.color = '#6B7280';
+                }
+            });
+        }
+
+        // File Upload Handling
+        function setupFileUpload() {
+            const fileUpload = document.getElementById('fileUpload');
+            const fileInput = document.getElementById('fileInput');
+            const fileList = document.getElementById('fileList');
+            
+            // Drag and drop
+            fileUpload.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            fileUpload.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            
+            fileUpload.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+            
+            function handleFiles(files) {
+                fileList.innerHTML = '';
+                Array.from(files).forEach(file => {
+                    if (file.size > 10 * 1024 * 1024) {
+                        showNotification('❌ Tệp ' + file.name + ' quá lớn (>10MB)', 'error');
+                        return;
+                    }
+                    
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between bg-gray-100 p-3 rounded-lg';
+                    fileItem.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-3">📄</span>
+                            <div>
+                                <div class="font-medium text-gray-900">${file.name}</div>
+                                <div class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+        }
+
+        // Toggle CVA Information
+        function toggleCVAInfo() {
+            const roleSelect = document.querySelector('select[name="role"]');
+            const cvaInfo = document.getElementById('cvaInfo');
+            
+            if (roleSelect.value === 'cva' || roleSelect.value === 'admin') {
+                cvaInfo.classList.remove('hidden');
+            } else {
+                cvaInfo.classList.add('hidden');
+            }
+        }
+
+        // Open CVA Form
+        function openCVAForm() {
+            // Pre-fill form for CVA
+            document.querySelector('select[name="role"]').value = 'cva';
+            document.querySelector('input[name="requestType"][value="verification"]').checked = true;
+            document.querySelector('textarea[name="message"]').value = 'Yêu cầu xác minh quyền truy cập cho tổ chức CVA. Tôi đã đính kèm các tài liệu pháp lý cần thiết.';
+            
+            // Scroll to form
+            document.getElementById('contactForm').scrollIntoView({ behavior: 'smooth' });
+            
+            // Update progress and show CVA info
+            updateProgress();
+            toggleCVAInfo();
+            
+            showNotification('📋 Form đã được điền sẵn cho yêu cầu CVA. Vui lòng bổ sung thông tin và đính kèm tài liệu!', 'info');
+        }
+
+        // Form Submission
+        function handleFormSubmission(event) {
+            event.preventDefault();
+            
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const submitText = document.getElementById('submitText');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Hide previous messages
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Show loading state
+            submitText.innerHTML = '<div class="loading-spinner"></div>Đang gửi yêu cầu...';
+            submitButton.disabled = true;
+            
+            // Simulate form submission
+            setTimeout(() => {
+                const isSuccess = Math.random() > 0.1; // 90% success rate
+                
+                if (isSuccess) {
+                    successMessage.style.display = 'block';
+                    event.target.reset();
+                    document.getElementById('formProgress').style.width = '0%';
+                    document.getElementById('fileList').innerHTML = '';
+                    document.getElementById('charCount').textContent = '0';
+                    
+                    showNotification('✅ Yêu cầu đã được gửi thành công!', 'success');
+                } else {
+                    errorMessage.style.display = 'block';
+                    showNotification('❌ Có lỗi xảy ra. Vui lòng thử lại!', 'error');
+                }
+                
+                // Reset button
+                submitText.innerHTML = '🚀 Gửi yêu cầu hỗ trợ';
+                submitButton.disabled = false;
+            }, 2000);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 px-6 py-4 rounded-lg text-white font-semibold shadow-lg transform translate-x-full transition-transform duration-300`;
+            
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-orange-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Intersection Observer for Animations
+        function setupScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Smooth Scrolling for Navigation Links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Close mobile menu if open
+                        const mobileMenu = document.getElementById('mobileMenu');
+                        const overlay = document.getElementById('mobileMenuOverlay');
+                        mobileMenu.classList.remove('open');
+                        overlay.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupScrollAnimations();
+            setupSmoothScrolling();
+            setupCharacterCounter();
+            setupFileUpload();
+            
+            // Close mobile menu when clicking overlay
+            document.getElementById('mobileMenuOverlay').addEventListener('click', toggleMobileMenu);
+            
+            // Add form event listener
+            document.getElementById('contactForm').addEventListener('submit', handleFormSubmission);
+            
+            // Welcome message
+            setTimeout(() => {
+                showNotification('📞 Chào mừng đến với trang Liên hệ & Hỗ trợ!', 'success');
+            }, 1000);
+            
+            // Form tip
+            setTimeout(() => {
+                showNotification('💡 Điền đầy đủ thông tin để chúng tôi hỗ trợ bạn tốt nhất!', 'info');
+            }, 3000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.remove('open');
+                overlay.classList.add('hidden');
+            }
+        });
+
+        // Add hover effects to contact cards
+        document.querySelectorAll('.contact-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Auto-save form data to localStorage
+        function autoSaveForm() {
+            const form = document.getElementById('contactForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            localStorage.setItem('contactFormData', JSON.stringify(data));
+        }
+
+        // Load saved form data
+        function loadSavedFormData() {
+            const savedData = localStorage.getItem('contactFormData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                const form = document.getElementById('contactForm');
+                
+                Object.keys(data).forEach(key => {
+                    const field = form.querySelector(`[name="${key}"]`);
+                    if (field && field.type !== 'file') {
+                        field.value = data[key];
+                    }
+                });
+                
+                updateProgress();
+                toggleCVAInfo();
+            }
+        }
+
+        // Auto-save on input
+        document.getElementById('contactForm').addEventListener('input', autoSaveForm);
+
+        // Clear saved data on successful submission
+        document.getElementById('contactForm').addEventListener('submit', function() {
+            setTimeout(() => {
+                localStorage.removeItem('contactFormData');
+            }, 3000);
+        });
+
+        // Load saved data on page load
+        window.addEventListener('load', loadSavedFormData);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de9263a4f309bc',t:'MTc2MDM1NTcyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
