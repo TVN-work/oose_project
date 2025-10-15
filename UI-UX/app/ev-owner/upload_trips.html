@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải Dữ Liệu Hành Trình - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Brand Colors */
+        :root {
+            --primary-green: #2ECC71;
+            --primary-green-hover: #27AE60;
+            --primary-blue: #3498DB;
+            --primary-blue-hover: #2980B9;
+            --active-green: #58D68D;
+            --text-primary: #333333;
+            --text-secondary: #7F8C8D;
+            --bg-light: #f8f9fa;
+            --border-light: #ddd;
+            --success-green: #27AE60;
+            --warning-yellow: #F39C12;
+            --error-red: #E74C3C;
+        }
+        
+        /* Layout */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-light);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-green), #27AE60);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .user-info h3 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--primary-green);
+            margin-top: 4px;
+        }
+        
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: #f8f9fa;
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background: var(--active-green);
+            color: white;
+            border-left-color: var(--primary-green);
+        }
+        
+        .nav-icon {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 32px;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        
+        .page-header {
+            padding: 32px 40px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-description {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            padding: 40px;
+        }
+        
+        /* Upload Section */
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        
+        .upload-box {
+            border: 2px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 48px 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafbfc;
+            position: relative;
+        }
+        
+        .upload-box:hover {
+            border-color: var(--primary-green);
+            background: #f0f9f4;
+        }
+        
+        .upload-box.dragover {
+            border-color: var(--primary-green);
+            background: #f0f9f4;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-green), #27AE60);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(46, 204, 113, 0.3);
+        }
+        
+        .upload-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .upload-description {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .upload-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: var(--primary-green);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-green-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--primary-blue);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), #27AE60);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Manual Input Section */
+        .manual-input-section {
+            padding: 32px;
+            background: #f9fafb;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .manual-input-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+        
+        .form-select {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+        
+        .form-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .add-trip-btn {
+            background: transparent;
+            color: var(--primary-green);
+            border: 2px dashed var(--primary-green);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+        
+        .add-trip-btn:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(135deg, var(--primary-green), #27AE60);
+            color: white;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+        }
+        
+        /* Trip Summary */
+        .trip-summary {
+            display: none;
+            margin-top: 32px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid;
+        }
+        
+        .summary-card.distance {
+            border-left-color: var(--primary-blue);
+            background: linear-gradient(135deg, #EBF5FB, #D6EAF8);
+        }
+        
+        .summary-card.energy {
+            border-left-color: var(--warning-yellow);
+            background: linear-gradient(135deg, #FEF9E7, #FCF3CF);
+        }
+        
+        .summary-card.co2 {
+            border-left-color: var(--primary-green);
+            background: linear-gradient(135deg, #E8F8F5, #D5F4E6);
+        }
+        
+        .summary-card.credits {
+            border-left-color: var(--success-green);
+            background: linear-gradient(135deg, #E8F6F3, #D1F2EB);
+        }
+        
+        .summary-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Calculation Details */
+        .calculation-details {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .calculation-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .calculation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .calculation-table th,
+        .calculation-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .calculation-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Verification Status */
+        .verification-status {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.pending {
+            background: #FEF9E7;
+            color: var(--warning-yellow);
+            border: 1px solid var(--warning-yellow);
+        }
+        
+        .status-badge.approved {
+            background: #E8F8F5;
+            color: var(--success-green);
+            border: 1px solid var(--success-green);
+        }
+        
+        .status-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .btn-success.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .btn-success.enabled:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+        
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .history-table td {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .status-success {
+            color: var(--success-green);
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            color: var(--warning-yellow);
+            font-weight: 600;
+        }
+        
+        .status-error {
+            color: var(--error-red);
+            font-weight: 600;
+        }
+        
+        /* Sidebar Cards */
+        .sidebar-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .info-card {
+            border-radius: 16px;
+            padding: 24px;
+            border-left: 4px solid;
+        }
+        
+        .info-card.blue {
+            background: #EBF5FB;
+            border-left-color: var(--primary-blue);
+        }
+        
+        .info-card.green {
+            background: #E8F8F5;
+            border-left-color: var(--primary-green);
+        }
+        
+        .info-card.yellow {
+            background: #FEF9E7;
+            border-left-color: #F39C12;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-content {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .code-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn-small {
+            background: white;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-small:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .conversion-example {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .conversion-step {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .conversion-arrow {
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+        
+        .warning-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .warning-list li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 14px;
+        }
+        
+        .warning-list li::before {
+            content: "•";
+            color: #F39C12;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            
+            .sidebar-cards {
+                order: -1;
+            }
+            
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .main-grid {
+                padding: 24px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .upload-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .download-buttons {
+                flex-direction: column;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-actions {
+                flex-direction: column;
+            }
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div class="user-avatar">NV</div>
+                    <div class="user-info">
+                        <h3>Nguyễn Văn A</h3>
+                        <div class="user-status">
+                            <span>✅</span>
+                            <span>Đã xác minh</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>Tổng quan</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">📤</span>
+                    <span>Tải dữ liệu hành trình</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">💰</span>
+                    <span>Ví Carbon</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🏷️</span>
+                    <span>Niêm yết tín chỉ</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🔄</span>
+                    <span>Giao dịch</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span>Báo cáo</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Page Header -->
+            <div class="content-card">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        📤 Tải dữ liệu hành trình
+                    </h1>
+                    <p class="page-description">
+                        Tải lên hoặc nhập thủ công hành trình xe điện của bạn để tính toán lượng CO₂ giảm phát thải và quy đổi thành tín chỉ carbon.
+                    </p>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="main-grid">
+                    <!-- Left Column - Upload Section -->
+                    <div class="upload-section">
+                        <!-- Drag & Drop Upload -->
+                        <div class="upload-box" id="uploadBox">
+                            <div class="upload-icon">📁</div>
+                            <h3 class="upload-title">Kéo thả file hoặc nhấn để chọn</h3>
+                            <p class="upload-description">CSV, JSON, GPX (tối đa 10MB)</p>
+                            
+                            <div class="upload-buttons">
+                                <button class="btn-primary" onclick="selectFile()">
+                                    📁 Chọn file
+                                </button>
+                                <button class="btn-secondary" onclick="simulateConnection()">
+                                    🚗 Giả lập kết nối xe
+                                </button>
+                            </div>
+                            
+                            <input type="file" id="fileInput" accept=".csv,.json,.gpx" style="display: none;">
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Đang tải lên... 0%</div>
+                        </div>
+
+                        <!-- Manual Input Section -->
+                        <div class="manual-input-section">
+                            <h3 class="manual-input-title">
+                                ✍️ Hoặc nhập dữ liệu thủ công
+                            </h3>
+                            
+                            <div id="tripForms">
+                                <div class="trip-form">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">Loại xe điện</label>
+                                            <select class="form-select">
+                                                <option>Chọn loại xe điện</option>
+                                                <option>Sedan điện</option>
+                                                <option>SUV điện</option>
+                                                <option>Hatchback điện</option>
+                                                <option>Xe máy điện</option>
+                                                <option>Crossover điện</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Biển số xe</label>
+                                            <input type="text" class="form-input" placeholder="Ví dụ: 30A-12345">
+                                            <div class="form-description">Dùng để định danh</div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Ngày hành trình</label>
+                                            <input type="date" class="form-input">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Giờ bắt đầu</label>
+                                            <input type="time" class="form-input" placeholder="08:30">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Giờ kết thúc</label>
+                                            <input type="time" class="form-input" placeholder="10:15">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Quãng đường (km)</label>
+                                            <input type="number" class="form-input" placeholder="Ví dụ: 48.5" step="0.1">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Tốc độ trung bình (km/h)</label>
+                                            <input type="number" class="form-input" placeholder="Ví dụ: 38" step="0.1">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="form-label">Năng lượng tiêu thụ (kWh)</label>
+                                            <input type="number" class="form-input" placeholder="Tùy chọn" step="0.1">
+                                            <div class="form-description">Không bắt buộc</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group full-width">
+                                        <label class="form-label">Hình ảnh minh chứng</label>
+                                        <input type="file" class="form-input" accept="image/*" multiple>
+                                        <div class="form-description">JPG/PNG ≤ 5MB</div>
+                                    </div>
+                                    
+                                    <div class="form-group full-width">
+                                        <label class="form-label">Ghi chú bổ sung</label>
+                                        <textarea class="form-input" rows="3" placeholder="Mô tả đặc biệt hành trình (ví dụ: đường đèo, kẹt xe...)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="add-trip-btn" onclick="addTripForm()">
+                                ➕ Thêm hành trình khác
+                            </button>
+                            
+                            <button class="calculate-btn" onclick="calculateCredits()">
+                                🌿 Gửi & Tính toán tín chỉ
+                            </button>
+                        </div>
+
+                        <!-- Trip Summary -->
+                        <div class="trip-summary" id="tripSummary">
+                            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+                                📊 Tóm tắt hành trình
+                            </h3>
+                            
+                            <div class="summary-grid">
+                                <div class="summary-card distance">
+                                    <div class="summary-icon">🛣️</div>
+                                    <div class="summary-value" id="totalDistance">0</div>
+                                    <div class="summary-label">Tổng quãng đường (km)</div>
+                                </div>
+                                
+                                <div class="summary-card energy">
+                                    <div class="summary-icon">⚡</div>
+                                    <div class="summary-value" id="totalEnergy">0</div>
+                                    <div class="summary-label">Năng lượng tiêu thụ (kWh)</div>
+                                </div>
+                                
+                                <div class="summary-card co2">
+                                    <div class="summary-icon">🌍</div>
+                                    <div class="summary-value" id="co2Saved">0</div>
+                                    <div class="summary-label">CO₂ giảm phát thải (kg)</div>
+                                </div>
+                                
+                                <div class="summary-card credits">
+                                    <div class="summary-icon">🌱</div>
+                                    <div class="summary-value" id="carbonCredits">0</div>
+                                    <div class="summary-label">Tín chỉ carbon quy đổi</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculation Details -->
+                            <div class="calculation-details">
+                                <h4 class="calculation-title">
+                                    🧮 Chi tiết tính toán
+                                </h4>
+                                <table class="calculation-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Thông số</th>
+                                            <th>Giá trị</th>
+                                            <th>Đơn vị</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Tổng quãng đường</td>
+                                            <td id="calcDistance">0</td>
+                                            <td>km</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Hệ số CO₂ tiết kiệm</td>
+                                            <td>0.12</td>
+                                            <td>kg/km</td>
+                                        </tr>
+                                        <tr>
+                                            <td>CO₂ giảm phát thải</td>
+                                            <td id="calcCO2">0</td>
+                                            <td>kg</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Quy đổi tín chỉ (1 tấn = 1 tín chỉ)</td>
+                                            <td id="calcCredits">0</td>
+                                            <td>tín chỉ</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Verification Status -->
+                            <div id="verificationStatus" class="bg-gray-50 rounded-xl p-6 mb-6">
+  <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+    <span class="mr-2">🏢</span>
+    Trạng thái xác minh tín chỉ carbon (CVA)
+  </h4>
+  <div class="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+    <div class="flex items-center">
+      <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+        <span class="text-yellow-600">⏳</span>
+      </div>
+      <div>
+        <p class="font-semibold text-yellow-800">Chờ phê duyệt từ CVA</p>
+        <p class="text-sm text-yellow-600">Dữ liệu hành trình đã được gửi đến Cơ quan Xác minh Carbon (CVA) để kiểm duyệt và phê duyệt tín chỉ carbon.</p>
+      </div>
+    </div>
+    <span class="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Pending</span>
+  </div>
+</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Sidebar Cards -->
+                    <div class="sidebar-cards">
+                        <!-- Guide Card -->
+                        <div class="info-card blue">
+                            <h3 class="card-title">
+                                💡 Hướng dẫn chuẩn bị dữ liệu
+                            </h3>
+                            <div class="card-content">
+                                <p>Định dạng file CSV/JSON/GPX cần có các trường bắt buộc:</p>
+                                
+                                <div class="code-example">
+timestamp,latitude,longitude,speed,distance,energy<br>
+2024-01-15 08:00:00,21.0285,105.8542,45.2,12.5,2.1<br>
+2024-01-15 08:15:00,21.0325,105.8598,52.1,8.3,1.8<br>
+2024-01-15 08:30:00,21.0365,105.8654,38.7,15.2,2.4
+                                </div>
+                                
+                                <div class="download-buttons">
+                                    <button class="btn-small" onclick="downloadSample('csv')">
+                                        📥 Tải file mẫu CSV
+                                    </button>
+                                    <button class="btn-small" onclick="downloadSample('json')">
+                                        📥 Tải file mẫu JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conversion Card -->
+                        <div class="info-card green">
+                            <h3 class="card-title">
+                                🌱 Công thức quy đổi CO₂ → tín chỉ carbon
+                            </h3>
+                            <div class="card-content">
+                                <p>Quy đổi chuẩn theo tiêu chuẩn quốc tế:</p>
+                                
+                                <div class="conversion-example">
+                                    <div class="conversion-step">
+                                        <span>1 km xe điện</span>
+                                        <span class="conversion-arrow">→</span>
+                                        <span>0.12 kg CO₂ tiết kiệm</span>
+                                    </div>
+                                    <div class="conversion-step">
+                                        <span>1 tấn CO₂</span>
+                                        <span class="conversion-arrow">→</span>
+                                        <span>1 tín chỉ carbon</span>
+                                    </div>
+                                    <hr style="margin: 12px 0; border: 1px solid #e5e7eb;">
+                                    <div class="conversion-step" style="font-weight: 600; color: var(--primary-green);">
+                                        <span>Ví dụ: 250 km</span>
+                                        <span class="conversion-arrow">→</span>
+                                        <span>0.03 tín chỉ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning Card -->
+                        <div class="info-card yellow">
+                            <h3 class="card-title">
+                                ⚠️ Lưu ý quan trọng
+                            </h3>
+                            <div class="card-content">
+                                <ul class="warning-list">
+                                    <li>Dữ liệu phải từ xe điện được xác minh</li>
+                                    <li>Chỉ chấp nhận hành trình trong 30 ngày</li>
+                                    <li>Hệ thống tự động loại bỏ dữ liệu trùng lặp</li>
+                                    <li>Thời gian xử lý: 2–5 phút</li>
+                                    <li>Cần hình ảnh minh chứng cho hành trình > 100km</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="content-card">
+                <div class="page-header">
+                    <h2 style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        📁 Lịch sử tải lên gần đây
+                    </h2>
+                </div>
+                
+                <div style="padding: 0 40px 40px;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày tải</th>
+                                <th>Loại dữ liệu</th>
+                                <th>Trạng thái</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/10/2024</td>
+                                <td>File CSV</td>
+                                <td><span class="status-success">✅ Thành công</span></td>
+                                <td>3 hành trình, 125.5 km</td>
+                            </tr>
+                            <tr>
+                                <td>14/10/2024</td>
+                                <td>Nhập tay</td>
+                                <td><span class="status-pending">⏳ Đang xử lý</span></td>
+                                <td>1 hành trình, 48.2 km</td>
+                            </tr>
+                            <tr>
+                                <td>13/10/2024</td>
+                                <td>File JSON</td>
+                                <td><span class="status-error">❌ Thất bại</span></td>
+                                <td>Dữ liệu lỗi định dạng</td>
+                            </tr>
+                            <tr>
+                                <td>12/10/2024</td>
+                                <td>File GPX</td>
+                                <td><span class="status-success">✅ Thành công</span></td>
+                                <td>2 hành trình, 89.3 km</td>
+                            </tr>
+                            <tr>
+                                <td>11/10/2024</td>
+                                <td>Nhập tay</td>
+                                <td><span class="status-success">✅ Thành công</span></td>
+                                <td>1 hành trình, 32.1 km</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tripFormCount = 1;
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // File upload functionality
+        function setupFileUpload() {
+            const uploadBox = document.getElementById('uploadBox');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadBox.addEventListener('click', () => fileInput.click());
+            uploadBox.addEventListener('dragover', handleDragOver);
+            uploadBox.addEventListener('drop', handleDrop);
+            uploadBox.addEventListener('dragleave', handleDragLeave);
+
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            // Validate file type
+            const validTypes = ['csv', 'json', 'gpx'];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            
+            if (!validTypes.includes(fileExt)) {
+                showNotification('Chỉ chấp nhận file CSV, JSON hoặc GPX!', 'error');
+                return;
+            }
+            
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('File không được vượt quá 10MB!', 'error');
+                return;
+            }
+            
+            // Show progress
+            showProgress();
+            
+            // Simulate upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        hideProgress();
+                        showNotification('File đã được tải lên thành công!', 'success');
+                        // Auto calculate with sample data
+                        setTimeout(() => {
+                            calculateCreditsFromFile();
+                        }, 1000);
+                    }, 500);
+                }
+                updateProgress(progress);
+            }, 200);
+        }
+
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = `Đang tải lên... ${Math.round(percent)}%`;
+        }
+
+        function selectFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        function simulateConnection() {
+            showNotification('🚗 Đang kết nối với xe điện...\n\nTính năng này sẽ được phát triển trong phiên bản tiếp theo!', 'info');
+        }
+
+        function addTripForm() {
+            tripFormCount++;
+            const tripForms = document.getElementById('tripForms');
+            const newForm = document.createElement('div');
+            newForm.className = 'trip-form';
+            newForm.style.marginTop = '24px';
+            newForm.style.paddingTop = '24px';
+            newForm.style.borderTop = '1px solid #e5e7eb';
+            
+            newForm.innerHTML = `
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Loại xe điện</label>
+                        <select class="form-select">
+                            <option>Chọn loại xe điện</option>
+                            <option>Sedan điện</option>
+                            <option>SUV điện</option>
+                            <option>Hatchback điện</option>
+                            <option>Xe máy điện</option>
+                            <option>Crossover điện</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Biển số xe</label>
+                        <input type="text" class="form-input" placeholder="Ví dụ: 30A-12345">
+                        <div class="form-description">Dùng để định danh</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Ngày hành trình</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Giờ bắt đầu</label>
+                        <input type="time" class="form-input" placeholder="08:30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Giờ kết thúc</label>
+                        <input type="time" class="form-input" placeholder="10:15">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Quãng đường (km)</label>
+                        <input type="number" class="form-input" placeholder="Ví dụ: 48.5" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tốc độ trung bình (km/h)</label>
+                        <input type="number" class="form-input" placeholder="Ví dụ: 38" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Năng lượng tiêu thụ (kWh)</label>
+                        <input type="number" class="form-input" placeholder="Tùy chọn" step="0.1">
+                        <div class="form-description">Không bắt buộc</div>
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Hình ảnh minh chứng</label>
+                    <input type="file" class="form-input" accept="image/*" multiple>
+                    <div class="form-description">JPG/PNG ≤ 5MB</div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Ghi chú bổ sung</label>
+                    <textarea class="form-input" rows="3" placeholder="Mô tả đặc biệt hành trình (ví dụ: đường đèo, kẹt xe...)"></textarea>
+                </div>
+                
+                <button type="button" onclick="removeTripForm(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 12px;">
+                    🗑️ Xóa hành trình này
+                </button>
+            `;
+            
+            tripForms.appendChild(newForm);
+            showNotification('Đã thêm form hành trình mới!', 'success');
+        }
+
+        function removeTripForm(button) {
+            button.closest('.trip-form').remove();
+            showNotification('Đã xóa hành trình!', 'info');
+        }
+
+        function calculateCredits() {
+            // Collect form data
+            const tripForms = document.querySelectorAll('.trip-form');
+            let totalDistance = 0;
+            let totalEnergy = 0;
+            let validTrips = 0;
+            
+            tripForms.forEach(form => {
+                const distanceInput = form.querySelector('input[placeholder*="48.5"]');
+                const energyInput = form.querySelector('input[placeholder*="Tùy chọn"]');
+                
+                const distance = parseFloat(distanceInput?.value) || 0;
+                const energy = parseFloat(energyInput?.value) || 0;
+                
+                if (distance > 0) {
+                    totalDistance += distance;
+                    totalEnergy += energy;
+                    validTrips++;
+                }
+            });
+            
+            if (validTrips === 0) {
+                showNotification('⚠️ Vui lòng nhập ít nhất một hành trình với quãng đường hợp lệ!', 'error');
+                return;
+            }
+            
+            // Calculate credits
+            const co2Saved = totalDistance * 0.12; // kg
+            const credits = co2Saved / 1000; // tons -> credits
+            
+            // Update summary
+            updateTripSummary(totalDistance, totalEnergy, co2Saved, credits);
+            
+            // Show summary section
+            document.getElementById('tripSummary').style.display = 'block';
+            
+            // Scroll to summary
+            document.getElementById('tripSummary').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            showNotification('✅ Dữ liệu đã được gửi thành công!\n\nĐang tính toán tín chỉ carbon...', 'success');
+        }
+
+        function calculateCreditsFromFile() {
+            // Simulate file processing with sample data
+            const totalDistance = 156.8;
+            const totalEnergy = 28.5;
+            const co2Saved = totalDistance * 0.12;
+            const credits = co2Saved / 1000;
+            
+            updateTripSummary(totalDistance, totalEnergy, co2Saved, credits);
+            document.getElementById('tripSummary').style.display = 'block';
+            
+            document.getElementById('tripSummary').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            showNotification('📊 Đã phân tích file thành công!\n\nTìm thấy 3 hành trình hợp lệ.', 'success');
+        }
+
+        function updateTripSummary(distance, energy, co2, credits) {
+            document.getElementById('totalDistance').textContent = distance.toFixed(1);
+            document.getElementById('totalEnergy').textContent = energy.toFixed(1);
+            document.getElementById('co2Saved').textContent = co2.toFixed(2);
+            document.getElementById('carbonCredits').textContent = credits.toFixed(4);
+            
+            // Update calculation table
+            document.getElementById('calcDistance').textContent = distance.toFixed(1);
+            document.getElementById('calcCO2').textContent = co2.toFixed(2);
+            document.getElementById('calcCredits').textContent = credits.toFixed(4);
+        }
+
+        function downloadSample(type) {
+            if (type === 'csv') {
+                const csvContent = `timestamp,latitude,longitude,speed,distance,energy
+2024-01-15 08:00:00,21.0285,105.8542,45.2,12.5,2.1
+2024-01-15 08:15:00,21.0325,105.8598,52.1,8.3,1.8
+2024-01-15 08:30:00,21.0365,105.8654,38.7,15.2,2.4
+2024-01-15 08:45:00,21.0405,105.8710,41.3,10.7,2.0`;
+                
+                downloadFile(csvContent, 'sample_trip_data.csv', 'text/csv');
+            } else if (type === 'json') {
+                const jsonContent = JSON.stringify({
+                    "trip_data": [
+                        {
+                            "timestamp": "2024-01-15 08:00:00",
+                            "latitude": 21.0285,
+                            "longitude": 105.8542,
+                            "speed": 45.2,
+                            "distance": 12.5,
+                            "energy": 2.1
+                        },
+                        {
+                            "timestamp": "2024-01-15 08:15:00",
+                            "latitude": 21.0325,
+                            "longitude": 105.8598,
+                            "speed": 52.1,
+                            "distance": 8.3,
+                            "energy": 1.8
+                        }
+                    ]
+                }, null, 2);
+                
+                downloadFile(jsonContent, 'sample_trip_data.json', 'application/json');
+            }
+            
+            showNotification(`Đã tải xuống file mẫu ${type.toUpperCase()}!`, 'success');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#2ECC71' : type === 'error' ? '#e74c3c' : '#3498DB'};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 400px;
+                font-size: 14px;
+                line-height: 1.4;
+                white-space: pre-line;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 1024 && 
+                !sidebar.contains(e.target) && 
+                !menuBtn.contains(e.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98eead3662c481bf',t:'MTc2MDUyNDU5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
