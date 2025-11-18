@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  carbon-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carbon-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:8000/api
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    networks:
+      - carbon-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend service (placeholder - bạn sẽ cần cấu hình backend service riêng)
+  backend:
+    image: node:20-alpine
+    container_name: carbon-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - carbon-network
+    # Cấu hình backend service của bạn ở đây
+
+networks:
+  carbon-network:
+    driver: bridge
+
