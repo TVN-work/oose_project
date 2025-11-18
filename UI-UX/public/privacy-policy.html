@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính sách bảo mật - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .text-green-primary { color: #22c55e; }
+        .bg-green-primary { background-color: #22c55e; }
+        .border-green-primary { border-color: #22c55e; }
+        .bg-green-light { background-color: #f0fdf4; }
+        .text-green-dark { color: #15803d; }
+        
+        /* Table of Contents Styles */
+        .toc-container {
+            position: sticky;
+            top: 2rem;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+        
+        .toc-link {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .toc-link:hover {
+            background-color: #f9fafb;
+            color: #22c55e;
+            border-left-color: #22c55e;
+        }
+        
+        .toc-link.active {
+            background-color: #f0fdf4;
+            color: #22c55e;
+            border-left-color: #22c55e;
+            font-weight: 600;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            scroll-margin-top: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .section-card:hover {
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+            border-color: #22c55e;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .section-icon {
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        /* Custom Lists */
+        .custom-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .custom-list li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        
+        .custom-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        /* Highlight Boxes */
+        .highlight-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #22c55e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #22c55e;
+            border-radius: 2px 0 0 2px;
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .warning-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #f59e0b;
+            border-radius: 2px 0 0 2px;
+        }
+        
+        /* Contact Box */
+        .contact-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Progress Indicator */
+        .progress-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+        
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 1024px) {
+            .toc-container {
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .section-card {
+                padding: 1.5rem;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .section-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Progress Indicator -->
+    <div id="progressIndicator" class="progress-indicator"></div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-primary rounded-lg flex items-center justify-center mr-4">
+                        <span class="text-white font-bold text-xl">🌱</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Carbon Credit Marketplace</h1>
+                        <p class="text-sm text-gray-600">for EV Owners</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">Trang chủ</a>
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">Thị trường</a>
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">Hướng dẫn</a>
+                    <a href="#" class="text-green-primary font-medium">Chính sách</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-green-50 to-green-100 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center bg-white rounded-full px-6 py-3 mb-6 shadow-sm">
+                <span class="text-2xl mr-3">🔒</span>
+                <span class="text-green-primary font-semibold">Chính sách bảo mật</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Bảo vệ thông tin 
+                <span class="text-green-primary">của bạn</span>
+            </h1>
+            
+            <p class="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
+                Chúng tôi cam kết bảo mật và minh bạch trong việc thu thập, sử dụng và bảo vệ 
+                thông tin cá nhân của bạn trên nền tảng Carbon Credit Marketplace.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-4 text-sm">
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm">
+                    <span class="text-green-primary font-semibold">✓</span> Mã hóa 256-bit
+                </div>
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm">
+                    <span class="text-green-primary font-semibold">✓</span> Tuân thủ GDPR
+                </div>
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm">
+                    <span class="text-green-primary font-semibold">✓</span> Minh bạch 100%
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Table of Contents -->
+                <div class="lg:col-span-1">
+                    <div class="toc-container bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                            <span class="text-2xl mr-2">📋</span>
+                            Mục lục
+                        </h3>
+                        <nav class="space-y-1">
+                            <a href="#introduction" class="toc-link active">1. Giới thiệu</a>
+                            <a href="#data-collection" class="toc-link">2. Thông tin được thu thập</a>
+                            <a href="#data-usage" class="toc-link">3. Cách sử dụng thông tin</a>
+                            <a href="#data-sharing" class="toc-link">4. Chia sẻ thông tin</a>
+                            <a href="#data-security" class="toc-link">5. Bảo mật dữ liệu</a>
+                            <a href="#user-rights" class="toc-link">6. Quyền của người dùng</a>
+                            <a href="#contact" class="toc-link">7. Liên hệ</a>
+                            <a href="#effective-date" class="toc-link">8. Hiệu lực</a>
+                        </nav>
+                        
+                        <div class="mt-8 pt-6 border-t border-gray-200">
+                            <h4 class="font-semibold text-gray-900 mb-3">Liên hệ nhanh</h4>
+                            <div class="space-y-2">
+                                <a href="mailto:privacy@carbonmarket.vn" class="block text-sm text-green-primary hover:underline">
+                                    📧 privacy@carbonmarket.vn
+                                </a>
+                                <a href="tel:+842888888888" class="block text-sm text-green-primary hover:underline">
+                                    📞 +84 28 8888 8888
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="lg:col-span-3">
+                    <!-- 1. Introduction -->
+                    <section id="introduction" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">🌱</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">1. Giới thiệu</h2>
+                                    <p class="text-gray-600 mt-2">Về nền tảng và cam kết bảo mật của chúng tôi</p>
+                                </div>
+                            </div>
+                            
+                            <div class="prose prose-lg max-w-none">
+                                <p class="text-gray-700 leading-relaxed mb-6">
+                                    Chào mừng bạn đến với <strong>Carbon Credit Marketplace for EV Owners</strong> - nền tảng giao dịch 
+                                    tín chỉ carbon đầu tiên dành riêng cho chủ sở hữu xe điện tại Việt Nam. Chúng tôi kết nối 
+                                    chủ xe điện với người mua tín chỉ carbon và các tổ chức xác minh để tạo ra một hệ sinh thái 
+                                    carbon bền vững và minh bạch.
+                                </p>
+                                
+                                <div class="highlight-box">
+                                    <h4 class="font-bold text-green-dark mb-3 flex items-center">
+                                        <span class="text-2xl mr-2">🛡️</span>
+                                        Cam kết bảo mật của chúng tôi
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li>Bảo vệ thông tin cá nhân của bạn bằng công nghệ mã hóa tiên tiến</li>
+                                        <li>Tuân thủ các tiêu chuẩn bảo mật quốc tế như GDPR và ISO 27001</li>
+                                        <li>Minh bạch trong việc thu thập, sử dụng và chia sẻ dữ liệu</li>
+                                        <li>Tôn trọng quyền riêng tư và quyền kiểm soát dữ liệu của người dùng</li>
+                                        <li>Cập nhật liên tục các biện pháp bảo mật để chống lại các mối đe dọa mới</li>
+                                    </ul>
+                                </div>
+                                
+                                <p class="text-gray-700 leading-relaxed">
+                                    Bằng việc sử dụng nền tảng của chúng tôi, bạn đồng ý với các điều khoản trong chính sách 
+                                    bảo mật này. Chúng tôi khuyến khích bạn đọc kỹ toàn bộ chính sách để hiểu rõ cách thức 
+                                    chúng tôi xử lý thông tin của bạn.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. Data Collection -->
+                    <section id="data-collection" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">📊</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">2. Thông tin được thu thập</h2>
+                                    <p class="text-gray-600 mt-2">Các loại dữ liệu chúng tôi thu thập từ người dùng</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- Account Data -->
+                                <div class="bg-green-light rounded-lg p-6">
+                                    <h4 class="font-bold text-green-dark mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">👤</span>
+                                        Dữ liệu tài khoản
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Thông tin cá nhân:</strong> Họ tên, ngày sinh, giới tính</li>
+                                        <li><strong>Thông tin liên hệ:</strong> Email, số điện thoại, địa chỉ</li>
+                                        <li><strong>Thông tin xe điện:</strong> Hãng xe, model, năm sản xuất, biển số</li>
+                                        <li><strong>Tài liệu xác minh:</strong> CMND/CCCD, giấy đăng ký xe</li>
+                                        <li><strong>Thông tin thanh toán:</strong> Số tài khoản ngân hàng, thông tin ví điện tử</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Usage Data -->
+                                <div class="bg-blue-50 rounded-lg p-6">
+                                    <h4 class="font-bold text-blue-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🚗</span>
+                                        Dữ liệu sử dụng
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Hành trình xe điện:</strong> Quãng đường di chuyển, thời gian sử dụng</li>
+                                        <li><strong>Lượng CO₂ tiết kiệm:</strong> Tính toán dựa trên quãng đường và loại xe</li>
+                                        <li><strong>Lịch sử giao dịch:</strong> Mua bán tín chỉ carbon, số lượng, giá trị</li>
+                                        <li><strong>Hoạt động trên nền tảng:</strong> Đăng nhập, tìm kiếm, tương tác</li>
+                                        <li><strong>Dữ liệu GPS:</strong> Vị trí xe (chỉ khi được cho phép)</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Technical Data -->
+                                <div class="bg-purple-50 rounded-lg p-6">
+                                    <h4 class="font-bold text-purple-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">💻</span>
+                                        Dữ liệu kỹ thuật
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Thông tin thiết bị:</strong> Loại thiết bị, hệ điều hành, trình duyệt</li>
+                                        <li><strong>Địa chỉ IP:</strong> Để xác định vị trí và bảo mật</li>
+                                        <li><strong>Cookie và tracking:</strong> Để cải thiện trải nghiệm người dùng</li>
+                                        <li><strong>Log files:</strong> Thời gian truy cập, trang đã xem, lỗi hệ thống</li>
+                                        <li><strong>Dữ liệu phân tích:</strong> Thống kê sử dụng, hiệu suất nền tảng</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="warning-box mt-6">
+                                <div class="flex items-start">
+                                    <span class="text-2xl mr-3">⚠️</span>
+                                    <div>
+                                        <h4 class="font-semibold text-orange-900 mb-2">Lưu ý quan trọng</h4>
+                                        <p class="text-orange-800">
+                                            Chúng tôi chỉ thu thập thông tin cần thiết để cung cấp dịch vụ và tuân thủ 
+                                            nguyên tắc "tối thiểu hóa dữ liệu". Bạn có thể từ chối cung cấp một số thông tin 
+                                            không bắt buộc, nhưng điều này có thể ảnh hưởng đến trải nghiệm sử dụng dịch vụ.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Data Usage -->
+                    <section id="data-usage" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">⚙️</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">3. Cách sử dụng thông tin</h2>
+                                    <p class="text-gray-600 mt-2">Mục đích và phương thức sử dụng dữ liệu của bạn</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- Primary Uses -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🎯</span>
+                                        Mục đích chính
+                                    </h4>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-green-900 mb-2">🔄 Cung cấp dịch vụ</h5>
+                                            <p class="text-green-800 text-sm">
+                                                Xử lý giao dịch carbon, quản lý tài khoản, tính toán lượng CO₂ tiết kiệm
+                                            </p>
+                                        </div>
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-blue-900 mb-2">✅ Xác minh danh tính</h5>
+                                            <p class="text-blue-800 text-sm">
+                                                Kiểm tra thông tin người dùng, phòng chống gian lận
+                                            </p>
+                                        </div>
+                                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-purple-900 mb-2">🛠️ Hỗ trợ kỹ thuật</h5>
+                                            <p class="text-purple-800 text-sm">
+                                                Giải quyết vấn đề, cải thiện dịch vụ, phát triển tính năng mới
+                                            </p>
+                                        </div>
+                                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-orange-900 mb-2">📊 Phân tích dữ liệu</h5>
+                                            <p class="text-orange-800 text-sm">
+                                                Thống kê sử dụng, tối ưu hóa hiệu suất, nghiên cứu thị trường
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Communication -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">📢</span>
+                                        Liên lạc và thông báo
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Thông báo giao dịch:</strong> Xác nhận mua bán, cập nhật trạng thái</li>
+                                        <li><strong>Báo cáo định kỳ:</strong> Tổng kết CO₂ tiết kiệm, thu nhập từ carbon</li>
+                                        <li><strong>Cảnh báo bảo mật:</strong> Đăng nhập bất thường, thay đổi mật khẩu</li>
+                                        <li><strong>Khuyến nghị AI:</strong> Gợi ý tối ưu hóa việc sử dụng xe điện (nếu đồng ý)</li>
+                                        <li><strong>Thông tin sản phẩm:</strong> Tính năng mới, cập nhật hệ thống</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-box mt-6">
+                                <div class="flex items-start">
+                                    <span class="text-2xl mr-3">🎯</span>
+                                    <div>
+                                        <h4 class="font-semibold text-green-dark mb-2">Nguyên tắc sử dụng dữ liệu</h4>
+                                        <p class="text-green-800">
+                                            Chúng tôi chỉ sử dụng dữ liệu của bạn cho các mục đích đã nêu rõ và có sự đồng ý của bạn. 
+                                            Dữ liệu sẽ không được sử dụng cho mục đích thương mại khác mà không có sự cho phép rõ ràng.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. Data Sharing -->
+                    <section id="data-sharing" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">🤝</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">4. Chia sẻ thông tin</h2>
+                                    <p class="text-gray-600 mt-2">Khi nào và với ai chúng tôi chia sẻ dữ liệu của bạn</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- Authorized Sharing -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">✅</span>
+                                        Chia sẻ được phép
+                                    </h4>
+                                    <div class="space-y-4">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-green-900 mb-2">🏛️ Tổ chức xác minh (CVA)</h5>
+                                            <p class="text-green-800 text-sm mb-2">
+                                                Chia sẻ dữ liệu cần thiết để xác minh tín chỉ carbon:
+                                            </p>
+                                            <ul class="text-green-800 text-sm space-y-1">
+                                                <li>• Thông tin xe điện và quãng đường di chuyển</li>
+                                                <li>• Lượng CO₂ tiết kiệm được tính toán</li>
+                                                <li>• Tài liệu chứng minh sở hữu xe</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-blue-900 mb-2">🏢 Cơ quan quản lý được cấp phép</h5>
+                                            <p class="text-blue-800 text-sm mb-2">
+                                                Báo cáo cho cơ quan có thẩm quyền:
+                                            </p>
+                                            <ul class="text-blue-800 text-sm space-y-1">
+                                                <li>• Bộ Tài nguyên và Môi trường</li>
+                                                <li>• Cục Thuế (cho mục đích thuế)</li>
+                                                <li>• Ngân hàng Nhà nước (giao dịch tài chính)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Prohibited Sharing -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">❌</span>
+                                        Không chia sẻ
+                                    </h4>
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <ul class="custom-list text-red-800">
+                                            <li>Không bán thông tin cá nhân cho bên thứ ba</li>
+                                            <li>Không chia sẻ với công ty quảng cáo mà không có sự đồng ý</li>
+                                            <li>Không cung cấp dữ liệu cho mục đích nghiên cứu thương mại</li>
+                                            <li>Không chia sẻ thông tin nhạy cảm (mật khẩu, thông tin thanh toán đầy đủ)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Consent Required -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">📝</span>
+                                        Chỉ chia sẻ khi có sự đồng ý hoặc yêu cầu pháp lý
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li>Chia sẻ dữ liệu cho mục đích marketing và quảng cáo</li>
+                                        <li>Tham gia chương trình nghiên cứu về xe điện và môi trường</li>
+                                        <li>Chia sẻ thống kê ẩn danh với đối tác chiến lược</li>
+                                        <li>Tuân thủ yêu cầu của cơ quan pháp luật có thẩm quyền</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. Data Security -->
+                    <section id="data-security" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">🔒</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">5. Bảo mật dữ liệu</h2>
+                                    <p class="text-gray-600 mt-2">Các biện pháp kỹ thuật và tổ chức để bảo vệ thông tin</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- Technical Security -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">💻</span>
+                                        Bảo mật kỹ thuật
+                                    </h4>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-blue-900 mb-2">🔐 Mã hóa dữ liệu</h5>
+                                            <ul class="text-blue-800 text-sm space-y-1">
+                                                <li>• SSL/TLS 256-bit cho truyền tải</li>
+                                                <li>• AES-256 cho lưu trữ</li>
+                                                <li>• Mã hóa end-to-end cho dữ liệu nhạy cảm</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-green-900 mb-2">🛡️ Bảo vệ máy chủ</h5>
+                                            <ul class="text-green-800 text-sm space-y-1">
+                                                <li>• Firewall và IDS/IPS</li>
+                                                <li>• Cập nhật bảo mật định kỳ</li>
+                                                <li>• Giám sát 24/7</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-purple-900 mb-2">💾 Sao lưu dữ liệu</h5>
+                                            <ul class="text-purple-800 text-sm space-y-1">
+                                                <li>• Sao lưu tự động hàng ngày</li>
+                                                <li>• Lưu trữ tại nhiều địa điểm</li>
+                                                <li>• Kiểm tra tính toàn vẹn định kỳ</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-orange-900 mb-2">🔑 Giới hạn quyền truy cập nội bộ</h5>
+                                            <ul class="text-orange-800 text-sm space-y-1">
+                                                <li>• Xác thực đa yếu tố (2FA)</li>
+                                                <li>• Phân quyền theo vai trò</li>
+                                                <li>• Audit log chi tiết</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Organizational Security -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">👥</span>
+                                        Bảo mật tổ chức
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Đào tạo nhân viên:</strong> Tất cả nhân viên được đào tạo về bảo mật thông tin</li>
+                                        <li><strong>Giới hạn truy cập:</strong> Chỉ nhân viên có thẩm quyền mới được truy cập dữ liệu</li>
+                                        <li><strong>Thỏa thuận bảo mật:</strong> Tất cả nhân viên ký cam kết bảo mật</li>
+                                        <li><strong>Kiểm toán định kỳ:</strong> Đánh giá bảo mật hàng quý bởi bên thứ ba</li>
+                                        <li><strong>Ứng phó sự cố:</strong> Quy trình xử lý vi phạm bảo mật 24/7</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 6. User Rights -->
+                    <section id="user-rights" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">⚖️</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">6. Quyền của người dùng</h2>
+                                    <p class="text-gray-600 mt-2">Các quyền bạn có đối với dữ liệu cá nhân của mình</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <!-- Access Rights -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                    <h4 class="font-bold text-blue-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">👁️</span>
+                                        Quyền truy cập
+                                    </h4>
+                                    <ul class="text-blue-800 space-y-2">
+                                        <li>• Yêu cầu truy cập dữ liệu cá nhân</li>
+                                        <li>• Xem tất cả thông tin chúng tôi lưu trữ</li>
+                                        <li>• Tải xuống dữ liệu của bạn</li>
+                                        <li>• Biết nguồn gốc và mục đích sử dụng</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Correction Rights -->
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                                    <h4 class="font-bold text-green-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">✏️</span>
+                                        Quyền chỉnh sửa
+                                    </h4>
+                                    <ul class="text-green-800 space-y-2">
+                                        <li>• Cập nhật thông tin không chính xác</li>
+                                        <li>• Bổ sung thông tin còn thiếu</li>
+                                        <li>• Yêu cầu xác minh lại dữ liệu</li>
+                                        <li>• Thay đổi cài đặt quyền riêng tư</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Deletion Rights -->
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                                    <h4 class="font-bold text-red-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🗑️</span>
+                                        Quyền xóa dữ liệu
+                                    </h4>
+                                    <ul class="text-red-800 space-y-2">
+                                        <li>• Xóa tài khoản và dữ liệu liên quan</li>
+                                        <li>• Xóa dữ liệu không còn cần thiết</li>
+                                        <li>• Rút lại sự đồng ý đã cấp</li>
+                                        <li>• Yêu cầu ngừng xử lý dữ liệu</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Objection Rights -->
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                                    <h4 class="font-bold text-purple-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🚫</span>
+                                        Quyền từ chối
+                                    </h4>
+                                    <ul class="text-purple-800 space-y-2">
+                                        <li>• Từ chối nhận thông báo marketing</li>
+                                        <li>• Phản đối việc sử dụng dữ liệu cho AI</li>
+                                        <li>• Không đồng ý chia sẻ với bên thứ ba</li>
+                                        <li>• Yêu cầu hạn chế xử lý dữ liệu</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-box mt-6">
+                                <div class="flex items-start">
+                                    <span class="text-2xl mr-3">📝</span>
+                                    <div>
+                                        <h4 class="font-semibold text-green-dark mb-2">Cách thực hiện quyền của bạn</h4>
+                                        <p class="text-green-800 mb-2">
+                                            Để thực hiện các quyền trên, bạn có thể:
+                                        </p>
+                                        <ul class="text-green-800 space-y-1">
+                                            <li>• Đăng nhập vào tài khoản và truy cập "Cài đặt quyền riêng tư"</li>
+                                            <li>• Gửi email đến privacy@carbonmarket.vn với yêu cầu cụ thể</li>
+                                            <li>• Gọi hotline +84 28 8888 8888 để được hỗ trợ</li>
+                                        </ul>
+                                        <p class="text-green-800 mt-2 text-sm">
+                                            <strong>Thời gian xử lý:</strong> Chúng tôi sẽ phản hồi trong vòng 30 ngày kể từ khi nhận được yêu cầu.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 7. Contact -->
+                    <section id="contact" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">📞</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">7. Liên hệ</h2>
+                                    <p class="text-gray-600 mt-2">Thông tin liên hệ về vấn đề bảo mật và quyền riêng tư</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <!-- Contact Information -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">📧</span>
+                                        Thông tin liên hệ
+                                    </h4>
+                                    <div class="space-y-4">
+                                        <div class="bg-green-light border border-green-200 rounded-lg p-4">
+                                            <h5 class="font-semibold text-green-dark mb-2">Chuyên viên bảo mật dữ liệu</h5>
+                                            <div class="text-green-800 space-y-1">
+                                                <p>📧 <a href="mailto:privacy@carbonmarket.vn" class="hover:underline">privacy@carbonmarket.vn</a></p>
+                                                <p>📞 <a href="tel:+842888888888" class="hover:underline">+84 28 8888 8888</a></p>
+                                                <p>🕒 Thứ 2 - Thứ 6: 8:00 - 18:00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Office Address -->
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🏢</span>
+                                        Địa chỉ văn phòng
+                                    </h4>
+                                    <div class="bg-gray-50 rounded-lg p-6">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <h5 class="font-semibold text-gray-900 mb-2">Trụ sở chính</h5>
+                                                <p class="text-gray-700">
+                                                    Tầng 15, Tòa nhà Keangnam<br>
+                                                    Phạm Hùng, Nam Từ Liêm<br>
+                                                    Hà Nội, Việt Nam
+                                                </p>
+                                            </div>
+                                            
+                                            <div>
+                                                <h5 class="font-semibold text-gray-900 mb-2">Chi nhánh TP.HCM</h5>
+                                                <p class="text-gray-700">
+                                                    Tầng 20, Tòa nhà Bitexco<br>
+                                                    Hai Bà Trưng, Quận 1<br>
+                                                    TP. Hồ Chí Minh, Việt Nam
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Response Time -->
+                            <div class="mt-8">
+                                <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                    <span class="text-2xl mr-3">⏱️</span>
+                                    Thời gian phản hồi cam kết
+                                </h4>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="text-center p-4 bg-red-50 rounded-lg">
+                                        <div class="text-2xl mb-2">🚨</div>
+                                        <h5 class="font-semibold text-red-900">Khẩn cấp</h5>
+                                        <p class="text-sm text-red-800">Vi phạm bảo mật: < 2 giờ</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-orange-50 rounded-lg">
+                                        <div class="text-2xl mb-2">⚡</div>
+                                        <h5 class="font-semibold text-orange-900">Ưu tiên cao</h5>
+                                        <p class="text-sm text-orange-800">Quyền dữ liệu: < 24 giờ</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div class="text-2xl mb-2">📝</div>
+                                        <h5 class="font-semibold text-gray-900">Thông thường</h5>
+                                        <p class="text-sm text-gray-600">Câu hỏi khác: < 72 giờ</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 8. Effective Date -->
+                    <section id="effective-date" class="content-section">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="text-white">📅</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900">8. Hiệu lực</h2>
+                                    <p class="text-gray-600 mt-2">Thông tin về hiệu lực và cập nhật chính sách</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="contact-box">
+                                    <div class="flex items-center justify-center mb-4">
+                                        <span class="text-3xl mr-3">📋</span>
+                                        <h4 class="font-bold text-blue-900">Hiệu lực chính sách</h4>
+                                    </div>
+                                    <p class="text-blue-800 mb-4">
+                                        Chính sách bảo mật này có hiệu lực kể từ ngày <strong>01 tháng 01 năm 2025</strong> 
+                                        và thay thế tất cả các phiên bản trước đó.
+                                    </p>
+                                    <p class="text-sm text-blue-700">
+                                        Lần cập nhật cuối: 01/01/2025 | Phiên bản: 2.0
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                        <span class="text-2xl mr-3">🔄</span>
+                                        Cập nhật chính sách
+                                    </h4>
+                                    <ul class="custom-list">
+                                        <li><strong>Thông báo trước:</strong> Chúng tôi sẽ thông báo qua email ít nhất 30 ngày trước khi có thay đổi quan trọng</li>
+                                        <li><strong>Đăng tải công khai:</strong> Phiên bản mới sẽ được đăng trên website với ngày hiệu lực rõ ràng</li>
+                                        <li><strong>Lưu trữ lịch sử:</strong> Các phiên bản cũ sẽ được lưu trữ để bạn có thể tham khảo</li>
+                                        <li><strong>Xác nhận đồng ý:</strong> Đối với thay đổi quan trọng, chúng tôi có thể yêu cầu bạn xác nhận đồng ý</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <div class="flex items-start">
+                                        <span class="text-2xl mr-3">⚠️</span>
+                                        <div>
+                                            <h4 class="font-semibold text-orange-900 mb-2">Lưu ý quan trọng</h4>
+                                            <p class="text-orange-800">
+                                                Việc tiếp tục sử dụng dịch vụ sau khi chính sách mới có hiệu lực đồng nghĩa với việc 
+                                                bạn chấp nhận các điều khoản mới. Nếu không đồng ý, bạn có thể ngừng sử dụng dịch vụ 
+                                                và yêu cầu xóa tài khoản.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-green-primary rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện tại Việt Nam.
+                    </p>
+                </div>
+
+                <!-- Legal -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Pháp lý</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#privacy" class="text-green-primary hover:text-green-400 transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="#terms" class="text-gray-400 hover:text-green-primary transition-colors">Điều khoản sử dụng</a></li>
+                        <li><a href="#cookies" class="text-gray-400 hover:text-green-primary transition-colors">Chính sách Cookie</a></li>
+                        <li><a href="#disclaimer" class="text-gray-400 hover:text-green-primary transition-colors">Tuyên bố từ chối</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Hỗ trợ</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#contact" class="text-gray-400 hover:text-green-primary transition-colors">Liên hệ</a></li>
+                        <li><a href="#faq" class="text-gray-400 hover:text-green-primary transition-colors">FAQ</a></li>
+                        <li><a href="#guide" class="text-gray-400 hover:text-green-primary transition-colors">Hướng dẫn</a></li>
+                        <li><a href="mailto:privacy@carbonmarket.vn" class="text-gray-400 hover:text-green-primary transition-colors">Báo cáo bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>privacy@carbonmarket.vn</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 28 8888 8888</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📍</span>
+                            <span>Hà Nội, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace for EV Owners. All rights reserved.
+                    <span class="text-green-primary ml-2">Bảo vệ dữ liệu, bảo vệ tương lai 🔒</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <div id="backToTop" class="back-to-top">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </div>
+
+    <script>
+        // Table of Contents Active Link
+        function updateActiveLink() {
+            const sections = document.querySelectorAll('.content-section');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            let currentSection = '';
+            
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 150 && rect.bottom >= 150) {
+                    currentSection = section.id;
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + currentSection) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Progress Indicator
+        function updateProgressIndicator() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            document.getElementById('progressIndicator').style.width = scrollPercent + '%';
+        }
+
+        // Back to Top Button
+        function updateBackToTopButton() {
+            const backToTop = document.getElementById('backToTop');
+            
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        }
+
+        // Smooth Scrolling for TOC Links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Back to Top Click Handler
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Scroll Event Listeners
+        window.addEventListener('scroll', function() {
+            updateActiveLink();
+            updateProgressIndicator();
+            updateBackToTopButton();
+        });
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSmoothScrolling();
+            updateActiveLink();
+            updateProgressIndicator();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dec3e2d1fc09bc',t:'MTc2MDM1Nzc1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

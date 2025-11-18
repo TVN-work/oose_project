@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết niêm yết - Carbon Credit Trading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 4px solid white;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mobile-sidebar {
+            transform: translateX(-100%);
+        }
+        .mobile-sidebar.open {
+            transform: translateX(0);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        .info-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #bbf7d0;
+        }
+        .price-highlight {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="mobileMenuBtn" class="bg-green-600 text-white p-2 rounded-lg shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 text-white z-40 mobile-sidebar md:translate-x-0">
+        <!-- User Profile -->
+        <div class="p-6 border-b border-green-400">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <span class="text-xl font-bold">🛒</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">Carbon Buyer</h3>
+                    <div class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-green-300 rounded-full mr-2"></span>
+                        <span class="text-sm opacity-90">Đã xác minh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <div class="px-4">
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">📊</span>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                <a href="#" class="sidebar-item active flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🛒</span>
+                    <span class="font-medium">Marketplace</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🏆</span>
+                    <span class="font-medium">Chứng nhận</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">💳</span>
+                    <span class="font-medium">Lịch sử giao dịch</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">⚙️</span>
+                    <span class="font-medium">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-400">
+            <div class="text-center">
+                <p class="text-sm opacity-75">Carbon Credit Marketplace</p>
+                <p class="text-xs opacity-60 mt-1">Buyer Portal v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="flex items-center mb-2">
+                        <button onclick="goBack()" class="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-3 text-4xl">📋</span>
+                            Chi tiết niêm yết
+                        </h1>
+                    </div>
+                    <p class="text-gray-600 ml-14">Thông tin chi tiết về tín chỉ carbon đang bán</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors">
+                        <span>💾</span>
+                        <span class="font-medium">Lưu</span>
+                    </button>
+                    <button class="flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                        <span>📤</span>
+                        <span class="font-medium">Chia sẻ</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="p-6">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Listing Details Card -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <!-- EV Owner Info -->
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mr-4">
+                                        N
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-gray-800">Nguyễn Văn A</h2>
+                                        <div class="flex items-center mt-1 space-x-4">
+                                            <div class="flex items-center text-green-600">
+                                                <span class="mr-1">✅</span>
+                                                <span class="font-medium">Đã xác minh</span>
+                                            </div>
+                                            <div class="flex items-center text-yellow-600">
+                                                <span class="mr-1">⭐</span>
+                                                <span class="font-medium">4.8/5 (127 đánh giá)</span>
+                                            </div>
+                                            <div class="flex items-center text-gray-600">
+                                                <span class="mr-1">📍</span>
+                                                <span class="font-medium">Hà Nội</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-600">Thành viên từ</div>
+                                    <div class="font-semibold text-gray-800">Tháng 3, 2024</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Credit Details -->
+                        <div class="p-6">
+                            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                <!-- Left Column -->
+                                <div class="space-y-4">
+                                    <div class="info-card p-4 rounded-xl">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Số lượng tín chỉ</span>
+                                            <span class="text-3xl font-bold text-green-600">150</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card p-4 rounded-xl">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Giá mỗi tín chỉ</span>
+                                            <span class="text-2xl font-bold price-highlight">$23.50</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="space-y-4">
+                                    <div class="info-card p-4 rounded-xl">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Loại giao dịch</span>
+                                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
+                                                💰 Giá cố định
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card p-4 rounded-xl">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Tổng giá trị</span>
+                                            <span class="text-2xl font-bold text-emerald-600">$3,525</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                    <span class="mr-2">📝</span>
+                                    Mô tả chi tiết
+                                </h3>
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <p class="text-gray-700 leading-relaxed mb-4">
+                                        Tín chỉ carbon được tạo ra từ việc sử dụng xe Tesla Model 3 cho các chuyến đi trong nội thành Hà Nội. 
+                                        Xe được bảo dưỡng định kỳ và đảm bảo hiệu suất tối ưu, góp phần giảm thiểu lượng khí thải CO2 so với xe xăng truyền thống.
+                                    </p>
+                                    
+                                    <div class="grid md:grid-cols-2 gap-4 mt-6">
+                                        <div class="bg-white p-4 rounded-lg">
+                                            <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <span class="mr-2">🚗</span>
+                                                Thông tin xe
+                                            </h4>
+                                            <ul class="text-sm text-gray-600 space-y-1">
+                                                <li>• Model: Tesla Model 3 Long Range</li>
+                                                <li>• Năm sản xuất: 2023</li>
+                                                <li>• Quãng đường: 45,000 km</li>
+                                                <li>• Hiệu suất: 15 kWh/100km</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-white p-4 rounded-lg">
+                                            <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <span class="mr-2">🌱</span>
+                                                Tác động môi trường
+                                            </h4>
+                                            <ul class="text-sm text-gray-600 space-y-1">
+                                                <li>• Giảm 3.2 tấn CO2/năm</li>
+                                                <li>• Tiết kiệm 1,200L xăng</li>
+                                                <li>• Sử dụng năng lượng tái tạo</li>
+                                                <li>• Chứng nhận VCS Standard</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Journey Timeline -->
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                    <span class="mr-2">🛣️</span>
+                                    Hành trình tạo tín chỉ
+                                </h3>
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-4">1</div>
+                                            <div>
+                                                <div class="font-semibold text-gray-800">Đăng ký xe điện</div>
+                                                <div class="text-sm text-gray-600">15/03/2024 - Đăng ký xe Tesla Model 3 vào hệ thống</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-4">2</div>
+                                            <div>
+                                                <div class="font-semibold text-gray-800">Theo dõi hành trình</div>
+                                                <div class="text-sm text-gray-600">16/03 - 15/12/2024 - Ghi nhận 45,000km di chuyển sạch</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-4">3</div>
+                                            <div>
+                                                <div class="font-semibold text-gray-800">Xác minh & chứng nhận</div>
+                                                <div class="text-sm text-gray-600">16/12/2024 - Hoàn thành xác minh và cấp 150 tín chỉ</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Similar Listings -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                <span class="mr-2">🔍</span>
+                                Niêm yết tương tự
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <!-- Similar Listing 1 -->
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-2">
+                                            T
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800 text-sm">Trần Thị B</div>
+                                            <div class="text-xs text-gray-600">TP. HCM</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Tín chỉ:</span>
+                                            <span class="font-semibold">85</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Giá:</span>
+                                            <span class="font-semibold text-green-600">$22.00</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">🔨 Đấu giá</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Similar Listing 2 -->
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-2">
+                                            L
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800 text-sm">Lê Minh C</div>
+                                            <div class="text-xs text-gray-600">Đà Nẵng</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Tín chỉ:</span>
+                                            <span class="font-semibold">200</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Giá:</span>
+                                            <span class="font-semibold text-green-600">$24.75</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">💰 Giá cố định</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Similar Listing 3 -->
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-2">
+                                            V
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800 text-sm">Vũ Minh F</div>
+                                            <div class="text-xs text-gray-600">Hà Nội</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Tín chỉ:</span>
+                                            <span class="font-semibold">180</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Giá:</span>
+                                            <span class="font-semibold text-green-600">$23.90</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">💰 Giá cố định</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Panel -->
+                <div class="space-y-6">
+                    <!-- Purchase Card -->
+                    <div class="bg-white rounded-xl card-shadow sticky top-6 fade-in">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                                <span class="mr-2">🛒</span>
+                                Mua tín chỉ carbon
+                            </h3>
+
+                            <!-- Quantity Input -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Số lượng muốn mua</label>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="decreaseQuantity()" class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center font-bold text-gray-700 transition-colors">
+                                        -
+                                    </button>
+                                    <input type="number" id="purchaseQuantity" value="1" min="1" max="150" 
+                                           class="flex-1 text-center text-lg font-bold py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                           onchange="updateTotal()">
+                                    <button onclick="increaseQuantity()" class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center font-bold text-gray-700 transition-colors">
+                                        +
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2 text-center">
+                                    Tối đa: 150 tín chỉ có sẵn
+                                </div>
+                            </div>
+
+                            <!-- Price Calculation -->
+                            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Giá mỗi tín chỉ:</span>
+                                        <span class="font-semibold text-gray-800">$23.50</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Số lượng:</span>
+                                        <span class="font-semibold text-gray-800" id="displayQuantity">1</span>
+                                    </div>
+                                    <div class="border-t border-gray-200 pt-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-bold text-gray-800">Tổng cộng:</span>
+                                            <span class="text-2xl font-bold text-green-600" id="totalPrice">$23.50</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Purchase Button -->
+                            <button onclick="handlePurchase()" class="w-full gradient-bg hover:shadow-lg text-white py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 mb-4">
+                                🛒 Mua ngay
+                            </button>
+
+                            <!-- Additional Info -->
+                            <div class="text-center text-sm text-gray-600">
+                                <p class="mb-2">✅ Thanh toán an toàn & bảo mật</p>
+                                <p class="mb-2">🏆 Chứng nhận được cấp ngay</p>
+                                <p>📧 Hóa đơn gửi qua email</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seller Info Card -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">👤</span>
+                                Thông tin người bán
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Tham gia:</span>
+                                    <span class="font-semibold">8 tháng</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Đã bán:</span>
+                                    <span class="font-semibold">2,340 tín chỉ</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Đánh giá:</span>
+                                    <span class="font-semibold text-yellow-600">⭐ 4.8/5</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Phản hồi:</span>
+                                    <span class="font-semibold text-green-600">< 2 giờ</span>
+                                </div>
+                            </div>
+                            <button class="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors">
+                                💬 Liên hệ người bán
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Trust & Safety -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">🛡️</span>
+                                An toàn & Tin cậy
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-center text-green-600">
+                                    <span class="mr-2">✅</span>
+                                    <span>Tín chỉ đã được xác minh</span>
+                                </div>
+                                <div class="flex items-center text-green-600">
+                                    <span class="mr-2">✅</span>
+                                    <span>Tuân thủ tiêu chuẩn VCS</span>
+                                </div>
+                                <div class="flex items-center text-green-600">
+                                    <span class="mr-2">✅</span>
+                                    <span>Bảo hiểm giao dịch</span>
+                                </div>
+                                <div class="flex items-center text-green-600">
+                                    <span class="mr-2">✅</span>
+                                    <span>Hỗ trợ 24/7</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Purchase Confirmation Modal -->
+    <div id="purchaseModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 fade-in">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🛒</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Xác nhận mua hàng</h3>
+                <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Người bán:</span>
+                            <span class="font-semibold">Nguyễn Văn A</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold" id="modalQuantity">1 tín chỉ</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá:</span>
+                            <span class="font-semibold">$23.50/tín chỉ</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="flex justify-between">
+                                <span class="text-lg font-bold">Tổng cộng:</span>
+                                <span class="text-lg font-bold text-green-600" id="modalTotal">$23.50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="closePurchaseModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                        Hủy
+                    </button>
+                    <button onclick="confirmPurchase()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors">
+                        Xác nhận thanh toán
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pricePerCredit = 23.50;
+        const maxCredits = 150;
+
+        // Update total price calculation
+        function updateTotal() {
+            const quantity = parseInt(document.getElementById('purchaseQuantity').value) || 1;
+            const total = quantity * pricePerCredit;
+            
+            document.getElementById('displayQuantity').textContent = quantity;
+            document.getElementById('totalPrice').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Increase quantity
+        function increaseQuantity() {
+            const input = document.getElementById('purchaseQuantity');
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue < maxCredits) {
+                input.value = currentValue + 1;
+                updateTotal();
+            }
+        }
+
+        // Decrease quantity
+        function decreaseQuantity() {
+            const input = document.getElementById('purchaseQuantity');
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+                updateTotal();
+            }
+        }
+
+        // Handle purchase
+        function handlePurchase() {
+            const quantity = parseInt(document.getElementById('purchaseQuantity').value) || 1;
+            const total = quantity * pricePerCredit;
+            
+            document.getElementById('modalQuantity').textContent = `${quantity} tín chỉ`;
+            document.getElementById('modalTotal').textContent = `$${total.toFixed(2)}`;
+            
+            document.getElementById('purchaseModal').classList.remove('hidden');
+        }
+
+        // Confirm purchase
+        function confirmPurchase() {
+            const quantity = parseInt(document.getElementById('purchaseQuantity').value) || 1;
+            const total = quantity * pricePerCredit;
+            
+            closePurchaseModal();
+            showNotification(`🎉 Đã mua thành công ${quantity} tín chỉ với giá $${total.toFixed(2)}!`, 'success');
+            
+            // Simulate purchase process
+            setTimeout(() => {
+                showNotification('💳 Đang xử lý thanh toán...', 'info');
+            }, 1000);
+            
+            setTimeout(() => {
+                showNotification('📧 Hóa đơn đã được gửi qua email', 'info');
+            }, 3000);
+            
+            setTimeout(() => {
+                showNotification('🏆 Chứng nhận tín chỉ carbon sẽ được cấp trong 24h', 'info');
+            }, 5000);
+        }
+
+        // Close purchase modal
+        function closePurchaseModal() {
+            document.getElementById('purchaseModal').classList.add('hidden');
+        }
+
+        // Go back function
+        function goBack() {
+            showNotification('🔙 Quay về Marketplace', 'info');
+            // In a real app, this would navigate back
+        }
+
+        // Mobile menu functionality
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu button
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileSidebar);
+
+            // Mobile overlay click
+            document.getElementById('mobileOverlay').addEventListener('click', closeMobileSidebar);
+
+            // Close modal on outside click
+            document.getElementById('purchaseModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePurchaseModal();
+                }
+            });
+
+            // Setup quantity input listener
+            document.getElementById('purchaseQuantity').addEventListener('input', updateTotal);
+
+            // Initialize total calculation
+            updateTotal();
+
+            // Welcome notification
+            setTimeout(() => {
+                showNotification('📋 Xem chi tiết niêm yết tín chỉ carbon', 'info');
+            }, 1000);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dc363ac1845fd8',t:'MTc2MDMzMDk4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

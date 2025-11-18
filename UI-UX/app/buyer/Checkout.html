@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán tín chỉ carbon - Carbon Credit Payment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 4px solid white;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mobile-sidebar {
+            transform: translateX(-100%);
+        }
+        .mobile-sidebar.open {
+            transform: translateX(0);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        }
+        .payment-method {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid #E5E7EB;
+        }
+        .payment-method:hover {
+            border-color: #3B82F6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+        .payment-method.selected {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%);
+        }
+        .security-badge {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
+        }
+        @keyframes successPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .payment-form {
+            transition: all 0.3s ease;
+        }
+        .form-input {
+            border: 2px solid #E5E7EB;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .processing {
+            animation: processing 1.5s infinite;
+        }
+        @keyframes processing {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="mobileMenuBtn" class="bg-green-600 text-white p-2 rounded-lg shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 text-white z-40 mobile-sidebar md:translate-x-0">
+        <!-- User Profile -->
+        <div class="p-6 border-b border-green-400">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <span class="text-xl font-bold">🛒</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">Carbon Buyer</h3>
+                    <div class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-green-300 rounded-full mr-2"></span>
+                        <span class="text-sm opacity-90">Đã xác minh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <div class="px-4">
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">📊</span>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🛒</span>
+                    <span class="font-medium">Marketplace</span>
+                </a>
+                <a href="#" class="sidebar-item active flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">💳</span>
+                    <span class="font-medium">Thanh toán</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🏆</span>
+                    <span class="font-medium">Chứng nhận</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">⚙️</span>
+                    <span class="font-medium">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-400">
+            <div class="text-center">
+                <p class="text-sm opacity-75">Carbon Credit Marketplace</p>
+                <p class="text-xs opacity-60 mt-1">Buyer Portal v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="flex items-center mb-2">
+                        <button onclick="goBack()" class="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-3 text-4xl">💳</span>
+                            Thanh toán đơn hàng
+                        </h1>
+                    </div>
+                    <p class="text-gray-600 ml-14">Hoàn tất thanh toán để sở hữu tín chỉ carbon</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="security-badge text-white px-4 py-2 rounded-full flex items-center">
+                        <span class="mr-2">🔒</span>
+                        <span class="font-medium text-sm">Bảo mật SSL</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Order Summary -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl card-shadow sticky top-6 fade-in">
+                            <div class="p-6 border-b border-gray-100">
+                                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                    <span class="mr-2">📋</span>
+                                    Tóm tắt đơn hàng
+                                </h3>
+                            </div>
+                            
+                            <div class="p-6">
+                                <!-- EV Owner Info -->
+                                <div class="mb-6">
+                                    <h4 class="font-semibold text-gray-700 mb-3">Người bán</h4>
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+                                            T
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800">Trần Thị B</div>
+                                            <div class="flex items-center text-sm text-green-600">
+                                                <span class="mr-1">✅</span>
+                                                <span>Đã xác minh</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Credit Details -->
+                                <div class="space-y-4 mb-6">
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h4 class="font-semibold text-gray-700 mb-3">Chi tiết tín chỉ</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Loại xe:</span>
+                                                <span class="font-medium">VinFast VF8</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Quãng đường:</span>
+                                                <span class="font-medium">28,500 km</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">Giảm CO2:</span>
+                                                <span class="font-medium text-green-600">2.1 tấn</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Price Breakdown -->
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Số lượng tín chỉ:</span>
+                                        <span class="font-semibold">85 tín chỉ</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Đơn giá:</span>
+                                        <span class="font-semibold">$22.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Phí giao dịch:</span>
+                                        <span class="font-semibold">$15.00</span>
+                                    </div>
+                                    <div class="border-t border-gray-200 pt-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-bold text-gray-800">Tổng cộng:</span>
+                                            <span class="text-2xl font-bold text-blue-600">$1,885</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Security Info -->
+                                <div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div class="flex items-center text-green-700">
+                                        <span class="mr-2">🛡️</span>
+                                        <div class="text-sm">
+                                            <div class="font-semibold">Giao dịch được bảo vệ</div>
+                                            <div>Mã hóa SSL 256-bit</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl card-shadow fade-in">
+                            <div class="p-6 border-b border-gray-100">
+                                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                    <span class="mr-2">💰</span>
+                                    Phương thức thanh toán
+                                </h3>
+                            </div>
+
+                            <div class="p-6">
+                                <!-- Payment Methods -->
+                                <div class="space-y-4 mb-8">
+                                    <div class="payment-method p-4 rounded-xl" onclick="selectPaymentMethod('wallet')" id="wallet-method">
+                                        <div class="flex items-center">
+                                            <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-500 rounded-lg flex items-center justify-center mr-4">
+                                                <span class="text-white text-xl">💳</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-gray-800">Ví điện tử</div>
+                                                <div class="text-sm text-gray-600">MoMo, ZaloPay, VNPay</div>
+                                            </div>
+                                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                                <div class="w-3 h-3 bg-blue-600 rounded-full hidden" id="wallet-check"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-method p-4 rounded-xl" onclick="selectPaymentMethod('bank')" id="bank-method">
+                                        <div class="flex items-center">
+                                            <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg flex items-center justify-center mr-4">
+                                                <span class="text-white text-xl">🏦</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-gray-800">Chuyển khoản ngân hàng</div>
+                                                <div class="text-sm text-gray-600">Vietcombank, Techcombank, BIDV</div>
+                                            </div>
+                                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                                <div class="w-3 h-3 bg-blue-600 rounded-full hidden" id="bank-check"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-method p-4 rounded-xl" onclick="selectPaymentMethod('card')" id="card-method">
+                                        <div class="flex items-center">
+                                            <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-lg flex items-center justify-center mr-4">
+                                                <span class="text-white text-xl">💎</span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-gray-800">Thẻ tín dụng/ghi nợ</div>
+                                                <div class="text-sm text-gray-600">Visa, Mastercard, JCB</div>
+                                            </div>
+                                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                                <div class="w-3 h-3 bg-blue-600 rounded-full hidden" id="card-check"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Form Details -->
+                                <div id="payment-details" class="hidden">
+                                    <!-- Wallet Form -->
+                                    <div id="wallet-form" class="payment-form hidden">
+                                        <h4 class="font-semibold text-gray-800 mb-4">Chọn ví điện tử</h4>
+                                        <div class="grid grid-cols-3 gap-4 mb-6">
+                                            <button class="wallet-option p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 transition-colors" onclick="selectWallet('momo')">
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 bg-pink-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold">M</div>
+                                                    <div class="text-sm font-medium">MoMo</div>
+                                                </div>
+                                            </button>
+                                            <button class="wallet-option p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 transition-colors" onclick="selectWallet('zalopay')">
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 bg-blue-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold">Z</div>
+                                                    <div class="text-sm font-medium">ZaloPay</div>
+                                                </div>
+                                            </button>
+                                            <button class="wallet-option p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 transition-colors" onclick="selectWallet('vnpay')">
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 bg-red-500 rounded-lg mx-auto mb-2 flex items-center justify-center text-white font-bold">V</div>
+                                                    <div class="text-sm font-medium">VNPay</div>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bank Form -->
+                                    <div id="bank-form" class="payment-form hidden">
+                                        <h4 class="font-semibold text-gray-800 mb-4">Thông tin chuyển khoản</h4>
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                            <div class="text-sm space-y-1">
+                                                <div><strong>Ngân hàng:</strong> Vietcombank</div>
+                                                <div><strong>Số tài khoản:</strong> 1234567890</div>
+                                                <div><strong>Chủ tài khoản:</strong> CARBON CREDIT MARKETPLACE</div>
+                                                <div><strong>Nội dung:</strong> THANHTOAN-CC-001</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            💡 Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xác nhận.
+                                        </div>
+                                    </div>
+
+                                    <!-- Card Form -->
+                                    <div id="card-form" class="payment-form hidden">
+                                        <h4 class="font-semibold text-gray-800 mb-4">Thông tin thẻ</h4>
+                                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Số thẻ</label>
+                                                <input type="text" placeholder="1234 5678 9012 3456" class="w-full px-4 py-3 form-input rounded-lg focus:outline-none" maxlength="19">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tháng/Năm</label>
+                                                <input type="text" placeholder="MM/YY" class="w-full px-4 py-3 form-input rounded-lg focus:outline-none" maxlength="5">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                                                <input type="text" placeholder="123" class="w-full px-4 py-3 form-input rounded-lg focus:outline-none" maxlength="3">
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tên chủ thẻ</label>
+                                                <input type="text" placeholder="NGUYEN VAN A" class="w-full px-4 py-3 form-input rounded-lg focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                            <div class="text-sm text-yellow-700">
+                                                ⚠️ <strong>Demo:</strong> Đây là form mẫu, không xử lý thanh toán thực tế.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div class="mt-8 mb-6">
+                                    <label class="flex items-start">
+                                        <input type="checkbox" id="terms-checkbox" class="mt-1 mr-3 w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500">
+                                        <div class="text-sm text-gray-700">
+                                            Tôi đồng ý với 
+                                            <a href="#" class="text-blue-600 hover:underline">Điều khoản sử dụng</a> 
+                                            và 
+                                            <a href="#" class="text-blue-600 hover:underline">Chính sách bảo mật</a> 
+                                            của Carbon Credit Marketplace. Tôi xác nhận rằng thông tin thanh toán là chính xác và tôi có quyền sử dụng phương thức thanh toán đã chọn.
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <!-- Payment Button -->
+                                <button onclick="processPayment()" id="payment-button" disabled class="w-full bg-gray-400 text-white py-4 rounded-xl font-bold text-lg transition-all cursor-not-allowed">
+                                    <span id="button-text">Chọn phương thức thanh toán</span>
+                                    <span id="button-loading" class="hidden">
+                                        <span class="processing">⏳ Đang xử lý...</span>
+                                    </span>
+                                </button>
+
+                                <!-- Security Notice -->
+                                <div class="mt-6 text-center">
+                                    <div class="flex items-center justify-center text-sm text-gray-600">
+                                        <span class="mr-2">🔒</span>
+                                        <span>Thông tin của bạn được mã hóa và bảo mật tuyệt đối</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 success-animation">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-4xl">🎉</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công!</h3>
+                <p class="text-gray-600 mb-6">Bạn đã sở hữu 85 tín chỉ carbon từ Trần Thị B</p>
+                
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                    <div class="space-y-2 text-left text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Mã giao dịch:</span>
+                            <span class="font-semibold text-green-600">#CC001234</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">85 tín chỉ</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tổng thanh toán:</span>
+                            <span class="font-semibold text-green-600">$1,885</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Thời gian:</span>
+                            <span class="font-semibold" id="payment-time"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="viewCertificate()" class="w-full gradient-bg hover:shadow-lg text-white py-3 rounded-lg font-semibold transition-all">
+                        🏆 Xem chứng nhận
+                    </button>
+                    <button onclick="closeSuccessModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold transition-colors">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = null;
+        let selectedWallet = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Terms checkbox listener
+            document.getElementById('terms-checkbox').addEventListener('change', updatePaymentButton);
+
+            // Mobile menu functionality
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileSidebar);
+            document.getElementById('mobileOverlay').addEventListener('click', closeMobileSidebar);
+
+            // Welcome notification
+            setTimeout(() => {
+                showNotification('💳 Hoàn tất thanh toán để sở hữu tín chỉ carbon!', 'info');
+            }, 1000);
+        });
+
+        // Select payment method
+        function selectPaymentMethod(method) {
+            // Reset all methods
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelectorAll('[id$="-check"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Select current method
+            selectedPaymentMethod = method;
+            document.getElementById(`${method}-method`).classList.add('selected');
+            document.getElementById(`${method}-check`).classList.remove('hidden');
+
+            // Show payment details
+            document.getElementById('payment-details').classList.remove('hidden');
+            
+            // Hide all forms
+            document.querySelectorAll('.payment-form').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show selected form
+            document.getElementById(`${method}-form`).classList.remove('hidden');
+
+            updatePaymentButton();
+        }
+
+        // Select wallet
+        function selectWallet(wallet) {
+            selectedWallet = wallet;
+            
+            // Reset all wallet options
+            document.querySelectorAll('.wallet-option').forEach(el => {
+                el.classList.remove('border-blue-500');
+                el.classList.add('border-gray-200');
+            });
+
+            // Highlight selected wallet
+            event.target.closest('.wallet-option').classList.remove('border-gray-200');
+            event.target.closest('.wallet-option').classList.add('border-blue-500');
+
+            updatePaymentButton();
+        }
+
+        // Update payment button state
+        function updatePaymentButton() {
+            const termsChecked = document.getElementById('terms-checkbox').checked;
+            const paymentSelected = selectedPaymentMethod !== null;
+            const walletSelected = selectedPaymentMethod !== 'wallet' || selectedWallet !== null;
+            
+            const button = document.getElementById('payment-button');
+            const buttonText = document.getElementById('button-text');
+
+            if (termsChecked && paymentSelected && walletSelected) {
+                button.disabled = false;
+                button.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                button.classList.add('gradient-bg', 'hover:shadow-lg', 'transform', 'hover:scale-105');
+                buttonText.textContent = '💳 Thanh toán ngay - $1,885';
+            } else {
+                button.disabled = true;
+                button.classList.add('bg-gray-400', 'cursor-not-allowed');
+                button.classList.remove('gradient-bg', 'hover:shadow-lg', 'transform', 'hover:scale-105');
+                
+                if (!paymentSelected) {
+                    buttonText.textContent = 'Chọn phương thức thanh toán';
+                } else if (selectedPaymentMethod === 'wallet' && !walletSelected) {
+                    buttonText.textContent = 'Chọn ví điện tử';
+                } else if (!termsChecked) {
+                    buttonText.textContent = 'Đồng ý điều khoản để tiếp tục';
+                }
+            }
+        }
+
+        // Process payment
+        function processPayment() {
+            if (!selectedPaymentMethod) {
+                showNotification('❌ Vui lòng chọn phương thức thanh toán!', 'error');
+                return;
+            }
+
+            if (selectedPaymentMethod === 'wallet' && !selectedWallet) {
+                showNotification('❌ Vui lòng chọn ví điện tử!', 'error');
+                return;
+            }
+
+            if (!document.getElementById('terms-checkbox').checked) {
+                showNotification('❌ Vui lòng đồng ý với điều khoản sử dụng!', 'error');
+                return;
+            }
+
+            // Show loading state
+            const button = document.getElementById('payment-button');
+            const buttonText = document.getElementById('button-text');
+            const buttonLoading = document.getElementById('button-loading');
+
+            button.disabled = true;
+            buttonText.classList.add('hidden');
+            buttonLoading.classList.remove('hidden');
+
+            // Simulate payment processing
+            setTimeout(() => {
+                // Hide loading state
+                buttonText.classList.remove('hidden');
+                buttonLoading.classList.add('hidden');
+                
+                // Show success modal
+                showSuccessModal();
+            }, 3000);
+
+            showNotification('⏳ Đang xử lý thanh toán...', 'info');
+        }
+
+        // Show success modal
+        function showSuccessModal() {
+            const now = new Date();
+            const timeString = now.toLocaleString('vi-VN');
+            document.getElementById('payment-time').textContent = timeString;
+            
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // Confetti effect (simple)
+            setTimeout(() => {
+                showNotification('🎉 Chúc mừng! Bạn đã sở hữu tín chỉ carbon!', 'success');
+            }, 500);
+        }
+
+        // Close success modal
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        // View certificate
+        function viewCertificate() {
+            showNotification('🏆 Đang chuyển đến trang chứng nhận...', 'success');
+            setTimeout(() => {
+                closeSuccessModal();
+            }, 1000);
+        }
+
+        // Go back function
+        function goBack() {
+            showNotification('🔙 Quay về trang đấu giá', 'info');
+        }
+
+        // Mobile menu functions
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Format card number input
+        document.addEventListener('input', function(e) {
+            if (e.target.placeholder === '1234 5678 9012 3456') {
+                let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                e.target.value = formattedValue;
+            }
+            
+            if (e.target.placeholder === 'MM/YY') {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dcdaa7651a4028',t:'MTc2MDMzNzcxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

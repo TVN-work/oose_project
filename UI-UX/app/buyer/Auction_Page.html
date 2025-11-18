@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu giá tín chỉ carbon - Carbon Credit Trading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 4px solid white;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mobile-sidebar {
+            transform: translateX(-100%);
+        }
+        .mobile-sidebar.open {
+            transform: translateX(0);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        }
+        .auction-gradient {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border: 2px solid #F59E0B;
+        }
+        .bid-history-item {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .bid-history-item:hover {
+            border-left-color: #3B82F6;
+            background-color: #F8FAFC;
+        }
+        .winning-bid {
+            border-left-color: #10B981 !important;
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+        }
+        .countdown-digit {
+            background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
+            color: white;
+            border-radius: 8px;
+            min-width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+        .bid-input {
+            border: 2px solid #E5E7EB;
+            transition: all 0.3s ease;
+        }
+        .bid-input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .auction-ended {
+            background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+            opacity: 0.8;
+        }
+        .winner-celebration {
+            animation: celebration 1s ease-in-out;
+        }
+        @keyframes celebration {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="mobileMenuBtn" class="bg-green-600 text-white p-2 rounded-lg shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 text-white z-40 mobile-sidebar md:translate-x-0">
+        <!-- User Profile -->
+        <div class="p-6 border-b border-green-400">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                    <span class="text-xl font-bold">🛒</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">Carbon Buyer</h3>
+                    <div class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-green-300 rounded-full mr-2"></span>
+                        <span class="text-sm opacity-90">Đã xác minh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6">
+            <div class="px-4">
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">📊</span>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                <a href="#" class="sidebar-item active flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🛒</span>
+                    <span class="font-medium">Marketplace</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">🏆</span>
+                    <span class="font-medium">Chứng nhận</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">💳</span>
+                    <span class="font-medium">Lịch sử giao dịch</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 rounded-lg mb-2">
+                    <span class="mr-3 text-xl">⚙️</span>
+                    <span class="font-medium">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-400">
+            <div class="text-center">
+                <p class="text-sm opacity-75">Carbon Credit Marketplace</p>
+                <p class="text-xs opacity-60 mt-1">Buyer Portal v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="flex items-center mb-2">
+                        <button onclick="goBack()" class="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-3 text-4xl">🔨</span>
+                            Tham gia đấu giá tín chỉ carbon
+                        </h1>
+                    </div>
+                    <p class="text-gray-600 ml-14">Đặt giá để sở hữu tín chỉ carbon chất lượng cao</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">Trạng thái đấu giá</p>
+                        <p class="text-sm font-medium" id="auctionStatus">🔥 Đang diễn ra</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="p-6">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Main Auction Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Auction Info Card -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <!-- EV Owner Info -->
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mr-4">
+                                        T
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-gray-800">Trần Thị B</h2>
+                                        <div class="flex items-center mt-1 space-x-4">
+                                            <div class="flex items-center text-green-600">
+                                                <span class="mr-1">✅</span>
+                                                <span class="font-medium">Đã xác minh</span>
+                                            </div>
+                                            <div class="flex items-center text-yellow-600">
+                                                <span class="mr-1">⭐</span>
+                                                <span class="font-medium">4.9/5 (89 đánh giá)</span>
+                                            </div>
+                                            <div class="flex items-center text-gray-600">
+                                                <span class="mr-1">📍</span>
+                                                <span class="font-medium">TP. Hồ Chí Minh</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="bg-orange-100 text-orange-700 px-4 py-2 rounded-full font-semibold">
+                                        🔨 Đấu giá
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auction Details -->
+                        <div class="p-6">
+                            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                <!-- Left Column -->
+                                <div class="space-y-4">
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Số lượng tín chỉ</span>
+                                            <span class="text-3xl font-bold text-blue-600">85</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Giá khởi điểm</span>
+                                            <span class="text-2xl font-bold text-green-600">$18.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="space-y-4">
+                                    <div class="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-xl border border-red-200">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Giá hiện tại</span>
+                                            <span class="text-3xl font-bold text-red-600" id="currentPrice">$22.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-xl border border-purple-200">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700 font-medium">Tổng giá trị</span>
+                                            <span class="text-2xl font-bold text-purple-600" id="totalValue">$1,870</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Countdown Timer -->
+                            <div class="countdown-box p-6 rounded-xl mb-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center">
+                                    <span class="mr-2">⏰</span>
+                                    Thời gian còn lại
+                                </h3>
+                                <div class="flex justify-center space-x-4" id="countdown">
+                                    <div class="text-center">
+                                        <div class="countdown-digit" id="hours">02</div>
+                                        <div class="text-sm font-medium text-gray-700 mt-2">Giờ</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="countdown-digit" id="minutes">45</div>
+                                        <div class="text-sm font-medium text-gray-700 mt-2">Phút</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="countdown-digit" id="seconds">30</div>
+                                        <div class="text-sm font-medium text-gray-700 mt-2">Giây</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                                    <span class="mr-2">📝</span>
+                                    Mô tả tín chỉ
+                                </h3>
+                                <p class="text-gray-700 leading-relaxed mb-4">
+                                    Tín chỉ carbon từ xe VinFast VF8, chuyến đi liên tỉnh từ TP.HCM đến Đà Lạt. 
+                                    Hành trình xanh với cảnh quan tuyệt đẹp, góp phần giảm thiểu khí thải CO2 và bảo vệ môi trường.
+                                </p>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="bg-white p-3 rounded-lg">
+                                        <div class="text-sm text-gray-600">🚗 Xe: VinFast VF8</div>
+                                        <div class="text-sm text-gray-600">📏 Quãng đường: 28,500 km</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg">
+                                        <div class="text-sm text-gray-600">🌱 Giảm: 2.1 tấn CO2</div>
+                                        <div class="text-sm text-gray-600">🏆 Chuẩn: VCS Verified</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bid History -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6 border-b border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                <span class="mr-2">📊</span>
+                                Lịch sử đặt giá
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-3" id="bidHistory">
+                                <!-- Bid history items will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bid Panel -->
+                <div class="space-y-6">
+                    <!-- Bid Form -->
+                    <div class="bg-white rounded-xl card-shadow sticky top-6 fade-in" id="bidPanel">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                                <span class="mr-2">💰</span>
+                                Đặt giá của bạn
+                            </h3>
+
+                            <!-- Current Bid Info -->
+                            <div class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-600 mb-1">Giá hiện tại cao nhất</div>
+                                    <div class="text-3xl font-bold text-blue-600" id="currentBidDisplay">$22.00</div>
+                                    <div class="text-sm text-gray-600 mt-1">bởi Buyer***789</div>
+                                </div>
+                            </div>
+
+                            <!-- Bid Input -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (USD)</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-4 text-gray-500 text-lg font-bold">$</span>
+                                    <input type="number" id="bidAmount" step="0.50" min="22.50" 
+                                           class="w-full pl-8 pr-4 py-4 text-xl font-bold bid-input rounded-xl focus:outline-none"
+                                           placeholder="22.50">
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">
+                                    Giá tối thiểu: $22.50 (cao hơn $0.50)
+                                </div>
+                            </div>
+
+                            <!-- Quick Bid Buttons -->
+                            <div class="grid grid-cols-3 gap-2 mb-6">
+                                <button onclick="quickBid(0.50)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm">
+                                    +$0.50
+                                </button>
+                                <button onclick="quickBid(1.00)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm">
+                                    +$1.00
+                                </button>
+                                <button onclick="quickBid(2.00)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm">
+                                    +$2.00
+                                </button>
+                            </div>
+
+                            <!-- Total Calculation -->
+                            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Giá mỗi tín chỉ:</span>
+                                        <span class="font-semibold text-gray-800" id="bidPriceDisplay">$22.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Số lượng:</span>
+                                        <span class="font-semibold text-gray-800">85 tín chỉ</span>
+                                    </div>
+                                    <div class="border-t border-gray-200 pt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-bold text-gray-800">Tổng nếu thắng:</span>
+                                            <span class="text-xl font-bold text-blue-600" id="totalIfWin">$1,870</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bid Button -->
+                            <button onclick="placeBid()" id="bidButton" class="w-full gradient-bg hover:shadow-lg text-white py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 mb-4">
+                                🔨 Đặt giá
+                            </button>
+
+                            <!-- Info -->
+                            <div class="text-center text-sm text-gray-600">
+                                <p class="mb-1">💡 Bạn chỉ thanh toán khi thắng đấu giá</p>
+                                <p class="mb-1">🔒 Giao dịch được bảo mật 100%</p>
+                                <p>⚡ Kết quả sẽ có ngay khi kết thúc</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auction Stats -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">📈</span>
+                                Thống kê đấu giá
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Số lượt đặt giá:</span>
+                                    <span class="font-semibold" id="totalBids">12</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Người tham gia:</span>
+                                    <span class="font-semibold">8 người</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Tăng giá trung bình:</span>
+                                    <span class="font-semibold text-green-600">$0.75</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Thời gian bắt đầu:</span>
+                                    <span class="font-semibold">18/12 14:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Your Bids -->
+                    <div class="bg-white rounded-xl card-shadow fade-in">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">👤</span>
+                                Giá của bạn
+                            </h3>
+                            <div id="userBids" class="space-y-2">
+                                <div class="text-sm text-gray-500 text-center py-4">
+                                    Bạn chưa đặt giá nào
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Auction End Modal -->
+    <div id="auctionEndModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 fade-in">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" id="modalIcon">
+                    <span class="text-4xl" id="modalEmoji">🎉</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2" id="modalTitle">Chúc mừng!</h3>
+                <p class="text-gray-600 mb-6" id="modalMessage">Bạn đã thắng cuộc đấu giá!</p>
+                <div class="bg-gray-50 rounded-lg p-4 mb-6" id="modalDetails">
+                    <!-- Details will be filled by JavaScript -->
+                </div>
+                <button onclick="closeAuctionModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auction data
+        let auctionData = {
+            currentPrice: 22.00,
+            totalCredits: 85,
+            endTime: new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000 + 30 * 1000), // 2h 45m 30s from now
+            isEnded: false,
+            winner: null,
+            userBids: [],
+            totalBids: 12
+        };
+
+        // Sample bid history
+        let bidHistory = [
+            { bidder: "Buyer***789", amount: 22.00, time: "16:42:15", isWinning: true },
+            { bidder: "Green***456", amount: 21.50, time: "16:41:32", isWinning: false },
+            { bidder: "Eco***123", amount: 21.00, time: "16:40:18", isWinning: false },
+            { bidder: "Carbon***999", amount: 20.50, time: "16:38:45", isWinning: false },
+            { bidder: "Clean***777", amount: 20.00, time: "16:37:22", isWinning: false },
+            { bidder: "Buyer***789", amount: 19.50, time: "16:35:10", isWinning: false },
+            { bidder: "Green***456", amount: 19.00, time: "16:33:55", isWinning: false },
+            { bidder: "Eco***123", amount: 18.50, time: "16:32:30", isWinning: false }
+        ];
+
+        // Initialize auction
+        function initializeAuction() {
+            updateDisplay();
+            renderBidHistory();
+            startCountdown();
+            
+            // Setup bid input listener
+            document.getElementById('bidAmount').addEventListener('input', updateBidCalculation);
+        }
+
+        // Update all displays
+        function updateDisplay() {
+            document.getElementById('currentPrice').textContent = `$${auctionData.currentPrice.toFixed(2)}`;
+            document.getElementById('totalValue').textContent = `$${(auctionData.currentPrice * auctionData.totalCredits).toLocaleString()}`;
+            document.getElementById('currentBidDisplay').textContent = `$${auctionData.currentPrice.toFixed(2)}`;
+            document.getElementById('bidPriceDisplay').textContent = `$${auctionData.currentPrice.toFixed(2)}`;
+            document.getElementById('totalIfWin').textContent = `$${(auctionData.currentPrice * auctionData.totalCredits).toLocaleString()}`;
+            document.getElementById('totalBids').textContent = auctionData.totalBids;
+            
+            // Update minimum bid
+            const minBid = auctionData.currentPrice + 0.50;
+            document.getElementById('bidAmount').min = minBid;
+            document.getElementById('bidAmount').placeholder = minBid.toFixed(2);
+        }
+
+        // Start countdown timer
+        function startCountdown() {
+            const timer = setInterval(() => {
+                if (auctionData.isEnded) {
+                    clearInterval(timer);
+                    return;
+                }
+
+                const now = new Date().getTime();
+                const distance = auctionData.endTime.getTime() - now;
+
+                if (distance < 0) {
+                    clearInterval(timer);
+                    endAuction();
+                    return;
+                }
+
+                const hours = Math.floor(distance / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+
+                // Add urgency effects when time is running out
+                if (distance < 5 * 60 * 1000) { // Less than 5 minutes
+                    document.getElementById('countdown').classList.add('pulse-animation');
+                }
+            }, 1000);
+        }
+
+        // Render bid history
+        function renderBidHistory() {
+            const container = document.getElementById('bidHistory');
+            container.innerHTML = bidHistory.map((bid, index) => `
+                <div class="bid-history-item ${bid.isWinning ? 'winning-bid' : ''} p-4 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-800">${bid.bidder}</div>
+                                <div class="text-sm text-gray-600">${bid.time}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold ${bid.isWinning ? 'text-green-600' : 'text-gray-800'}">
+                                $${bid.amount.toFixed(2)}
+                            </div>
+                            ${bid.isWinning ? '<div class="text-sm text-green-600 font-medium">🏆 Đang dẫn đầu</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Quick bid function
+        function quickBid(amount) {
+            const newBid = auctionData.currentPrice + amount;
+            document.getElementById('bidAmount').value = newBid.toFixed(2);
+            updateBidCalculation();
+        }
+
+        // Update bid calculation
+        function updateBidCalculation() {
+            const bidAmount = parseFloat(document.getElementById('bidAmount').value) || auctionData.currentPrice;
+            const total = bidAmount * auctionData.totalCredits;
+            
+            document.getElementById('totalIfWin').textContent = `$${total.toLocaleString()}`;
+        }
+
+        // Place bid
+        function placeBid() {
+            if (auctionData.isEnded) {
+                showNotification('❌ Đấu giá đã kết thúc!', 'error');
+                return;
+            }
+
+            const bidAmount = parseFloat(document.getElementById('bidAmount').value);
+            const minBid = auctionData.currentPrice + 0.50;
+
+            if (!bidAmount || bidAmount < minBid) {
+                showNotification(`❌ Giá đặt phải ít nhất $${minBid.toFixed(2)}`, 'error');
+                return;
+            }
+
+            // Update auction data
+            auctionData.currentPrice = bidAmount;
+            auctionData.totalBids++;
+
+            // Add to bid history
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', { hour12: false });
+            
+            // Mark previous winning bid as not winning
+            bidHistory.forEach(bid => bid.isWinning = false);
+            
+            // Add new bid
+            bidHistory.unshift({
+                bidder: "Bạn",
+                amount: bidAmount,
+                time: timeString,
+                isWinning: true
+            });
+
+            // Add to user bids
+            auctionData.userBids.push({
+                amount: bidAmount,
+                time: timeString,
+                isWinning: true
+            });
+
+            // Update displays
+            updateDisplay();
+            renderBidHistory();
+            renderUserBids();
+            
+            // Clear input
+            document.getElementById('bidAmount').value = '';
+
+            // Show success notification
+            showNotification(`🎉 Đã đặt giá thành công $${bidAmount.toFixed(2)}!`, 'success');
+
+            // Simulate other bidders (random chance)
+            if (Math.random() < 0.3) {
+                setTimeout(() => {
+                    simulateOtherBid();
+                }, 2000 + Math.random() * 8000);
+            }
+        }
+
+        // Simulate other bidders
+        function simulateOtherBid() {
+            if (auctionData.isEnded) return;
+
+            const bidders = ["Green***456", "Eco***123", "Carbon***999", "Clean***777"];
+            const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
+            const newBid = auctionData.currentPrice + 0.50 + (Math.random() * 2);
+
+            auctionData.currentPrice = newBid;
+            auctionData.totalBids++;
+
+            // Mark previous bids as not winning
+            bidHistory.forEach(bid => bid.isWinning = false);
+            auctionData.userBids.forEach(bid => bid.isWinning = false);
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', { hour12: false });
+
+            bidHistory.unshift({
+                bidder: randomBidder,
+                amount: newBid,
+                time: timeString,
+                isWinning: true
+            });
+
+            updateDisplay();
+            renderBidHistory();
+            renderUserBids();
+
+            showNotification(`🔔 ${randomBidder} đã đặt giá $${newBid.toFixed(2)}`, 'info');
+        }
+
+        // Render user bids
+        function renderUserBids() {
+            const container = document.getElementById('userBids');
+            
+            if (auctionData.userBids.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Bạn chưa đặt giá nào</div>';
+                return;
+            }
+
+            container.innerHTML = auctionData.userBids.map((bid, index) => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-semibold text-gray-800">$${bid.amount.toFixed(2)}</div>
+                        <div class="text-sm text-gray-600">${bid.time}</div>
+                    </div>
+                    <div class="text-sm font-medium ${bid.isWinning ? 'text-green-600' : 'text-gray-500'}">
+                        ${bid.isWinning ? '🏆 Đang dẫn đầu' : '📉 Bị vượt qua'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // End auction
+        function endAuction() {
+            auctionData.isEnded = true;
+            
+            // Update status
+            document.getElementById('auctionStatus').innerHTML = '🔴 Đã kết thúc';
+            
+            // Disable bid panel
+            const bidPanel = document.getElementById('bidPanel');
+            bidPanel.classList.add('auction-ended');
+            document.getElementById('bidButton').disabled = true;
+            document.getElementById('bidButton').textContent = '⏰ Đấu giá đã kết thúc';
+            document.getElementById('bidAmount').disabled = true;
+
+            // Update countdown display
+            document.getElementById('hours').textContent = '00';
+            document.getElementById('minutes').textContent = '00';
+            document.getElementById('seconds').textContent = '00';
+
+            // Determine winner
+            const userIsWinner = auctionData.userBids.some(bid => bid.isWinning);
+            
+            setTimeout(() => {
+                showAuctionEndModal(userIsWinner);
+            }, 1000);
+        }
+
+        // Show auction end modal
+        function showAuctionEndModal(userWon) {
+            const modal = document.getElementById('auctionEndModal');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalEmoji = document.getElementById('modalEmoji');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalDetails = document.getElementById('modalDetails');
+
+            if (userWon) {
+                modalIcon.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 winner-celebration';
+                modalEmoji.textContent = '🎉';
+                modalTitle.textContent = 'Chúc mừng! Bạn đã thắng cuộc!';
+                modalMessage.textContent = 'Bạn đã thắng đấu giá tín chỉ carbon này!';
+                modalDetails.innerHTML = `
+                    <div class="space-y-2 text-left">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá thắng:</span>
+                            <span class="font-bold text-green-600">$${auctionData.currentPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số lượng:</span>
+                            <span class="font-semibold">85 tín chỉ</span>
+                        </div>
+                        <div class="flex justify-between border-t pt-2">
+                            <span class="text-lg font-bold">Tổng thanh toán:</span>
+                            <span class="text-lg font-bold text-green-600">$${(auctionData.currentPrice * auctionData.totalCredits).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalIcon.className = 'w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4';
+                modalEmoji.textContent = '😔';
+                modalTitle.textContent = 'Đấu giá đã kết thúc';
+                modalMessage.textContent = 'Rất tiếc, bạn không thắng cuộc đấu giá này.';
+                modalDetails.innerHTML = `
+                    <div class="space-y-2 text-left">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giá thắng cuộc:</span>
+                            <span class="font-bold">$${auctionData.currentPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Người thắng:</span>
+                            <span class="font-semibold">${bidHistory[0].bidder}</span>
+                        </div>
+                        <div class="text-center mt-4 text-sm text-gray-600">
+                            Đừng lo! Còn nhiều đấu giá khác đang chờ bạn.
+                        </div>
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        // Close auction modal
+        function closeAuctionModal() {
+            document.getElementById('auctionEndModal').classList.add('hidden');
+        }
+
+        // Go back function
+        function goBack() {
+            showNotification('🔙 Quay về Marketplace', 'info');
+        }
+
+        // Mobile menu functionality
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize auction
+            initializeAuction();
+
+            // Mobile menu button
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileSidebar);
+
+            // Mobile overlay click
+            document.getElementById('mobileOverlay').addEventListener('click', closeMobileSidebar);
+
+            // Close modal on outside click
+            document.getElementById('auctionEndModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAuctionModal();
+                }
+            });
+
+            // Welcome notification
+            setTimeout(() => {
+                showNotification('🔨 Chào mừng đến với phiên đấu giá!', 'info');
+            }, 1000);
+
+            // Demo: End auction after 10 seconds for testing
+            // setTimeout(() => {
+            //     endAuction();
+            // }, 10000);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dccfee50e73e56',t:'MTc2MDMzNzI3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

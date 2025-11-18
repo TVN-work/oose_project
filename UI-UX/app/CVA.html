@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVA Dashboard - Carbon Verification Authority</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            background: #2C3E50;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .sidebar-item.active {
+            background: #34495E;
+            border-right: 4px solid #3498DB;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Card Styles */
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card-shadow:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Mobile Responsive */
+        .mobile-sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .mobile-sidebar.open {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+        }
+        
+        /* User Profile Section */
+        .user-profile {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-avatar {
+            background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="mobileMenuBtn" class="bg-gray-700 text-white p-3 rounded-xl shadow-lg hover:bg-gray-800 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-72 text-white z-40 mobile-sidebar md:translate-x-0 custom-scrollbar overflow-y-auto">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-gray-600">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm">
+                    <span class="text-2xl">🏛️</span>
+                </div>
+                <div>
+                    <h2 class="font-bold text-xl">CVA Dashboard</h2>
+                    <p class="text-sm opacity-80">Verification Authority</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-6 border-b border-gray-600">
+            <div class="user-profile rounded-xl p-4">
+                <div class="flex items-center">
+                    <div class="user-avatar w-14 h-14 rounded-full flex items-center justify-center mr-4">
+                        <span class="text-2xl">👤</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg">CVA Admin</h3>
+                        <div class="flex items-center mt-1">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2 notification-badge"></span>
+                            <span class="text-sm opacity-90">Đã xác minh</span>
+                        </div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">Cấp độ A+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6 px-4">
+            <div class="space-y-2">
+                <a href="#" onclick="navigateTo('overview')" class="sidebar-item active flex items-center px-4 py-3 rounded-xl" data-page="overview">
+                    <span class="mr-4 text-xl">📊</span>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                
+                <a href="#" onclick="navigateTo('verification-requests')" class="sidebar-item flex items-center px-4 py-3 rounded-xl" data-page="verification-requests">
+                    <span class="mr-4 text-xl">📋</span>
+                    <span class="font-medium">Yêu cầu xác minh</span>
+                    <span class="ml-auto w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">8</span>
+                </a>
+                
+                <a href="#" onclick="navigateTo('issue-credits')" class="sidebar-item flex items-center px-4 py-3 rounded-xl" data-page="issue-credits">
+                    <span class="mr-4 text-xl">🏷️</span>
+                    <span class="font-medium">Phát hành tín chỉ</span>
+                    <span class="ml-auto w-5 h-5 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                </a>
+                
+                <a href="#" onclick="navigateTo('reports')" class="sidebar-item flex items-center px-4 py-3 rounded-xl" data-page="reports">
+                    <span class="mr-4 text-xl">📈</span>
+                    <span class="font-medium">Báo cáo</span>
+                </a>
+                
+                <a href="#" onclick="navigateTo('settings')" class="sidebar-item flex items-center px-4 py-3 rounded-xl" data-page="settings">
+                    <span class="mr-4 text-xl">⚙️</span>
+                    <span class="font-medium">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Quick Stats -->
+        <div class="px-4 mt-8">
+            <div class="bg-white bg-opacity-10 rounded-xl p-4 backdrop-filter backdrop-blur-sm">
+                <h4 class="font-semibold mb-3 text-center">Thống kê nhanh</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Chờ duyệt:</span>
+                        <span class="font-bold">8</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Đã xác minh:</span>
+                        <span class="font-bold">247</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Tỷ lệ duyệt:</span>
+                        <span class="font-bold">92.5%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 mb-6 px-4">
+            <div class="border-t border-gray-600 pt-4">
+                <div class="text-center">
+                    <p class="text-sm opacity-75">Carbon Verification Authority</p>
+                    <p class="text-xs opacity-60 mt-1">CVA Dashboard v2.0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="md:ml-72 min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div class="slide-in">
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                        <span class="mr-3">🏛️</span>
+                        <span id="pageTitle">Bảng điều khiển CVA</span>
+                    </h1>
+                    <p class="text-gray-600 mt-2" id="pageSubtitle">Quản lý xác minh và phát hành tín chỉ carbon</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button class="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h8v-2H4v2zM4 11h10V9H4v2z"></path>
+                            </svg>
+                        </button>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full notification-badge"></span>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">Hôm nay</p>
+                            <p class="text-lg font-semibold text-gray-800" id="currentDate"></p>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">CVA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main class="p-6" id="mainContent">
+            <!-- Default Overview Content -->
+            <div class="max-w-7xl mx-auto fade-in" id="overviewContent">
+                <!-- Welcome Card -->
+                <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8 mb-8">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span class="text-4xl">🏛️</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Chào mừng đến với CVA Dashboard</h2>
+                        <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+                            Hệ thống quản lý xác minh và phát hành tín chỉ carbon. 
+                            Xem xét yêu cầu, xác minh dữ liệu và cấp phát tín chỉ carbon cho các chủ xe điện!
+                        </p>
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="navigateTo('verification-requests')" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold">
+                                📋 Xem yêu cầu xác minh
+                            </button>
+                            <button onclick="navigateTo('issue-credits')" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors font-semibold">
+                                🏷️ Phát hành tín chỉ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-6 text-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">⏳</span>
+                        </div>
+                        <p class="text-2xl font-bold text-yellow-600">8</p>
+                        <p class="text-sm text-gray-600">Số yêu cầu đang chờ duyệt</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-6 text-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">✅</span>
+                        </div>
+                        <p class="text-2xl font-bold text-green-600">247</p>
+                        <p class="text-sm text-gray-600">Tổng tín chỉ đã xác minh</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-6 text-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl">📊</span>
+                        </div>
+                        <p class="text-2xl font-bold text-blue-600">92.5%</p>
+                        <p class="text-sm text-gray-600">Tỷ lệ chấp thuận (%)</p>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Pie Chart for Status Distribution -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="mr-3">🥧</span>
+                            Phân bố yêu cầu theo trạng thái
+                        </h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <!-- Pie Chart -->
+                            <div class="relative w-48 h-48">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <!-- Approved (70%) -->
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="40"
+                                        fill="transparent"
+                                        stroke="#10B981"
+                                        stroke-width="20"
+                                        stroke-dasharray="175 250"
+                                        stroke-dashoffset="0"
+                                    />
+                                    <!-- Pending (20%) -->
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="40"
+                                        fill="transparent"
+                                        stroke="#F59E0B"
+                                        stroke-width="20"
+                                        stroke-dasharray="50 250"
+                                        stroke-dashoffset="-175"
+                                    />
+                                    <!-- Rejected (10%) -->
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="40"
+                                        fill="transparent"
+                                        stroke="#EF4444"
+                                        stroke-width="20"
+                                        stroke-dasharray="25 250"
+                                        stroke-dashoffset="-225"
+                                    />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <p class="text-2xl font-bold text-gray-800">267</p>
+                                        <p class="text-xs text-gray-600">Tổng yêu cầu</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                                    <span class="text-sm text-gray-600">Đã duyệt</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">187 (70%)</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
+                                    <span class="text-sm text-gray-600">Chờ duyệt</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">53 (20%)</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-red-500 rounded mr-2"></div>
+                                    <span class="text-sm text-gray-600">Từ chối</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">27 (10%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart for Monthly Credits -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="mr-3">📊</span>
+                            Tín chỉ phát hành mỗi tháng
+                        </h3>
+                        <div class="h-64 relative">
+                            <!-- Chart Container -->
+                            <div class="absolute inset-0 flex items-end justify-between px-4 pb-8">
+                                <!-- Chart Bars -->
+                                <div class="flex items-end space-x-3 h-full w-full">
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 45%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T1</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 60%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T2</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 75%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T3</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 55%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T4</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 85%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T5</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 90%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T6</span>
+                                    </div>
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div class="bg-green-500 rounded-t-lg w-full transition-all duration-500 hover:bg-green-600" style="height: 100%"></div>
+                                        <span class="text-xs text-gray-600 mt-2">T7</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Y-axis labels -->
+                            <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
+                                <span>50</span>
+                                <span>40</span>
+                                <span>30</span>
+                                <span>20</span>
+                                <span>10</span>
+                                <span>0</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-center space-x-6 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                                <span class="text-gray-600">Tín chỉ đã cấp</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                                <span class="text-gray-600">Tháng hiện tại</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Requests Table -->
+                <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-3">📋</span>
+                            Yêu cầu gần đây
+                        </h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã hồ sơ</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">EV Owner</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Ngày gửi</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR001</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-green-600 text-sm">🚗</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Nguyễn Văn An</p>
+                                                <p class="text-xs text-gray-500">Tesla Model 3</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">15/12/2024</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="viewDetail('VR001')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR002</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-blue-600 text-sm">🚗</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Trần Thị Bình</p>
+                                                <p class="text-xs text-gray-500">VinFast VF8</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">14/12/2024</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Đã duyệt</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="viewDetail('VR002')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR003</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-purple-600 text-sm">🚗</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Lê Minh Cường</p>
+                                                <p class="text-xs text-gray-500">BMW iX3</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">13/12/2024</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">Đang xử lý</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="viewDetail('VR003')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR004</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-orange-600 text-sm">🚗</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Phạm Thị Dung</p>
+                                                <p class="text-xs text-gray-500">Hyundai Kona EV</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">12/12/2024</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">Từ chối</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="viewDetail('VR004')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR005</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-teal-600 text-sm">🚗</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Hoàng Văn Em</p>
+                                                <p class="text-xs text-gray-500">Audi e-tron</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600">10/12/2024</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="viewDetail('VR005')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <button onclick="navigateTo('verification-requests')" class="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold">
+                            📄 Xem tất cả yêu cầu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg p-6 z-50 hidden">
+        <div class="flex items-center">
+            <div class="loading-spinner mr-3"></div>
+            <span class="text-gray-700 font-medium">Đang tải...</span>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 'overview';
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            updateCurrentDate();
+            
+            // Mobile menu functionality
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileSidebar);
+            document.getElementById('mobileOverlay').addEventListener('click', closeMobileSidebar);
+            
+            // Welcome notification
+            setTimeout(() => {
+                showNotification('🏛️ Chào mừng đến với CVA Dashboard!', 'success');
+            }, 1000);
+        });
+
+        // Update current date
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', options);
+        }
+
+        // Navigation function
+        function navigateTo(page) {
+            if (currentPage === page) return;
+            
+            showLoading();
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            const activeItem = document.querySelector(`[data-page="${page}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+            
+            // Update page title and content
+            updatePageContent(page);
+            currentPage = page;
+            
+            // Close mobile sidebar if open
+            closeMobileSidebar();
+            
+            // Hide loading after animation
+            setTimeout(() => {
+                hideLoading();
+                showNotification(`📄 Đã chuyển đến ${getPageName(page)}`, 'success');
+            }, 800);
+        }
+
+        // Update page content based on selected page
+        function updatePageContent(page) {
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            const mainContent = document.getElementById('mainContent');
+            
+            // Update header
+            const pageInfo = getPageInfo(page);
+            pageTitle.textContent = pageInfo.title;
+            pageSubtitle.textContent = pageInfo.subtitle;
+            
+            // Update content with slide animation
+            mainContent.innerHTML = `
+                <div class="max-w-7xl mx-auto slide-in">
+                    ${getPageContent(page)}
+                </div>
+            `;
+        }
+
+        // Get page information
+        function getPageInfo(page) {
+            const pageInfoMap = {
+                'overview': {
+                    title: '🏛️ Bảng điều khiển CVA',
+                    subtitle: 'Quản lý xác minh và phát hành tín chỉ carbon'
+                },
+                'verification-requests': {
+                    title: '📋 Danh sách yêu cầu xác minh',
+                    subtitle: 'Xem xét và phê duyệt các yêu cầu xác minh từ EV Owner'
+                },
+                'issue-credits': {
+                    title: '🏷️ Phát hành tín chỉ carbon',
+                    subtitle: 'Cấp phát tín chỉ carbon cho các hồ sơ đã được duyệt'
+                },
+                'reports': {
+                    title: '📈 Báo cáo hoạt động xác minh carbon',
+                    subtitle: 'Thống kê và phân tích hoạt động xác minh'
+                },
+                'settings': {
+                    title: '⚙️ Cài đặt tài khoản',
+                    subtitle: 'Quản lý thông tin tổ chức và cấu hình hệ thống'
+                }
+            };
+            
+            return pageInfoMap[page] || pageInfoMap['overview'];
+        }
+
+        // Get page name for notifications
+        function getPageName(page) {
+            const names = {
+                'overview': 'Tổng quan',
+                'verification-requests': 'Yêu cầu xác minh',
+                'issue-credits': 'Phát hành tín chỉ',
+                'reports': 'Báo cáo',
+                'settings': 'Cài đặt'
+            };
+            return names[page] || page;
+        }
+
+        // Get page content
+        function getPageContent(page) {
+            switch(page) {
+                case 'verification-requests':
+                    return getVerificationRequestsContent();
+                case 'issue-credits':
+                    return getIssueCreditsContent();
+                case 'reports':
+                    return getReportsContent();
+                case 'settings':
+                    return getSettingsContent();
+                default:
+                    return getOverviewContent();
+            }
+        }
+
+        // Overview content (already defined above)
+        function getOverviewContent() {
+            return document.getElementById('overviewContent').innerHTML;
+        }
+
+        // Verification Requests content
+        function getVerificationRequestsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Filter Section -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-6">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <h3 class="text-2xl font-bold text-gray-800">Bộ lọc yêu cầu</h3>
+                            
+                            <div class="flex flex-wrap items-center gap-4">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="pending">Chờ duyệt</option>
+                                    <option value="approved">Đã duyệt</option>
+                                    <option value="rejected">Từ chối</option>
+                                </select>
+                                
+                                <input type="date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                
+                                <button onclick="applyFilters()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    🔍 Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requests Table -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã hồ sơ</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">EV Owner</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Ngày gửi</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Số tín chỉ dự kiến</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR001</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-green-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Nguyễn Văn An</p>
+                                                    <p class="text-xs text-gray-500">Tesla Model 3</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">15/12/2024</td>
+                                        <td class="py-4 px-4 font-bold text-blue-600">0.025</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex space-x-2">
+                                                <button onclick="viewDetail('VR001')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                                    👁️ Xem chi tiết
+                                                </button>
+                                                <button onclick="approveRequest('VR001')" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                                    ✅ Duyệt
+                                                </button>
+                                                <button onclick="rejectRequest('VR001')" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                                                    ❌ Từ chối
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR006</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-blue-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Lê Văn Cường</p>
+                                                    <p class="text-xs text-gray-500">BMW iX3</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">14/12/2024</td>
+                                        <td class="py-4 px-4 font-bold text-blue-600">0.018</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex space-x-2">
+                                                <button onclick="viewDetail('VR006')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                                    👁️ Xem chi tiết
+                                                </button>
+                                                <button onclick="approveRequest('VR006')" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                                    ✅ Duyệt
+                                                </button>
+                                                <button onclick="rejectRequest('VR006')" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                                                    ❌ Từ chối
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#VR007</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-purple-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Phạm Thị Mai</p>
+                                                    <p class="text-xs text-gray-500">VinFast VF9</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-gray-600">13/12/2024</td>
+                                        <td class="py-4 px-4 font-bold text-blue-600">0.032</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex space-x-2">
+                                                <button onclick="viewDetail('VR007')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                                    👁️ Xem chi tiết
+                                                </button>
+                                                <button onclick="approveRequest('VR007')" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                                    ✅ Duyệt
+                                                </button>
+                                                <button onclick="rejectRequest('VR007')" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                                                    ❌ Từ chối
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="mt-6 flex items-center justify-between">
+                            <p class="text-sm text-gray-600">Hiển thị 8 trong tổng số 23 yêu cầu</p>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Trước</button>
+                                <button class="px-3 py-2 bg-blue-600 text-white rounded-lg">1</button>
+                                <button class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">2</button>
+                                <button class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Sau</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Issue Credits content
+        function getIssueCreditsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Approved Profiles Ready for Credit Issuance -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Hồ sơ đã duyệt - Chờ cấp tín chỉ</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã hồ sơ</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">EV Owner</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Số tín chỉ cần cấp</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Ngày phê duyệt</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-green-100 px-2 py-1 rounded">#VR002</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-blue-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Trần Thị Bình</p>
+                                                    <p class="text-xs text-gray-500">VinFast VF8</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-green-600">0.022</td>
+                                        <td class="py-4 px-4 text-gray-600">14/12/2024</td>
+                                        <td class="py-4 px-4">
+                                            <button onclick="issueCredit('VR002', 0.022)" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                                                🏷️ Phát hành
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-green-100 px-2 py-1 rounded">#VR008</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-purple-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Hoàng Văn Nam</p>
+                                                    <p class="text-xs text-gray-500">Audi e-tron</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-green-600">0.035</td>
+                                        <td class="py-4 px-4 text-gray-600">13/12/2024</td>
+                                        <td class="py-4 px-4">
+                                            <button onclick="issueCredit('VR008', 0.035)" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                                                🏷️ Phát hành
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-green-100 px-2 py-1 rounded">#VR009</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span class="text-orange-600">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-gray-800">Nguyễn Thị Lan</p>
+                                                    <p class="text-xs text-gray-500">Hyundai Ioniq 5</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-green-600">0.028</td>
+                                        <td class="py-4 px-4 text-gray-600">12/12/2024</td>
+                                        <td class="py-4 px-4">
+                                            <button onclick="issueCredit('VR009', 0.028)" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                                                🏷️ Phát hành
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Credit Issuance Form -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8" id="issuanceForm" style="display: none;">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Form xác nhận phát hành tín chỉ</h3>
+                        
+                        <form onsubmit="confirmIssuance(event)" class="space-y-6">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ID hồ sơ</label>
+                                    <input type="text" id="profileId" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Số lượng tín chỉ</label>
+                                    <input type="number" step="0.001" id="creditAmount" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500" readonly>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
+                                <textarea class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500" rows="4" placeholder="Nhập ghi chú về việc phát hành tín chỉ..."></textarea>
+                            </div>
+                            
+                            <div class="flex justify-center space-x-4">
+                                <button type="button" onclick="cancelIssuance()" class="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors font-semibold">
+                                    ❌ Hủy bỏ
+                                </button>
+                                <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors font-semibold">
+                                    ✅ Xác nhận phát hành
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Recently Issued Credits -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Tín chỉ đã phát hành gần đây</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã tín chỉ</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">EV Owner</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Số lượng</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Ngày phát hành</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-green-100 px-2 py-1 rounded">CC-001-2024</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Lê Minh Đức</p>
+                                                <p class="text-xs text-gray-500">Tesla Model Y</p>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-green-600">0.045</td>
+                                        <td class="py-4 px-4 text-gray-600">11/12/2024</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Đã phát hành</span>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-mono text-sm bg-green-100 px-2 py-1 rounded">CC-002-2024</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Võ Thị Hoa</p>
+                                                <p class="text-xs text-gray-500">BMW i4</p>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-green-600">0.038</td>
+                                        <td class="py-4 px-4 text-gray-600">10/12/2024</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Đã phát hành</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Reports content
+        function getReportsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Report Controls -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-bold text-gray-800">Bộ lọc báo cáo</h3>
+                            <button onclick="exportReport()" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold">
+                                📊 Xuất báo cáo PDF
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4 flex items-center space-x-4">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                <option>30 ngày qua</option>
+                                <option>3 tháng qua</option>
+                                <option>6 tháng qua</option>
+                                <option>1 năm qua</option>
+                            </select>
+                            <input type="date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                            <span class="text-gray-600">đến</span>
+                            <input type="date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Monthly Processing Chart -->
+                        <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Số hồ sơ xử lý theo tháng</h3>
+                            <div class="h-64 relative">
+                                <!-- Chart Container -->
+                                <div class="absolute inset-0 flex items-end justify-between px-4 pb-8">
+                                    <!-- Chart Bars -->
+                                    <div class="flex items-end space-x-3 h-full w-full">
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 60%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T1</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 75%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T2</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 85%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T3</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 70%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T4</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 90%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T5</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-blue-500 rounded-t-lg w-full transition-all duration-500 hover:bg-blue-600" style="height: 95%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T6</span>
+                                        </div>
+                                        <div class="flex flex-col items-center flex-1">
+                                            <div class="bg-green-500 rounded-t-lg w-full transition-all duration-500 hover:bg-green-600" style="height: 100%"></div>
+                                            <span class="text-xs text-gray-600 mt-2">T7</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Y-axis labels -->
+                                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
+                                    <span>50</span>
+                                    <span>40</span>
+                                    <span>30</span>
+                                    <span>20</span>
+                                    <span>10</span>
+                                    <span>0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Credits Issued Over Time -->
+                        <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Tổng tín chỉ phát hành theo thời gian</h3>
+                            <div class="h-64 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg flex items-center justify-center">
+                                <div class="text-center">
+                                    <span class="text-4xl mb-4 block">📈</span>
+                                    <p class="text-gray-600 font-semibold">Biểu đồ đường tín chỉ</p>
+                                    <p class="text-sm text-gray-500 mt-2">Xu hướng tăng trưởng tích cực</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Approval Rate Pie Chart -->
+                        <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Tỷ lệ chấp thuận</h3>
+                            <div class="h-64 flex items-center justify-center">
+                                <!-- Pie Chart -->
+                                <div class="relative w-48 h-48">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <!-- Approved (92.5%) -->
+                                        <circle
+                                            cx="50"
+                                            cy="50"
+                                            r="40"
+                                            fill="transparent"
+                                            stroke="#10B981"
+                                            stroke-width="20"
+                                            stroke-dasharray="231 250"
+                                            stroke-dashoffset="0"
+                                        />
+                                        <!-- Rejected (7.5%) -->
+                                        <circle
+                                            cx="50"
+                                            cy="50"
+                                            r="40"
+                                            fill="transparent"
+                                            stroke="#EF4444"
+                                            stroke-width="20"
+                                            stroke-dasharray="19 250"
+                                            stroke-dashoffset="-231"
+                                        />
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-green-600">92.5%</p>
+                                            <p class="text-xs text-gray-600">Tỷ lệ duyệt</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                                        <span class="text-sm text-gray-600">Đã duyệt</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-800">92.5%</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-red-500 rounded mr-2"></div>
+                                        <span class="text-sm text-gray-600">Từ chối</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-800">7.5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Table -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Bảng tổng hợp theo tháng</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Tháng</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hồ sơ đã duyệt</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hồ sơ từ chối</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Tín chỉ phát hành</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Tỷ lệ duyệt</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4 font-semibold">Tháng 12/2024</td>
+                                        <td class="py-4 px-4 text-green-600 font-semibold">42</td>
+                                        <td class="py-4 px-4 text-red-600 font-semibold">3</td>
+                                        <td class="py-4 px-4 text-blue-600 font-semibold">1.247</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-semibold">93.3%</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4 font-semibold">Tháng 11/2024</td>
+                                        <td class="py-4 px-4 text-green-600 font-semibold">38</td>
+                                        <td class="py-4 px-4 text-red-600 font-semibold">4</td>
+                                        <td class="py-4 px-4 text-blue-600 font-semibold">1.156</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-semibold">90.5%</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-4 font-semibold">Tháng 10/2024</td>
+                                        <td class="py-4 px-4 text-green-600 font-semibold">35</td>
+                                        <td class="py-4 px-4 text-red-600 font-semibold">2</td>
+                                        <td class="py-4 px-4 text-blue-600 font-semibold">1.089</td>
+                                        <td class="py-4 px-4">
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-semibold">94.6%</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Settings content
+        function getSettingsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Organization Information -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Thông tin tổ chức</h3>
+                        
+                        <form onsubmit="updateOrganization(event)" class="space-y-6">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tên đơn vị</label>
+                                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" value="Carbon Verification Authority" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mã CVA</label>
+                                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" value="CVA-2024-001" required>
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" value="admin@cva.org" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
+                                    <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" value="+84 28 1234 5678">
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold">
+                                    💾 Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Bảo mật</h3>
+                        
+                        <div class="space-y-6">
+                            <!-- Change Password -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-4">Đổi mật khẩu</h4>
+                                <form onsubmit="changePassword(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu hiện tại</label>
+                                        <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" required>
+                                    </div>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</label>
+                                            <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
+                                            <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500" required>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                            🔒 Đổi mật khẩu
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- User Management -->
+                            <div class="border-t border-gray-200 pt-6">
+                                <h4 class="font-semibold text-gray-800 mb-4">Quản lý phân quyền người kiểm toán</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                        <div>
+                                            <p class="font-semibold text-gray-800">CVA Admin</p>
+                                            <p class="text-sm text-gray-600">admin@cva.org</p>
+                                        </div>
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">Quản trị viên</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                        <div>
+                                            <p class="font-semibold text-gray-800">Kiểm toán viên A</p>
+                                            <p class="text-sm text-gray-600">auditor1@cva.org</p>
+                                        </div>
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">Kiểm toán viên</span>
+                                    </div>
+                                    
+                                    <button onclick="addAuditor()" class="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                                        ➕ Thêm kiểm toán viên mới
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="bg-white rounded-xl border border-gray-200 card-shadow p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Cấu hình thông báo</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <p class="font-semibold text-gray-800">Thông báo email</p>
+                                    <p class="text-sm text-gray-600">Nhận email khi có yêu cầu xác minh mới</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <p class="font-semibold text-gray-800">Thông báo hệ thống</p>
+                                    <p class="text-sm text-gray-600">Hiển thị thông báo trên dashboard</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mobile menu functions
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+
+        // Loading functions
+        function showLoading() {
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').classList.add('hidden');
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // CVA specific functions
+        function viewDetail(profileId) {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification(`👁️ Đang xem chi tiết hồ sơ ${profileId}...`, 'info');
+                // Here you would typically show a detailed view modal or navigate to detail page
+            }, 1000);
+        }
+
+        function approveRequest(requestId) {
+            if (confirm(`Bạn có chắc chắn muốn phê duyệt yêu cầu ${requestId}?`)) {
+                showLoading();
+                setTimeout(() => {
+                    hideLoading();
+                    showNotification(`✅ Đã phê duyệt yêu cầu ${requestId}!`, 'success');
+                }, 2000);
+            }
+        }
+
+        function rejectRequest(requestId) {
+            if (confirm(`Bạn có chắc chắn muốn từ chối yêu cầu ${requestId}?`)) {
+                showLoading();
+                setTimeout(() => {
+                    hideLoading();
+                    showNotification(`❌ Đã từ chối yêu cầu ${requestId}`, 'error');
+                }, 1500);
+            }
+        }
+
+        function issueCredit(profileId, amount) {
+            // Show the issuance form
+            document.getElementById('issuanceForm').style.display = 'block';
+            document.getElementById('profileId').value = profileId;
+            document.getElementById('creditAmount').value = amount;
+            
+            // Scroll to form
+            document.getElementById('issuanceForm').scrollIntoView({ behavior: 'smooth' });
+            showNotification(`📝 Đang chuẩn bị phát hành tín chỉ cho ${profileId}`, 'info');
+        }
+
+        function confirmIssuance(event) {
+            event.preventDefault();
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                document.getElementById('issuanceForm').style.display = 'none';
+                showNotification('🏷️ Phát hành thành công! Tín chỉ đã được cấp cho EV Owner.', 'success');
+                event.target.reset();
+            }, 3000);
+        }
+
+        function cancelIssuance() {
+            document.getElementById('issuanceForm').style.display = 'none';
+            showNotification('❌ Đã hủy bỏ việc phát hành tín chỉ', 'info');
+        }
+
+        function exportReport() {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('📊 Đã xuất báo cáo PDF thành công!', 'success');
+            }, 2000);
+        }
+
+        function updateOrganization(event) {
+            event.preventDefault();
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('💾 Đã cập nhật thông tin tổ chức!', 'success');
+            }, 1500);
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('🔒 Đã đổi mật khẩu thành công!', 'success');
+                event.target.reset();
+            }, 2000);
+        }
+
+        function addAuditor() {
+            showNotification('➕ Chức năng thêm kiểm toán viên đang được phát triển', 'info');
+        }
+
+        function applyFilters() {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('🔍 Đã áp dụng bộ lọc', 'success');
+            }, 1000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ddb01ac6d7ce4b',t:'MTc2MDM0NjQ1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

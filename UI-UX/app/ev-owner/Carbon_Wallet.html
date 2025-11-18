@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ví Carbon - EV Owner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .modal {
+            display: none;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-white font-bold text-lg">💰</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Ví Carbon của tôi</h1>
+                        <p class="text-sm text-gray-600">Quản lý tín chỉ carbon</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2310B981'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                    <span class="text-gray-700 font-medium">EV Owner</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Balance Card -->
+        <div class="balance-card text-white p-8 rounded-2xl card-shadow mb-8 relative">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
+                            <span class="text-2xl">🌱</span>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-medium opacity-90">Số dư tín chỉ carbon</h2>
+                            <p class="text-sm opacity-75">Cập nhật lúc 14:30 hôm nay</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm opacity-75">Giá trị ước tính</p>
+                        <p class="text-xl font-semibold">$2,847.50</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-6">
+                    <div class="text-5xl font-bold mb-2" id="balance-amount">127.8</div>
+                    <p class="text-lg opacity-90">tín chỉ carbon</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="showWithdrawModal()" class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center">
+                        💸 Rút tiền
+                    </button>
+                    <button onclick="showTopupModal()" class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center">
+                        💳 Nạp tín chỉ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-blue-600 text-xl">📈</span>
+                    </div>
+                    <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+12.5%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">89.3</p>
+                <p class="text-sm text-gray-600">Tín chỉ đã bán (tháng này)</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span class="text-orange-600 text-xl">🏪</span>
+                    </div>
+                    <span class="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">5 niêm yết</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">45.2</p>
+                <p class="text-sm text-gray-600">Tín chỉ đang niêm yết</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-purple-600 text-xl">💰</span>
+                    </div>
+                    <span class="text-sm text-gray-600">Tháng này</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">$2,156</p>
+                <p class="text-sm text-gray-600">Tổng thu nhập</p>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="bg-white rounded-xl card-shadow overflow-hidden">
+            <div class="p-6 border-b bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">Lịch sử giao dịch</h3>
+                    <div class="flex gap-2">
+                        <select class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option>Tất cả</option>
+                            <option>Nhận</option>
+                            <option>Bán</option>
+                            <option>Rút</option>
+                        </select>
+                        <button class="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-colors">
+                            📊 Xuất báo cáo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Ngày</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Loại giao dịch</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Số tín chỉ</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Giá trị</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Số dư</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Trạng thái</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">18/12/2024 14:30</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    📥 Nhận
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-green-600">+25.3</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$563.40</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">127.8</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+                        
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">17/12/2024 09:15</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                    💰 Bán
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-red-600">-18.7</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$542.15</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">102.5</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">16/12/2024 16:45</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                    💸 Rút
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-red-600">-15.0</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$435.00</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">121.2</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">15/12/2024 11:20</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    📥 Nhận
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-green-600">+32.1</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$867.90</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">136.2</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">14/12/2024 08:30</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                    💰 Bán
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-red-600">-22.5</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$652.50</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">104.1</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">13/12/2024 15:10</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                                    💳 Nạp
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-green-600">+50.0</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$1,450.00</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">126.6</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm text-gray-800">12/12/2024 13:45</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                    📥 Nhận
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-sm font-medium text-green-600">+19.8</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$574.20</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">76.6</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Hoàn thành</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="p-6 border-t bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-600">Hiển thị 1-7 trong 23 giao dịch</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">Trước</button>
+                        <button class="px-3 py-1 bg-green-500 text-white rounded-lg text-sm">1</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">2</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">3</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">Sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdraw-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl max-w-md w-full mx-4 fade-in">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">💸 Rút tín chỉ carbon</h3>
+            
+            <form onsubmit="processWithdraw(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Số lượng tín chỉ</label>
+                    <input type="number" step="0.1" max="127.8" placeholder="Nhập số tín chỉ muốn rút" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <p class="text-xs text-gray-500 mt-1">Tối đa: 127.8 tín chỉ</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phương thức nhận</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option>Chuyển khoản ngân hàng</option>
+                        <option>Ví điện tử</option>
+                        <option>Tiền mặt</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Giá hiện tại:</span>
+                            <span class="font-medium">$22.30/tín chỉ</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Phí giao dịch (2%):</span>
+                            <span class="text-red-600">-$0.45</span>
+                        </div>
+                        <div class="flex justify-between font-semibold">
+                            <span>Số tiền nhận được:</span>
+                            <span class="text-green-600">$21.85</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeModal('withdraw-modal')" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="submit" class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
+                        Xác nhận rút
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top-up Modal -->
+    <div id="topup-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl max-w-md w-full mx-4 fade-in">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">💳 Nạp tín chỉ carbon</h3>
+            
+            <form onsubmit="processTopup(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Số lượng tín chỉ</label>
+                    <input type="number" step="0.1" min="1" placeholder="Nhập số tín chỉ muốn mua" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <p class="text-xs text-gray-500 mt-1">Tối thiểu: 1 tín chỉ</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phương thức thanh toán</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option>Ví điện tử</option>
+                        <option>Thẻ tín dụng</option>
+                        <option>Chuyển khoản ngân hàng</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Giá mua:</span>
+                            <span class="font-medium">$23.50/tín chỉ</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Phí giao dịch (1.5%):</span>
+                            <span class="text-red-600">+$0.35</span>
+                        </div>
+                        <div class="flex justify-between font-semibold">
+                            <span>Tổng thanh toán:</span>
+                            <span class="text-blue-600">$23.85</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeModal('topup-modal')" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="submit" class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        Xác nhận mua
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Show modals
+        function showWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.add('active');
+        }
+
+        function showTopupModal() {
+            document.getElementById('topup-modal').classList.add('active');
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Process withdraw
+        function processWithdraw(event) {
+            event.preventDefault();
+            const amount = event.target.querySelector('input[type="number"]').value;
+            
+            showNotification(`Yêu cầu rút ${amount} tín chỉ đã được gửi!`, 'success');
+            closeModal('withdraw-modal');
+            
+            // Update balance (demo)
+            setTimeout(() => {
+                const currentBalance = parseFloat(document.getElementById('balance-amount').textContent);
+                const newBalance = currentBalance - parseFloat(amount);
+                document.getElementById('balance-amount').textContent = newBalance.toFixed(1);
+                
+                // Add transaction to history (would normally refresh from server)
+                addTransactionToHistory('Rút', -amount, newBalance, 'Đang xử lý');
+            }, 1000);
+        }
+
+        // Process top-up
+        function processTopup(event) {
+            event.preventDefault();
+            const amount = event.target.querySelector('input[type="number"]').value;
+            
+            showNotification(`Đang xử lý mua ${amount} tín chỉ...`, 'info');
+            closeModal('topup-modal');
+            
+            // Simulate processing
+            setTimeout(() => {
+                const currentBalance = parseFloat(document.getElementById('balance-amount').textContent);
+                const newBalance = currentBalance + parseFloat(amount);
+                document.getElementById('balance-amount').textContent = newBalance.toFixed(1);
+                
+                showNotification(`Đã mua thành công ${amount} tín chỉ!`, 'success');
+                addTransactionToHistory('Nạp', amount, newBalance, 'Hoàn thành');
+            }, 2000);
+        }
+
+        // Add transaction to history (demo function)
+        function addTransactionToHistory(type, amount, balance, status) {
+            const tbody = document.querySelector('tbody');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+            
+            const typeClass = type === 'Rút' ? 'purple' : type === 'Nạp' ? 'orange' : 'green';
+            const typeIcon = type === 'Rút' ? '💸' : type === 'Nạp' ? '💳' : '📥';
+            const amountClass = amount > 0 ? 'text-green-600' : 'text-red-600';
+            const amountSign = amount > 0 ? '+' : '';
+            
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="py-4 px-6 text-sm text-gray-800">${dateStr}</td>
+                <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2 py-1 bg-${typeClass}-100 text-${typeClass}-800 text-xs rounded-full">
+                        ${typeIcon} ${type}
+                    </span>
+                </td>
+                <td class="py-4 px-6 text-sm font-medium ${amountClass}">${amountSign}${Math.abs(amount)}</td>
+                <td class="py-4 px-6 text-sm text-gray-800">$${(Math.abs(amount) * 22.30).toFixed(2)}</td>
+                <td class="py-4 px-6 text-sm text-gray-800">${balance.toFixed(1)}</td>
+                <td class="py-4 px-6">
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">${status}</span>
+                </td>
+                <td class="py-4 px-6">
+                    <button class="text-blue-600 hover:text-blue-800 text-sm">Xem</button>
+                </td>
+            `;
+            
+            tbody.insertBefore(row, tbody.firstChild);
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some animation to balance card
+            const balanceCard = document.querySelector('.balance-card');
+            balanceCard.classList.add('pulse-green');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dbc38344123e56',t:'MTc2MDMyNjI4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

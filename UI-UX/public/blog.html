@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tin tức & Kiến thức - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Colors */
+        .text-green-primary { color: #22c55e; }
+        .bg-green-primary { background-color: #22c55e; }
+        .border-green-primary { border-color: #22c55e; }
+        .bg-green-light { background-color: #f0fdf4; }
+        .text-green-dark { color: #15803d; }
+        
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+        }
+        
+        /* Category Filter */
+        .category-filter {
+            background: white;
+            border-radius: 50px;
+            padding: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .category-filter::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .category-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        
+        .category-btn:not(.active) {
+            color: #6b7280;
+        }
+        
+        .category-btn:not(.active):hover {
+            background: #f3f4f6;
+            color: #22c55e;
+        }
+        
+        /* Article Cards */
+        .article-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border-color: #22c55e;
+        }
+        
+        .article-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .article-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.1), transparent 50%);
+        }
+        
+        .article-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .article-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .category-basic { background: #dbeafe; color: #1e40af; }
+        .category-news { background: #fef3c7; color: #d97706; }
+        .category-community { background: #f3e8ff; color: #7c3aed; }
+        
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            flex: 1;
+        }
+        
+        .article-description {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+        
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .article-date {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .read-more-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .read-more-btn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateX(2px);
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 4s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+        
+        .cta-button {
+            background: white;
+            color: #22c55e;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Stats Section */
+        .stats-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: #22c55e;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .article-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .category-filter {
+                padding: 0.25rem;
+                gap: 0.25rem;
+            }
+            
+            .category-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .cta-section {
+                padding: 2rem;
+                border-radius: 20px;
+            }
+        }
+        
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .article-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Loading Animation */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Newsletter Section */
+        .newsletter-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 25px;
+            padding: 2.5rem;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .newsletter-input {
+            padding: 1rem 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .newsletter-input:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+        
+        .newsletter-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .newsletter-btn:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-primary rounded-lg flex items-center justify-center mr-4">
+                        <span class="text-white font-bold text-xl">🌱</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Carbon Credit Marketplace</h1>
+                        <p class="text-sm text-gray-600">for EV Owners</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">Trang chủ</a>
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">Thị trường</a>
+                    <a href="#" class="text-green-primary font-medium">Tin tức</a>
+                    <a href="#" class="text-gray-600 hover:text-green-primary font-medium">FAQ</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div class="inline-flex items-center bg-white rounded-full px-6 py-3 mb-6 shadow-sm">
+                <span class="text-2xl mr-3">📰</span>
+                <span class="text-green-primary font-semibold">Tin tức & Kiến thức</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                Tin tức & Kiến thức về
+                <span class="text-green-primary">Tín chỉ Carbon</span>
+                <br>và <span class="text-green-primary">Xe điện</span>
+            </h1>
+            
+            <p class="text-xl text-gray-700 mb-12 max-w-3xl mx-auto">
+                Cập nhật những thông tin mới nhất về thị trường tín chỉ carbon, xu hướng xe điện 
+                và câu chuyện thành công từ cộng đồng EV Owner Việt Nam.
+            </p>
+            
+            <!-- Quick Stats -->
+            <div class="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="stats-card">
+                    <div class="text-3xl mb-2">📚</div>
+                    <div class="stats-number text-blue-600">50+</div>
+                    <div class="text-sm text-gray-600">Bài viết hữu ích</div>
+                </div>
+                <div class="stats-card">
+                    <div class="text-3xl mb-2">🔄</div>
+                    <div class="stats-number text-green-primary">24/7</div>
+                    <div class="text-sm text-gray-600">Cập nhật tin tức</div>
+                </div>
+                <div class="stats-card">
+                    <div class="text-3xl mb-2">👥</div>
+                    <div class="stats-number text-orange-600">2,500+</div>
+                    <div class="text-sm text-gray-600">Độc giả thường xuyên</div>
+                </div>
+                <div class="stats-card">
+                    <div class="text-3xl mb-2">⭐</div>
+                    <div class="stats-number text-purple-600">4.9/5</div>
+                    <div class="text-sm text-gray-600">Đánh giá nội dung</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="py-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="category-filter max-w-4xl mx-auto">
+                <button class="category-btn active" data-category="all">
+                    <span class="mr-2">🌟</span>Tất cả
+                </button>
+                <button class="category-btn" data-category="basic">
+                    <span class="mr-2">📖</span>Kiến thức cơ bản
+                </button>
+                <button class="category-btn" data-category="news">
+                    <span class="mr-2">📈</span>Tin tức & Chính sách
+                </button>
+                <button class="category-btn" data-category="community">
+                    <span class="mr-2">👥</span>Cộng đồng EV
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Articles Grid -->
+    <section class="py-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="article-grid grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8">
+                
+                <!-- Article 1: Basic Knowledge -->
+                <article class="article-card" data-category="basic">
+                    <div class="article-image">
+                        <span>🌱</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-400/20 to-blue-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-basic">Kiến thức cơ bản</span>
+                        <h3 class="article-title">Tín chỉ Carbon là gì? Hướng dẫn từ A-Z cho người mới bắt đầu</h3>
+                        <p class="article-description">
+                            Tìm hiểu khái niệm tín chỉ carbon, cách thức hoạt động và tại sao nó quan trọng 
+                            trong việc chống biến đổi khí hậu. Hướng dẫn chi tiết dành cho người mới.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>15 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 2: News & Policy -->
+                <article class="article-card" data-category="news">
+                    <div class="article-image">
+                        <span>📊</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-orange-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-news">Tin tức & Chính sách</span>
+                        <h3 class="article-title">Chính phủ Việt Nam công bố chính sách mới hỗ trợ xe điện 2025</h3>
+                        <p class="article-description">
+                            Phân tích chi tiết các chính sách ưu đãi mới cho xe điện, tác động đến thị trường 
+                            tín chỉ carbon và cơ hội cho chủ sở hữu xe điện.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>12 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 3: Community -->
+                <article class="article-card" data-category="community">
+                    <div class="article-image">
+                        <span>🚗</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-pink-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-community">Cộng đồng EV</span>
+                        <h3 class="article-title">Câu chuyện thành công: Anh Minh kiếm 2.5 triệu/tháng từ xe điện</h3>
+                        <p class="article-description">
+                            Chia sẻ từ anh Nguyễn Văn Minh - tài xế Grab sử dụng xe điện VinFast VF5, 
+                            đã kiếm thêm thu nhập ổn định từ việc bán tín chỉ carbon.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>10 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 4: Basic Knowledge -->
+                <article class="article-card" data-category="basic">
+                    <div class="article-image">
+                        <span>⚡</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-cyan-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-basic">Kiến thức cơ bản</span>
+                        <h3 class="article-title">So sánh phát thải CO₂: Xe điện vs Xe xăng - Số liệu thực tế</h3>
+                        <p class="article-description">
+                            Phân tích chi tiết mức phát thải CO₂ của xe điện và xe xăng tại Việt Nam, 
+                            bao gồm cả quá trình sản xuất điện và nhiên liệu.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>8 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 5: News & Policy -->
+                <article class="article-card" data-category="news">
+                    <div class="article-image">
+                        <span>🌍</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-400/20 to-teal-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-news">Tin tức & Chính sách</span>
+                        <h3 class="article-title">Thị trường tín chỉ carbon toàn cầu đạt kỷ lục 1 tỷ USD năm 2024</h3>
+                        <p class="article-description">
+                            Báo cáo tổng quan về sự phát triển của thị trường tín chỉ carbon thế giới 
+                            và cơ hội cho các dự án tại Việt Nam.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>5 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 6: Community -->
+                <article class="article-card" data-category="community">
+                    <div class="article-image">
+                        <span>🏆</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-red-400/20"></div>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-category category-community">Cộng đồng EV</span>
+                        <h3 class="article-title">Top 10 chủ xe điện bán nhiều tín chỉ carbon nhất tháng 12/2024</h3>
+                        <p class="article-description">
+                            Vinh danh những chủ xe điện xuất sắc nhất trong việc đóng góp vào việc 
+                            giảm phát thải CO₂ và kiếm thu nhập từ tín chỉ carbon.
+                        </p>
+                        <div class="article-meta">
+                            <span class="article-date">
+                                <span class="mr-2">📅</span>2 Tháng 1, 2025
+                            </span>
+                            <a href="#" class="read-more-btn">
+                                Đọc thêm <span class="ml-1">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="newsletter-section text-center">
+                <div class="text-4xl mb-4">📧</div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Đăng ký nhận tin tức mới nhất</h2>
+                <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Nhận thông báo về các bài viết mới, cập nhật chính sách và xu hướng thị trường 
+                    tín chỉ carbon qua email hàng tuần.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                    <input 
+                        type="email" 
+                        placeholder="Nhập email của bạn..." 
+                        class="newsletter-input flex-1"
+                        required
+                    >
+                    <button type="submit" class="newsletter-btn">
+                        Đăng ký ngay
+                    </button>
+                </form>
+                <p class="text-sm text-gray-500 mt-4">
+                    Chúng tôi tôn trọng quyền riêng tư của bạn. Hủy đăng ký bất cứ lúc nào.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="cta-section">
+                <div class="relative z-10">
+                    <div class="text-5xl mb-6">🚗💚</div>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                        Bắt đầu hành trình kiếm tiền từ xe điện của bạn
+                    </h2>
+                    <p class="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+                        Đăng nhập để theo dõi tín chỉ carbon, xem báo cáo chi tiết và bắt đầu 
+                        kiếm thu nhập thụ động từ việc sử dụng xe điện thân thiện môi trường.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="/login" class="cta-button">
+                            <span class="mr-2">🔑</span>
+                            Đăng nhập ngay
+                        </a>
+                        <a href="/register" class="bg-green-600 text-white px-8 py-4 rounded-full font-bold hover:bg-green-700 transition-colors inline-flex items-center">
+                            <span class="mr-2">✨</span>
+                            Đăng ký miễn phí
+                        </a>
+                    </div>
+                    <div class="mt-6 text-sm opacity-75">
+                        <p>✅ Miễn phí đăng ký • ✅ Không phí ẩn • ✅ Hỗ trợ 24/7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-green-primary rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-xl">🌱</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Carbon Credit</h3>
+                            <p class="text-sm text-gray-400">Marketplace</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        Nền tảng giao dịch tín chỉ carbon đầu tiên dành cho chủ sở hữu xe điện tại Việt Nam.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Danh mục tin tức</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Kiến thức cơ bản</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Tin tức & Chính sách</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Cộng đồng EV</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Xu hướng công nghệ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Tài nguyên</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">FAQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Webinar</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-green-primary transition-colors">Báo cáo thị trường</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center">
+                            <span class="mr-2">📧</span>
+                            <span>news@carbonmarket.vn</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📞</span>
+                            <span>+84 28 8888 8888</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="mr-2">📍</span>
+                            <span>TP. Hồ Chí Minh, Việt Nam</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2025 Carbon Credit Marketplace for EV Owners. All rights reserved.
+                    <span class="text-green-primary ml-2">Tin tức cập nhật 24/7 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Category Filter Functionality
+        function setupCategoryFilter() {
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            const articles = document.querySelectorAll('.article-card');
+            
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    
+                    // Update active button
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Filter articles
+                    articles.forEach(article => {
+                        const articleCategory = article.getAttribute('data-category');
+                        
+                        if (category === 'all' || articleCategory === category) {
+                            article.style.display = 'block';
+                            // Add fade in animation
+                            article.style.opacity = '0';
+                            setTimeout(() => {
+                                article.style.opacity = '1';
+                            }, 100);
+                        } else {
+                            article.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        }
+
+        // Newsletter Form Submission
+        function setupNewsletterForm() {
+            const form = document.querySelector('.newsletter-section form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = this.querySelector('input[type="email"]').value;
+                const button = this.querySelector('button');
+                const originalText = button.textContent;
+                
+                // Show loading state
+                button.textContent = 'Đang xử lý...';
+                button.disabled = true;
+                
+                // Simulate API call
+                setTimeout(() => {
+                    alert(`Cảm ơn bạn đã đăng ký! Chúng tôi sẽ gửi tin tức mới nhất đến ${email}`);
+                    this.reset();
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 2000);
+            });
+        }
+
+        // Smooth Scroll for Anchor Links
+        function setupSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Article Card Hover Effects
+        function setupArticleHoverEffects() {
+            const articles = document.querySelectorAll('.article-card');
+            
+            articles.forEach(article => {
+                article.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px)';
+                });
+                
+                article.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        }
+
+        // Reading Time Estimation
+        function addReadingTime() {
+            const articles = document.querySelectorAll('.article-card');
+            
+            articles.forEach(article => {
+                const description = article.querySelector('.article-description');
+                const wordCount = description.textContent.split(' ').length;
+                const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+                
+                const dateElement = article.querySelector('.article-date');
+                dateElement.innerHTML += ` • <span class="text-green-primary">${readingTime} phút đọc</span>`;
+            });
+        }
+
+        // Initialize all functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCategoryFilter();
+            setupNewsletterForm();
+            setupSmoothScroll();
+            setupArticleHoverEffects();
+            addReadingTime();
+            
+            // Add loading animation on page load
+            const articles = document.querySelectorAll('.article-card');
+            articles.forEach((article, index) => {
+                article.style.opacity = '0';
+                article.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    article.style.transition = 'all 0.6s ease';
+                    article.style.opacity = '1';
+                    article.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // Search functionality (bonus feature)
+        function addSearchFeature() {
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Tìm kiếm bài viết...';
+            searchInput.className = 'newsletter-input mb-4';
+            
+            const categoryFilter = document.querySelector('.category-filter');
+            categoryFilter.parentNode.insertBefore(searchInput, categoryFilter);
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const articles = document.querySelectorAll('.article-card');
+                
+                articles.forEach(article => {
+                    const title = article.querySelector('.article-title').textContent.toLowerCase();
+                    const description = article.querySelector('.article-description').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        article.style.display = 'block';
+                    } else {
+                        article.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98df4124266bfdc5',t:'MTc2MDM2Mjg4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

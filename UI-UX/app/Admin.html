@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Carbon Credit Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Admin Sidebar Styles */
+        .admin-sidebar {
+            background: #1F2A44;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 20px rgba(31, 42, 68, 0.3);
+        }
+        
+        .admin-sidebar-item {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .admin-sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .admin-sidebar-item.active {
+            background: rgba(41, 128, 185, 0.3);
+            border-right: 4px solid #2980B9;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Admin Profile Section */
+        .admin-profile {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .admin-avatar {
+            background: linear-gradient(135deg, #2980B9 0%, #3498DB 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Card Styles */
+        .admin-card {
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .admin-card:hover {
+            box-shadow: 0 8px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-3px);
+        }
+        
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Mobile Responsive */
+        .mobile-admin-sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .mobile-admin-sidebar.open {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+        }
+        
+        /* Status Indicators */
+        .status-online {
+            background: #2ECC71;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-warning {
+            background: #F39C12;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-danger {
+            background: #E74C3C;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Chart Animations */
+        .chart-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease-in-out forwards;
+        }
+        
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        .chart-bar {
+            transition: all 0.3s ease;
+            transform-origin: bottom;
+        }
+        
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+        
+        /* Gradient Backgrounds */
+        .gradient-admin-blue {
+            background: linear-gradient(135deg, #2980B9 0%, #3498DB 100%);
+        }
+        
+        .gradient-admin-orange {
+            background: linear-gradient(135deg, #F39C12 0%, #E67E22 100%);
+        }
+        
+        .gradient-admin-green {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+        
+        .gradient-admin-purple {
+            background: linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%);
+        }
+        
+        .gradient-admin-red {
+            background: linear-gradient(135deg, #C0392B 0%, #E74C3C 100%);
+        }
+        
+        /* Loading Animation */
+        .admin-loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #2980B9;
+            width: 28px;
+            height: 28px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom Scrollbar */
+        .admin-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .admin-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .admin-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .admin-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-3px); }
+            60% { transform: translateY(-2px); }
+        }
+        
+        /* Table Styles */
+        .admin-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .admin-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .admin-table tr:hover {
+            background: rgba(41, 128, 185, 0.05);
+        }
+        
+        /* System Status */
+        .system-status {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(39, 174, 96, 0.1) 100%);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+        }
+        
+        /* Quick Actions */
+        .quick-action-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .quick-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .quick-action-btn:hover::before {
+            left: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="mobileAdminMenuBtn" class="bg-gray-800 text-white p-3 rounded-xl shadow-lg hover:bg-gray-700 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Admin Sidebar -->
+    <div id="adminSidebar" class="admin-sidebar fixed left-0 top-0 h-full w-80 text-white z-40 mobile-admin-sidebar md:translate-x-0 admin-scrollbar overflow-y-auto">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-gray-600">
+            <div class="flex items-center">
+                <div class="w-14 h-14 bg-white bg-opacity-15 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm">
+                    <span class="text-3xl">⚡</span>
+                </div>
+                <div>
+                    <h2 class="font-bold text-xl">Admin Dashboard</h2>
+                    <p class="text-sm opacity-80">Carbon Marketplace</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Profile Section -->
+        <div class="p-6 border-b border-gray-600">
+            <div class="admin-profile rounded-xl p-5">
+                <div class="flex items-center">
+                    <div class="admin-avatar w-16 h-16 rounded-full flex items-center justify-center mr-4">
+                        <span class="text-3xl text-white">👨‍💼</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg text-white">Nguyễn Văn Admin</h3>
+                        <div class="flex items-center mt-1">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2 status-online"></span>
+                            <span class="text-sm text-gray-300">Quản trị viên hệ thống</span>
+                        </div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded-full">Super Admin</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="system-status rounded-lg p-3 mt-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-green-300">Hệ thống hoạt động</span>
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2 status-online"></span>
+                            <span class="text-xs text-green-300">99.9%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-6 px-4">
+            <div class="space-y-2">
+                <a href="#" onclick="adminNavigateTo('overview')" class="admin-sidebar-item active flex items-center px-4 py-4 rounded-xl" data-page="overview">
+                    <span class="mr-4 text-xl">📊</span>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('users')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="users">
+                    <span class="mr-4 text-xl">👥</span>
+                    <span class="font-medium">Người dùng</span>
+                    <span class="ml-auto w-6 h-6 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center notification-badge">1.2K</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('transactions')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="transactions">
+                    <span class="mr-4 text-xl">💳</span>
+                    <span class="font-medium">Giao dịch</span>
+                    <span class="ml-auto w-6 h-6 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">847</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('listings')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="listings">
+                    <span class="mr-4 text-xl">🏷️</span>
+                    <span class="font-medium">Niêm yết tín chỉ</span>
+                    <span class="ml-auto w-6 h-6 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">156</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('wallets')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="wallets">
+                    <span class="mr-4 text-xl">💰</span>
+                    <span class="font-medium">Ví & dòng tiền</span>
+                    <span class="ml-auto w-6 h-6 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center">₫</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('reports')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="reports">
+                    <span class="mr-4 text-xl">📈</span>
+                    <span class="font-medium">Báo cáo</span>
+                    <span class="ml-auto w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center status-warning">!</span>
+                </a>
+                
+                <a href="#" onclick="adminNavigateTo('settings')" class="admin-sidebar-item flex items-center px-4 py-4 rounded-xl" data-page="settings">
+                    <span class="mr-4 text-xl">⚙️</span>
+                    <span class="font-medium">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Quick Stats -->
+        <div class="px-4 mt-8">
+            <div class="bg-white bg-opacity-10 rounded-xl p-5 backdrop-filter backdrop-blur-sm">
+                <h4 class="font-semibold mb-4 text-center">Thống kê nhanh</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Người dùng online:</span>
+                        <span class="text-green-300 font-bold">247</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Giao dịch hôm nay:</span>
+                        <span class="text-blue-300 font-bold">23</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Doanh thu:</span>
+                        <span class="text-yellow-300 font-bold">₫45.2M</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-80">Tranh chấp:</span>
+                        <span class="text-red-300 font-bold">3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="px-4 mt-6">
+            <h4 class="font-semibold mb-3 text-center opacity-80">Hành động nhanh</h4>
+            <div class="space-y-2">
+                <button onclick="quickAction('backup')" class="quick-action-btn w-full gradient-admin-blue text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all text-sm font-medium">
+                    💾 Sao lưu hệ thống
+                </button>
+                <button onclick="quickAction('maintenance')" class="quick-action-btn w-full gradient-admin-orange text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all text-sm font-medium">
+                    🔧 Bảo trì hệ thống
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 mb-6 px-4">
+            <div class="border-t border-gray-600 pt-4">
+                <div class="text-center">
+                    <p class="text-sm opacity-75">Carbon Credit Marketplace</p>
+                    <p class="text-xs opacity-60 mt-1">Admin Panel v3.0</p>
+                    <p class="text-xs opacity-60 mt-1">© 2024 All Rights Reserved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="md:ml-80 min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-6 py-6">
+            <div class="flex justify-between items-center">
+                <div class="slide-in">
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                        <span class="mr-3">⚡</span>
+                        <span id="adminPageTitle">Bảng điều khiển Quản trị hệ thống</span>
+                    </h1>
+                    <p class="text-gray-600 mt-2" id="adminPageSubtitle">Giám sát và quản lý toàn bộ hệ thống Carbon Credit Marketplace</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- System Health -->
+                    <div class="flex items-center space-x-2 bg-green-50 px-4 py-2 rounded-xl">
+                        <div class="w-3 h-3 bg-green-500 rounded-full status-online"></div>
+                        <span class="text-sm font-medium text-green-700">Hệ thống ổn định</span>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button class="p-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h8v-2H4v2zM4 11h10V9H4v2z"></path>
+                            </svg>
+                        </button>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full notification-badge text-xs text-white flex items-center justify-center">3</span>
+                    </div>
+                    
+                    <!-- Admin Actions -->
+                    <div class="flex items-center space-x-3">
+                        <button onclick="adminQuickAction('emergency')" class="gradient-admin-red text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all font-semibold shadow-lg text-sm">
+                            🚨 Khẩn cấp
+                        </button>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">Hôm nay</p>
+                            <p class="text-lg font-semibold text-gray-800" id="adminCurrentDate"></p>
+                        </div>
+                        <div class="w-12 h-12 gradient-admin-blue rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main class="p-6" id="adminMainContent">
+            <!-- Default Overview Content -->
+            <div class="max-w-7xl mx-auto fade-in" id="adminOverviewContent">
+                <!-- Welcome Card -->
+                <div class="gradient-admin-blue rounded-xl text-white admin-card p-8 mb-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">Chào mừng, Admin Nguyễn Văn!</h2>
+                            <p class="opacity-90 mb-4">Hệ thống đang hoạt động ổn định với 1,247 người dùng và 847 giao dịch</p>
+                            <div class="flex space-x-4">
+                                <button onclick="adminNavigateTo('users')" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
+                                    👥 Quản lý người dùng
+                                </button>
+                                <button onclick="adminNavigateTo('transactions')" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
+                                    💳 Xem giao dịch
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-6xl opacity-20">⚡</div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                        <div class="w-16 h-16 gradient-admin-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">👥</span>
+                        </div>
+                        <p class="text-3xl font-bold text-blue-600 mb-2">1,247</p>
+                        <p class="text-sm text-gray-600">Tổng người dùng</p>
+                        <p class="text-xs text-blue-600 mt-2">↗️ +47 tuần này</p>
+                        <div class="mt-3 bg-blue-50 rounded-lg p-2">
+                            <p class="text-xs text-blue-700">EV: 856 | Buyer: 391</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                        <div class="w-16 h-16 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">🏷️</span>
+                        </div>
+                        <p class="text-3xl font-bold text-green-600 mb-2">12.47</p>
+                        <p class="text-sm text-gray-600">Tổng tín chỉ giao dịch</p>
+                        <p class="text-xs text-green-600 mt-2">↗️ +2.1 tháng này</p>
+                        <div class="mt-3 bg-green-50 rounded-lg p-2">
+                            <p class="text-xs text-green-700">Tương đương 12.47 tấn CO₂</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                        <div class="w-16 h-16 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">💰</span>
+                        </div>
+                        <p class="text-3xl font-bold text-orange-600 mb-2">₫62.3M</p>
+                        <p class="text-sm text-gray-600">Tổng giá trị giao dịch</p>
+                        <p class="text-xs text-orange-600 mt-2">↗️ +₫8.5M tháng này</p>
+                        <div class="mt-3 bg-orange-50 rounded-lg p-2">
+                            <p class="text-xs text-orange-700">Phí hệ thống: ₫1.87M</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                        <div class="w-16 h-16 gradient-admin-red rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">⚠️</span>
+                        </div>
+                        <p class="text-3xl font-bold text-red-600 mb-2">3</p>
+                        <p class="text-sm text-gray-600">Yêu cầu tranh chấp</p>
+                        <p class="text-xs text-red-600 mt-2">⚠️ Cần xử lý</p>
+                        <div class="mt-3 bg-red-50 rounded-lg p-2">
+                            <p class="text-xs text-red-700">2 mới, 1 đang xử lý</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Transaction Timeline Chart -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="mr-3">📈</span>
+                            Tổng giao dịch theo thời gian
+                        </h3>
+                        <div class="h-64 relative">
+                            <!-- Line Chart -->
+                            <svg class="w-full h-full" viewBox="0 0 400 200">
+                                <!-- Grid lines -->
+                                <defs>
+                                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                                    </pattern>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#grid)" />
+                                
+                                <!-- Chart line -->
+                                <polyline
+                                    class="chart-line"
+                                    fill="none"
+                                    stroke="#2980B9"
+                                    stroke-width="3"
+                                    points="20,160 60,140 100,120 140,100 180,80 220,90 260,70 300,60 340,50 380,40"
+                                />
+                                
+                                <!-- Data points -->
+                                <circle cx="20" cy="160" r="4" fill="#2980B9"/>
+                                <circle cx="60" cy="140" r="4" fill="#2980B9"/>
+                                <circle cx="100" cy="120" r="4" fill="#2980B9"/>
+                                <circle cx="140" cy="100" r="4" fill="#2980B9"/>
+                                <circle cx="180" cy="80" r="4" fill="#2980B9"/>
+                                <circle cx="220" cy="90" r="4" fill="#2980B9"/>
+                                <circle cx="260" cy="70" r="4" fill="#2980B9"/>
+                                <circle cx="300" cy="60" r="4" fill="#2980B9"/>
+                                <circle cx="340" cy="50" r="4" fill="#2980B9"/>
+                                <circle cx="380" cy="40" r="4" fill="#2980B9"/>
+                            </svg>
+                            
+                            <!-- X-axis labels -->
+                            <div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 px-2">
+                                <span>T1</span>
+                                <span>T2</span>
+                                <span>T3</span>
+                                <span>T4</span>
+                                <span>T5</span>
+                                <span>T6</span>
+                                <span>T7</span>
+                                <span>T8</span>
+                                <span>T9</span>
+                                <span>T10</span>
+                            </div>
+                            
+                            <!-- Y-axis labels -->
+                            <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
+                                <span>200</span>
+                                <span>150</span>
+                                <span>100</span>
+                                <span>50</span>
+                                <span>0</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-gray-600">Tổng giao dịch 10 tháng: <span class="font-bold text-blue-600">847 giao dịch</span></p>
+                        </div>
+                    </div>
+
+                    <!-- User Role Distribution Chart -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="mr-3">👥</span>
+                            Tỷ lệ người dùng theo vai trò
+                        </h3>
+                        <div class="h-64 flex items-center justify-center">
+                            <!-- Pie Chart -->
+                            <div class="relative w-48 h-48">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <!-- EV Owner (68.6%) -->
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="40"
+                                        fill="transparent"
+                                        stroke="#2980B9"
+                                        stroke-width="20"
+                                        stroke-dasharray="171.5 250"
+                                        stroke-dashoffset="0"
+                                    />
+                                    <!-- Buyer (31.4%) -->
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="40"
+                                        fill="transparent"
+                                        stroke="#F39C12"
+                                        stroke-width="20"
+                                        stroke-dasharray="78.5 250"
+                                        stroke-dashoffset="-171.5"
+                                    />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <p class="text-2xl font-bold text-gray-800">1,247</p>
+                                        <p class="text-xs text-gray-600">Tổng người dùng</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                                    <span class="text-sm text-gray-600">EV Owner</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">856 (68.6%)</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-orange-500 rounded mr-2"></div>
+                                    <span class="text-sm text-gray-600">Buyer</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">391 (31.4%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Table -->
+                <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-3">💳</span>
+                            Giao dịch gần đây
+                        </h3>
+                        <button onclick="adminNavigateTo('transactions')" class="text-blue-600 hover:text-blue-800 font-semibold">
+                            Xem tất cả →
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="admin-table w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã giao dịch</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Người bán</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Người mua</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Số lượng</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Giá trị</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                    <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#TX001</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-green-600 text-sm">🚗</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Nguyễn Văn An</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-blue-600 text-sm">🏢</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Green Corp</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-green-600">0.025</td>
+                                    <td class="py-4 px-4 font-bold text-blue-600">₫125,000</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Hoàn thành</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="adminViewTransaction('TX001')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#TX002</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-purple-600 text-sm">🚗</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Trần Thị Bình</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-orange-600 text-sm">🏢</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Eco Solutions</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-green-600">0.018</td>
+                                    <td class="py-4 px-4 font-bold text-blue-600">₫90,000</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Hoàn thành</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="adminViewTransaction('TX002')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#TX003</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-teal-600 text-sm">🚗</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Lê Minh Cường</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-pink-600 text-sm">🏢</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Clean Energy Ltd</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-green-600">0.032</td>
+                                    <td class="py-4 px-4 font-bold text-blue-600">₫160,000</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Đang xử lý</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="adminViewTransaction('TX003')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#TX004</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-indigo-600 text-sm">🚗</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Phạm Thị Dung</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-cyan-600 text-sm">🏢</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Future Tech</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-green-600">0.045</td>
+                                    <td class="py-4 px-4 font-bold text-blue-600">₫225,000</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Hoàn thành</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="adminViewTransaction('TX004')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-4">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#TX005</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-rose-600 text-sm">🚗</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Hoàng Văn Minh</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
+                                                <span class="text-emerald-600 text-sm">🏢</span>
+                                            </div>
+                                            <span class="font-semibold text-gray-800">Green Corp</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-green-600">0.028</td>
+                                    <td class="py-4 px-4 font-bold text-blue-600">₫140,000</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Hoàn thành</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button onclick="adminViewTransaction('TX005')" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                            👁️ Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <button onclick="adminNavigateTo('transactions')" class="gradient-admin-blue text-white px-8 py-3 rounded-xl hover:opacity-90 transition-all font-semibold shadow-lg">
+                            💳 Xem chi tiết giao dịch
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="adminMobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Loading Indicator -->
+    <div id="adminLoadingIndicator" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg p-6 z-50 hidden">
+        <div class="flex items-center">
+            <div class="admin-loading-spinner mr-3"></div>
+            <span class="text-gray-700 font-medium">Đang tải dữ liệu...</span>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentAdminPage = 'overview';
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            updateAdminCurrentDate();
+            
+            // Mobile menu functionality
+            document.getElementById('mobileAdminMenuBtn').addEventListener('click', toggleAdminMobileSidebar);
+            document.getElementById('adminMobileOverlay').addEventListener('click', closeAdminMobileSidebar);
+            
+            // Welcome notification
+            setTimeout(() => {
+                showAdminNotification('⚡ Chào mừng đến với Admin Dashboard!', 'success');
+            }, 1000);
+            
+            // Auto-refresh system stats every 30 seconds
+            setInterval(refreshSystemStats, 30000);
+        });
+
+        // Update current date
+        function updateAdminCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            };
+            document.getElementById('adminCurrentDate').textContent = now.toLocaleDateString('vi-VN', options);
+        }
+
+        // Navigation function
+        function adminNavigateTo(page) {
+            if (currentAdminPage === page) return;
+            
+            showAdminLoading();
+            
+            // Update sidebar active state
+            document.querySelectorAll('.admin-sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            const activeItem = document.querySelector(`[data-page="${page}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+            
+            // Update page title and content
+            updateAdminPageContent(page);
+            currentAdminPage = page;
+            
+            // Close mobile sidebar if open
+            closeAdminMobileSidebar();
+            
+            // Hide loading after animation
+            setTimeout(() => {
+                hideAdminLoading();
+                showAdminNotification(`📄 Đã chuyển đến ${getAdminPageName(page)}`, 'success');
+            }, 800);
+        }
+
+        // Update page content based on selected page
+        function updateAdminPageContent(page) {
+            const pageTitle = document.getElementById('adminPageTitle');
+            const pageSubtitle = document.getElementById('adminPageSubtitle');
+            const mainContent = document.getElementById('adminMainContent');
+            
+            // Update header
+            const pageInfo = getAdminPageInfo(page);
+            pageTitle.textContent = pageInfo.title;
+            pageSubtitle.textContent = pageInfo.subtitle;
+            
+            // Update content with slide animation
+            mainContent.innerHTML = `
+                <div class="max-w-7xl mx-auto slide-in">
+                    ${getAdminPageContent(page)}
+                </div>
+            `;
+        }
+
+        // Get page information
+        function getAdminPageInfo(page) {
+            const pageInfoMap = {
+                'overview': {
+                    title: '⚡ Bảng điều khiển Quản trị hệ thống',
+                    subtitle: 'Giám sát và quản lý toàn bộ hệ thống Carbon Credit Marketplace'
+                },
+                'users': {
+                    title: '👥 Quản lý người dùng',
+                    subtitle: 'Quản lý tài khoản EV Owner, Buyer và CVA'
+                },
+                'transactions': {
+                    title: '💳 Quản lý giao dịch',
+                    subtitle: 'Giám sát và xử lý tất cả giao dịch tín chỉ carbon'
+                },
+                'listings': {
+                    title: '🏷️ Quản lý niêm yết',
+                    subtitle: 'Kiểm duyệt và quản lý các niêm yết tín chỉ carbon'
+                },
+                'wallets': {
+                    title: '💰 Quản lý ví & dòng tiền',
+                    subtitle: 'Theo dõi ví điện tử và dòng tiền trong hệ thống'
+                },
+                'reports': {
+                    title: '📈 Báo cáo hệ thống',
+                    subtitle: 'Phân tích dữ liệu và tạo báo cáo chi tiết'
+                },
+                'settings': {
+                    title: '⚙️ Cài đặt hệ thống',
+                    subtitle: 'Cấu hình và bảo trì hệ thống'
+                }
+            };
+            
+            return pageInfoMap[page] || pageInfoMap['overview'];
+        }
+
+        // Get page name for notifications
+        function getAdminPageName(page) {
+            const names = {
+                'overview': 'Tổng quan',
+                'users': 'Quản lý người dùng',
+                'transactions': 'Quản lý giao dịch',
+                'listings': 'Quản lý niêm yết',
+                'wallets': 'Ví & dòng tiền',
+                'reports': 'Báo cáo',
+                'settings': 'Cài đặt'
+            };
+            return names[page] || page;
+        }
+
+        // Get page content
+        function getAdminPageContent(page) {
+            switch(page) {
+                case 'users':
+                    return getAdminUsersContent();
+                case 'transactions':
+                    return getAdminTransactionsContent();
+                case 'listings':
+                    return getAdminListingsContent();
+                case 'wallets':
+                    return getAdminWalletsContent();
+                case 'reports':
+                    return getAdminReportsContent();
+                case 'settings':
+                    return getAdminSettingsContent();
+                default:
+                    return getAdminOverviewContent();
+            }
+        }
+
+        // Overview content (already defined above)
+        function getAdminOverviewContent() {
+            return document.getElementById('adminOverviewContent').innerHTML;
+        }
+
+        // Users management content
+        function getAdminUsersContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Users Overview -->
+                    <div class="gradient-admin-blue rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Quản lý người dùng</h2>
+                                <p class="opacity-90 mb-4">Tổng cộng 1,247 người dùng đang hoạt động trong hệ thống</p>
+                                <div class="flex space-x-4">
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">856 EV Owner</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">391 Buyer</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">👥</div>
+                        </div>
+                    </div>
+
+                    <!-- User Stats -->
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">🚗</span>
+                            </div>
+                            <p class="text-2xl font-bold text-blue-600">856</p>
+                            <p class="text-sm text-gray-600">EV Owner</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">🏢</span>
+                            </div>
+                            <p class="text-2xl font-bold text-orange-600">391</p>
+                            <p class="text-sm text-gray-600">Buyer</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">✅</span>
+                            </div>
+                            <p class="text-2xl font-bold text-green-600">247</p>
+                            <p class="text-sm text-gray-600">Online</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-red rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">⚠️</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">12</p>
+                            <p class="text-sm text-gray-600">Bị khóa</p>
+                        </div>
+                    </div>
+
+                    <!-- User Management Table -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Danh sách người dùng</h3>
+                            <div class="flex space-x-3">
+                                <input type="text" placeholder="Tìm kiếm..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                    <option>Tất cả vai trò</option>
+                                    <option>EV Owner</option>
+                                    <option>Buyer</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="admin-table w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Người dùng</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Vai trò</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Ngày tham gia</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Giao dịch</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${generateAdminUsersList()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate users list
+        function generateAdminUsersList() {
+            const users = [
+                {
+                    id: 'U001',
+                    name: 'Nguyễn Văn An',
+                    email: 'an.nguyen@email.com',
+                    role: 'EV Owner',
+                    joinDate: '15/01/2024',
+                    transactions: 12,
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                },
+                {
+                    id: 'U002',
+                    name: 'Green Corporation',
+                    email: 'contact@greencorp.com',
+                    role: 'Buyer',
+                    joinDate: '20/02/2024',
+                    transactions: 8,
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                },
+                {
+                    id: 'U003',
+                    name: 'Trần Thị Bình',
+                    email: 'binh.tran@email.com',
+                    role: 'EV Owner',
+                    joinDate: '10/03/2024',
+                    transactions: 5,
+                    status: 'Tạm khóa',
+                    statusColor: 'red'
+                }
+            ];
+
+            return users.map(user => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-blue-600 text-sm">${user.role === 'EV Owner' ? '🚗' : '🏢'}</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">${user.name}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${user.role}</span>
+                    </td>
+                    <td class="py-4 px-4 text-gray-600">${user.joinDate}</td>
+                    <td class="py-4 px-4 font-bold text-green-600">${user.transactions}</td>
+                    <td class="py-4 px-4">
+                        <span class="bg-${user.statusColor}-100 text-${user.statusColor}-800 px-3 py-1 rounded-full text-xs font-semibold">${user.status}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex space-x-2">
+                            <button onclick="adminViewUser('${user.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
+                                👁️ Xem
+                            </button>
+                            <button onclick="adminEditUser('${user.id}')" class="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600 transition-colors">
+                                ✏️ Sửa
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Transactions management content
+        function getAdminTransactionsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Transaction Overview -->
+                    <div class="gradient-admin-green rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Quản lý giao dịch</h2>
+                                <p class="opacity-90 mb-4">Tổng cộng 847 giao dịch với giá trị ₫62.3M</p>
+                                <div class="flex space-x-4">
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">23 giao dịch hôm nay</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">3 tranh chấp</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">💳</div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Stats -->
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">✅</span>
+                            </div>
+                            <p class="text-2xl font-bold text-green-600">789</p>
+                            <p class="text-sm text-gray-600">Hoàn thành</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">⏳</span>
+                            </div>
+                            <p class="text-2xl font-bold text-orange-600">45</p>
+                            <p class="text-sm text-gray-600">Đang xử lý</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-red rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">⚠️</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">3</p>
+                            <p class="text-sm text-gray-600">Tranh chấp</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-purple rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">❌</span>
+                            </div>
+                            <p class="text-2xl font-bold text-purple-600">10</p>
+                            <p class="text-sm text-gray-600">Thất bại</p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Transaction Table -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Chi tiết giao dịch</h3>
+                            <div class="flex space-x-3">
+                                <input type="text" placeholder="Tìm mã giao dịch..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                    <option>Tất cả trạng thái</option>
+                                    <option>Hoàn thành</option>
+                                    <option>Đang xử lý</option>
+                                    <option>Tranh chấp</option>
+                                </select>
+                                <button onclick="exportTransactions()" class="gradient-admin-blue text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all">
+                                    📊 Xuất Excel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="admin-table w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Mã GD</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Thời gian</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Người bán</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Người mua</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Tín chỉ</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Giá trị</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Phí</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${generateDetailedTransactionsList()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate detailed transactions list
+        function generateDetailedTransactionsList() {
+            const transactions = [
+                {
+                    id: 'TX001',
+                    time: '15/12/2024 14:30',
+                    seller: 'Nguyễn Văn An',
+                    buyer: 'Green Corp',
+                    credits: '0.025',
+                    value: '₫125,000',
+                    fee: '₫3,750',
+                    status: 'Hoàn thành',
+                    statusColor: 'green'
+                },
+                {
+                    id: 'TX002',
+                    time: '15/12/2024 13:15',
+                    seller: 'Trần Thị Bình',
+                    buyer: 'Eco Solutions',
+                    credits: '0.018',
+                    value: '₫90,000',
+                    fee: '₫2,700',
+                    status: 'Hoàn thành',
+                    statusColor: 'green'
+                },
+                {
+                    id: 'TX003',
+                    time: '15/12/2024 12:45',
+                    seller: 'Lê Minh Cường',
+                    buyer: 'Clean Energy',
+                    credits: '0.032',
+                    value: '₫160,000',
+                    fee: '₫4,800',
+                    status: 'Tranh chấp',
+                    statusColor: 'red'
+                }
+            ];
+
+            return transactions.map(tx => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">
+                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#${tx.id}</span>
+                    </td>
+                    <td class="py-4 px-4 text-gray-600 text-sm">${tx.time}</td>
+                    <td class="py-4 px-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-green-600 text-xs">🚗</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-800">${tx.seller}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                                <span class="text-blue-600 text-xs">🏢</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-800">${tx.buyer}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 font-bold text-green-600">${tx.credits}</td>
+                    <td class="py-4 px-4 font-bold text-blue-600">${tx.value}</td>
+                    <td class="py-4 px-4 font-bold text-orange-600">${tx.fee}</td>
+                    <td class="py-4 px-4">
+                        <span class="bg-${tx.statusColor}-100 text-${tx.statusColor}-800 px-2 py-1 rounded-full text-xs font-semibold">${tx.status}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex space-x-1">
+                            <button onclick="adminViewTransaction('${tx.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
+                                👁️
+                            </button>
+                            <button onclick="adminEditTransaction('${tx.id}')" class="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600 transition-colors">
+                                ✏️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Listings management content
+        function getAdminListingsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Listings Overview -->
+                    <div class="gradient-admin-orange rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Quản lý niêm yết tín chỉ</h2>
+                                <p class="opacity-90 mb-4">156 niêm yết đang hoạt động, 23 chờ duyệt</p>
+                                <div class="flex space-x-4">
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">12 niêm yết mới hôm nay</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">5 cần xem xét</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">🏷️</div>
+                        </div>
+                    </div>
+
+                    <!-- Listings Management -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Danh sách niêm yết</h3>
+                            <div class="flex space-x-3">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                    <option>Tất cả trạng thái</option>
+                                    <option>Đang hoạt động</option>
+                                    <option>Chờ duyệt</option>
+                                    <option>Bị từ chối</option>
+                                </select>
+                                <button onclick="approveAllListings()" class="gradient-admin-green text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all">
+                                    ✅ Duyệt tất cả
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${generateAdminListings()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate admin listings
+        function generateAdminListings() {
+            const listings = [
+                {
+                    id: 'L001',
+                    seller: 'Nguyễn Văn An',
+                    car: 'Tesla Model 3',
+                    credits: '0.045',
+                    price: '₫225,000',
+                    status: 'Chờ duyệt',
+                    statusColor: 'yellow'
+                },
+                {
+                    id: 'L002',
+                    seller: 'Trần Thị Bình',
+                    car: 'VinFast VF8',
+                    credits: '0.038',
+                    price: '₫195,000',
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                },
+                {
+                    id: 'L003',
+                    seller: 'Lê Minh Cường',
+                    car: 'BMW iX3',
+                    credits: '0.052',
+                    price: '₫260,000',
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                }
+            ];
+
+            return listings.map(listing => `
+                <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-${listing.statusColor}-100 text-${listing.statusColor}-800 px-2 py-1 rounded text-xs font-semibold">${listing.status}</span>
+                        <span class="text-sm text-gray-600">#${listing.id}</span>
+                    </div>
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-blue-600">🚗</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">${listing.seller}</p>
+                            <p class="text-xs text-gray-500">${listing.car}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <p class="text-sm"><span class="font-semibold">Tín chỉ:</span> ${listing.credits}</p>
+                        <p class="text-sm"><span class="font-semibold">Giá:</span> <span class="text-green-600 font-bold">${listing.price}</span></p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="approveListing('${listing.id}')" class="flex-1 gradient-admin-green text-white py-2 rounded-lg hover:opacity-90 transition-all text-sm">
+                            ✅ Duyệt
+                        </button>
+                        <button onclick="rejectListing('${listing.id}')" class="flex-1 gradient-admin-red text-white py-2 rounded-lg hover:opacity-90 transition-all text-sm">
+                            ❌ Từ chối
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Wallets management content
+        function getAdminWalletsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Wallets Overview -->
+                    <div class="gradient-admin-purple rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Quản lý ví & dòng tiền</h2>
+                                <p class="opacity-90 mb-4">Tổng giá trị trong hệ thống: ₫62.3M</p>
+                                <div class="flex space-x-4">
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">1,247 ví hoạt động</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">₫1.87M phí hệ thống</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">💰</div>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Stats -->
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">💳</span>
+                            </div>
+                            <p class="text-2xl font-bold text-green-600">₫45.2M</p>
+                            <p class="text-sm text-gray-600">Tổng số dư</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">📈</span>
+                            </div>
+                            <p class="text-2xl font-bold text-blue-600">₫8.5M</p>
+                            <p class="text-sm text-gray-600">Dòng tiền tháng</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">🏦</span>
+                            </div>
+                            <p class="text-2xl font-bold text-orange-600">₫1.87M</p>
+                            <p class="text-sm text-gray-600">Phí hệ thống</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6 text-center">
+                            <div class="w-12 h-12 gradient-admin-red rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">⚠️</span>
+                            </div>
+                            <p class="text-2xl font-bold text-red-600">5</p>
+                            <p class="text-sm text-gray-600">Ví bị khóa</p>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Management -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Quản lý ví người dùng</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="admin-table w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Người dùng</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Số dư</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Giao dịch</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Trạng thái</th>
+                                        <th class="text-left py-4 px-4 font-semibold text-gray-700">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${generateWalletsList()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate wallets list
+        function generateWalletsList() {
+            const wallets = [
+                {
+                    user: 'Green Corporation',
+                    balance: '₫2,450,000',
+                    transactions: 15,
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                },
+                {
+                    user: 'Nguyễn Văn An',
+                    balance: '₫850,000',
+                    transactions: 8,
+                    status: 'Hoạt động',
+                    statusColor: 'green'
+                },
+                {
+                    user: 'Eco Solutions',
+                    balance: '₫1,200,000',
+                    transactions: 12,
+                    status: 'Bị khóa',
+                    statusColor: 'red'
+                }
+            ];
+
+            return wallets.map(wallet => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-purple-600">💳</span>
+                            </div>
+                            <span class="font-semibold text-gray-800">${wallet.user}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 font-bold text-green-600">${wallet.balance}</td>
+                    <td class="py-4 px-4 text-gray-600">${wallet.transactions}</td>
+                    <td class="py-4 px-4">
+                        <span class="bg-${wallet.statusColor}-100 text-${wallet.statusColor}-800 px-3 py-1 rounded-full text-xs font-semibold">${wallet.status}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex space-x-2">
+                            <button onclick="adminViewWallet('${wallet.user}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
+                                👁️ Xem
+                            </button>
+                            <button onclick="adminFreezeWallet('${wallet.user}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors">
+                                🔒 Khóa
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Reports content
+        function getAdminReportsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Reports Overview -->
+                    <div class="gradient-admin-red rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Báo cáo hệ thống</h2>
+                                <p class="opacity-90 mb-4">Phân tích dữ liệu và tạo báo cáo chi tiết</p>
+                                <div class="flex space-x-4">
+                                    <button onclick="generateReport('monthly')" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
+                                        📊 Báo cáo tháng
+                                    </button>
+                                    <button onclick="generateReport('yearly')" class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
+                                        📈 Báo cáo năm
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">📈</div>
+                        </div>
+                    </div>
+
+                    <!-- Report Types -->
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6">
+                            <div class="w-12 h-12 gradient-admin-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">👥</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">Báo cáo người dùng</h4>
+                            <p class="text-sm text-gray-600 mb-4">Thống kê người dùng, tăng trưởng, hoạt động</p>
+                            <button onclick="generateUserReport()" class="w-full gradient-admin-blue text-white py-2 rounded-lg hover:opacity-90 transition-all">
+                                📊 Tạo báo cáo
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6">
+                            <div class="w-12 h-12 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">💳</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">Báo cáo giao dịch</h4>
+                            <p class="text-sm text-gray-600 mb-4">Phân tích giao dịch, doanh thu, xu hướng</p>
+                            <button onclick="generateTransactionReport()" class="w-full gradient-admin-green text-white py-2 rounded-lg hover:opacity-90 transition-all">
+                                📈 Tạo báo cáo
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-6">
+                            <div class="w-12 h-12 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">💰</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">Báo cáo tài chính</h4>
+                            <p class="text-sm text-gray-600 mb-4">Dòng tiền, phí, lợi nhuận hệ thống</p>
+                            <button onclick="generateFinancialReport()" class="w-full gradient-admin-orange text-white py-2 rounded-lg hover:opacity-90 transition-all">
+                                💰 Tạo báo cáo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Settings content
+        function getAdminSettingsContent() {
+            return `
+                <div class="space-y-8">
+                    <!-- Settings Overview -->
+                    <div class="gradient-admin-blue rounded-xl text-white admin-card p-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">Cài đặt hệ thống</h2>
+                                <p class="opacity-90 mb-4">Cấu hình và bảo trì hệ thống Carbon Credit Marketplace</p>
+                                <div class="flex space-x-4">
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">Hệ thống ổn định</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                                        <span class="text-sm">Uptime: 99.9%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-6xl opacity-20">⚙️</div>
+                        </div>
+                    </div>
+
+                    <!-- System Settings -->
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- General Settings -->
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Cài đặt chung</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Phí giao dịch (%)</label>
+                                    <input type="number" value="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Giá tối thiểu (VND)</label>
+                                    <input type="number" value="50000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Tự động duyệt niêm yết</p>
+                                        <p class="text-sm text-gray-600">Duyệt tự động các niêm yết từ người dùng đã xác thực</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <button onclick="saveGeneralSettings()" class="gradient-admin-blue text-white px-6 py-3 rounded-xl hover:opacity-90 transition-all font-semibold">
+                                    💾 Lưu cài đặt
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Cài đặt bảo mật</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Xác thực 2 bước</p>
+                                        <p class="text-sm text-gray-600">Bắt buộc xác thực 2 bước cho admin</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Ghi log hoạt động</p>
+                                        <p class="text-sm text-gray-600">Ghi lại tất cả hoạt động của admin</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <button onclick="saveSecuritySettings()" class="gradient-admin-red text-white px-6 py-3 rounded-xl hover:opacity-90 transition-all font-semibold">
+                                    🔒 Lưu bảo mật
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Maintenance -->
+                    <div class="bg-white rounded-xl border border-gray-200 admin-card p-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Bảo trì hệ thống</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="w-16 h-16 gradient-admin-green rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-3xl text-white">💾</span>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-2">Sao lưu dữ liệu</h4>
+                                <p class="text-sm text-gray-600 mb-4">Sao lưu toàn bộ dữ liệu hệ thống</p>
+                                <button onclick="backupSystem()" class="gradient-admin-green text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all">
+                                    💾 Sao lưu ngay
+                                </button>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 gradient-admin-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-3xl text-white">🔧</span>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-2">Bảo trì hệ thống</h4>
+                                <p class="text-sm text-gray-600 mb-4">Chuyển hệ thống sang chế độ bảo trì</p>
+                                <button onclick="maintenanceMode()" class="gradient-admin-orange text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all">
+                                    🔧 Bảo trì
+                                </button>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 gradient-admin-red rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-3xl text-white">🔄</span>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-2">Khởi động lại</h4>
+                                <p class="text-sm text-gray-600 mb-4">Khởi động lại toàn bộ hệ thống</p>
+                                <button onclick="restartSystem()" class="gradient-admin-red text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all">
+                                    🔄 Khởi động lại
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mobile sidebar functions
+        function toggleAdminMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('adminMobileOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeAdminMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('adminMobileOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+
+        // Loading functions
+        function showAdminLoading() {
+            document.getElementById('adminLoadingIndicator').classList.remove('hidden');
+        }
+
+        function hideAdminLoading() {
+            document.getElementById('adminLoadingIndicator').classList.add('hidden');
+        }
+
+        // Quick action functions
+        function quickAction(action) {
+            switch(action) {
+                case 'backup':
+                    showAdminNotification('💾 Đang thực hiện sao lưu hệ thống...', 'info');
+                    break;
+                case 'maintenance':
+                    showAdminNotification('🔧 Đang chuyển sang chế độ bảo trì...', 'warning');
+                    break;
+            }
+        }
+
+        function adminQuickAction(action) {
+            if (action === 'emergency') {
+                showAdminNotification('🚨 Đã kích hoạt chế độ khẩn cấp!', 'error');
+            }
+        }
+
+        // Admin action functions
+        function adminViewTransaction(txId) {
+            showAdminNotification(`👁️ Đang xem chi tiết giao dịch #${txId}`, 'info');
+        }
+
+        function adminViewUser(userId) {
+            showAdminNotification(`👁️ Đang xem thông tin người dùng #${userId}`, 'info');
+        }
+
+        function adminEditUser(userId) {
+            showAdminNotification(`✏️ Đang chỉnh sửa người dùng #${userId}`, 'info');
+        }
+
+        function adminEditTransaction(txId) {
+            showAdminNotification(`✏️ Đang chỉnh sửa giao dịch #${txId}`, 'info');
+        }
+
+        function approveListing(listingId) {
+            showAdminNotification(`✅ Đã duyệt niêm yết #${listingId}`, 'success');
+        }
+
+        function rejectListing(listingId) {
+            showAdminNotification(`❌ Đã từ chối niêm yết #${listingId}`, 'error');
+        }
+
+        function approveAllListings() {
+            showAdminNotification('✅ Đã duyệt tất cả niêm yết chờ duyệt!', 'success');
+        }
+
+        function adminViewWallet(user) {
+            showAdminNotification(`👁️ Đang xem ví của ${user}`, 'info');
+        }
+
+        function adminFreezeWallet(user) {
+            showAdminNotification(`🔒 Đã khóa ví của ${user}`, 'warning');
+        }
+
+        function exportTransactions() {
+            showAdminNotification('📊 Đang xuất dữ liệu giao dịch...', 'info');
+        }
+
+        function generateReport(type) {
+            showAdminNotification(`📈 Đang tạo báo cáo ${type}...`, 'info');
+        }
+
+        function generateUserReport() {
+            showAdminNotification('📊 Đang tạo báo cáo người dùng...', 'info');
+        }
+
+        function generateTransactionReport() {
+            showAdminNotification('📈 Đang tạo báo cáo giao dịch...', 'info');
+        }
+
+        function generateFinancialReport() {
+            showAdminNotification('💰 Đang tạo báo cáo tài chính...', 'info');
+        }
+
+        function saveGeneralSettings() {
+            showAdminNotification('💾 Đã lưu cài đặt chung!', 'success');
+        }
+
+        function saveSecuritySettings() {
+            showAdminNotification('🔒 Đã lưu cài đặt bảo mật!', 'success');
+        }
+
+        function backupSystem() {
+            showAdminNotification('💾 Đang thực hiện sao lưu hệ thống...', 'info');
+        }
+
+        function maintenanceMode() {
+            showAdminNotification('🔧 Đã chuyển sang chế độ bảo trì!', 'warning');
+        }
+
+        function restartSystem() {
+            showAdminNotification('🔄 Đang khởi động lại hệ thống...', 'warning');
+        }
+
+        // Refresh system stats
+        function refreshSystemStats() {
+            // Simulate real-time data updates
+            console.log('Refreshing system stats...');
+        }
+
+        // Notification function
+        function showAdminNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl text-white font-semibold shadow-lg transform translate-x-full transition-transform duration-300`;
+            
+            // Set color based on type
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-orange-500');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ddd353662184af',t:'MTc2MDM0NzkwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

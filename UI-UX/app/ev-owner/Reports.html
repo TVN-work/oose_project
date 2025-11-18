@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo cá nhân - EV Owner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        .ai-prediction {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-prediction::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-white font-bold text-lg">📊</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Báo cáo CO₂ & Doanh thu</h1>
+                        <p class="text-sm text-gray-600">Theo dõi tác động môi trường và hiệu quả kinh tế</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="mr-4 text-right">
+                        <p class="text-sm text-gray-600">Cập nhật lần cuối</p>
+                        <p class="text-sm font-medium text-green-600">18/12/2024 15:30</p>
+                    </div>
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2310B981'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                    <span class="text-gray-700 font-medium">EV Owner</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Summary Cards -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">🌱</span>
+                    <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+12.3%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">24.7 tấn</p>
+                <p class="text-sm text-gray-600">Tổng CO₂ giảm</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">⚡</span>
+                    <span class="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">+8.9%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">247</p>
+                <p class="text-sm text-gray-600">Tín chỉ quy đổi</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">💰</span>
+                    <span class="text-sm text-purple-600 bg-purple-100 px-2 py-1 rounded-full">+15.2%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1">189</p>
+                <p class="text-sm text-gray-600">Tín chỉ đã bán</p>
+            </div>
+
+            <div class="gradient-green text-white p-6 rounded-xl card-shadow relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-3xl">💵</span>
+                        <span class="text-sm opacity-75">Năm 2024</span>
+                    </div>
+                    <p class="text-2xl font-bold mb-1">$4,347.80</p>
+                    <p class="text-sm opacity-90">Tổng doanh thu</p>
+                </div>
+                <div class="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <!-- CO2 Reduction Chart -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <span class="mr-2">🌱</span>
+                        CO₂ giảm theo tháng
+                    </h3>
+                    <select class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option>2024</option>
+                        <option>2023</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="co2Chart"></canvas>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600">Xu hướng tăng trưởng: <span class="text-green-600 font-semibold">+12.3% so với năm trước</span></p>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <span class="mr-2">💰</span>
+                        Doanh thu theo tháng
+                    </h3>
+                    <select class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>2024</option>
+                        <option>2023</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600">Doanh thu trung bình: <span class="text-blue-600 font-semibold">$362.32/tháng</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Summary Table -->
+        <div class="bg-white rounded-xl card-shadow mb-8">
+            <div class="p-6 border-b bg-green-50">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <span class="mr-2">📋</span>
+                    Bảng tổng hợp chi tiết
+                </h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-green-50">
+                        <tr>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Chỉ số</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Tháng này</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Tháng trước</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Tổng cộng</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Thay đổi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm font-medium text-gray-800">🌱 CO₂ giảm (tấn)</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">2.8</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">2.3</td>
+                            <td class="py-4 px-6 text-sm font-semibold text-green-600">24.7</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+21.7%</span>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm font-medium text-gray-800">⚡ Tín chỉ quy đổi</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">28</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">23</td>
+                            <td class="py-4 px-6 text-sm font-semibold text-blue-600">247</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+21.7%</span>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm font-medium text-gray-800">💰 Tín chỉ đã bán</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">25</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">18</td>
+                            <td class="py-4 px-6 text-sm font-semibold text-purple-600">189</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+38.9%</span>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 text-sm font-medium text-gray-800">💵 Doanh thu (USD)</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$587.50</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">$423.20</td>
+                            <td class="py-4 px-6 text-sm font-semibold text-green-600">$4,347.80</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+38.8%</span>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-blue-50">
+                            <td class="py-4 px-6 text-sm font-medium text-gray-800">📊 Giá trung bình/tín chỉ</td>
+                            <td class="py-4 px-6 text-sm text-gray-800">$23.50</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">$23.51</td>
+                            <td class="py-4 px-6 text-sm font-semibold text-blue-600">$23.01</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm text-red-600 bg-red-100 px-2 py-1 rounded-full">-0.04%</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- AI Prediction & Export Section -->
+        <div class="grid lg:grid-cols-3 gap-6">
+            <!-- AI Prediction -->
+            <div class="lg:col-span-2">
+                <div class="ai-prediction text-white p-6 rounded-xl card-shadow relative pulse-glow">
+                    <div class="relative z-10">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center">
+                            <span class="mr-2">🤖</span>
+                            Dự đoán AI - Tháng tới
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                                <p class="text-sm opacity-90 mb-1">Dự kiến CO₂ giảm</p>
+                                <p class="text-xl font-bold">3.2 tấn</p>
+                                <p class="text-xs opacity-75">+14.3% so với tháng này</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                                <p class="text-sm opacity-90 mb-1">Dự kiến doanh thu</p>
+                                <p class="text-xl font-bold">$672.40</p>
+                                <p class="text-xs opacity-75">+14.4% so với tháng này</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg mb-4">
+                            <h4 class="font-semibold mb-2">💡 Gợi ý tối ưu:</h4>
+                            <ul class="text-sm space-y-1 opacity-90">
+                                <li>• Tăng cường sử dụng xe điện vào cuối tuần (+15% tín chỉ)</li>
+                                <li>• Giá tín chỉ dự kiến tăng lên $24.20 trong 2 tuần tới</li>
+                                <li>• Nên bán 20-25 tín chỉ trong tuần đầu tháng sau</li>
+                            </ul>
+                        </div>
+
+                        <button onclick="getDetailedPrediction()" class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 py-2 px-4 rounded-lg transition-all duration-200 font-medium">
+                            🔮 Xem dự đoán chi tiết
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">📤</span>
+                    Xuất báo cáo
+                </h3>
+                
+                <div class="space-y-3">
+                    <button onclick="exportCSV()" class="w-full gradient-green text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 flex items-center justify-center">
+                        <span class="mr-2">📊</span>
+                        Xuất file CSV
+                    </button>
+                    
+                    <button onclick="exportPDF()" class="w-full gradient-blue text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 flex items-center justify-center">
+                        <span class="mr-2">📄</span>
+                        Xuất file PDF
+                    </button>
+                    
+                    <button onclick="shareReport()" class="w-full border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center justify-center">
+                        <span class="mr-2">🔗</span>
+                        Chia sẻ báo cáo
+                    </button>
+                </div>
+
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-2">📈 Thống kê nhanh</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Hiệu suất tháng này:</span>
+                            <span class="font-semibold text-green-600">Xuất sắc</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Xếp hạng:</span>
+                            <span class="font-semibold text-blue-600">Top 15%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Mục tiêu tháng sau:</span>
+                            <span class="font-semibold text-purple-600">$700</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart data
+        const co2Data = {
+            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            datasets: [{
+                label: 'CO₂ giảm (tấn)',
+                data: [1.2, 1.8, 2.1, 2.3, 2.0, 2.5, 2.2, 2.7, 2.4, 2.6, 2.3, 2.8],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        };
+
+        const revenueData = {
+            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            datasets: [{
+                label: 'Doanh thu (USD)',
+                data: [280, 420, 490, 540, 470, 590, 520, 630, 560, 610, 540, 587],
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: '#3b82f6',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        };
+
+        // Initialize charts
+        function initializeCharts() {
+            // CO2 Chart
+            const co2Ctx = document.getElementById('co2Chart').getContext('2d');
+            new Chart(co2Ctx, {
+                type: 'line',
+                data: co2Data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' tấn';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            hoverRadius: 8
+                        }
+                    }
+                }
+            });
+
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'bar',
+                data: revenueData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Get detailed AI prediction
+        function getDetailedPrediction() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '🤖 Đang phân tích...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                showNotification(`🔮 Dự đoán chi tiết tháng 1/2025:
+
+📊 Phân tích xu hướng:
+• CO₂ giảm: 3.2 tấn (+14.3%)
+• Tín chỉ tạo ra: 32 (+14.3%)
+• Doanh thu dự kiến: $672.40 (+14.4%)
+
+💡 Yếu tố ảnh hưởng:
+• Thời tiết thuận lợi cho xe điện
+• Giá tín chỉ tăng nhẹ ($24.20)
+• Nhu cầu thị trường cao
+
+🎯 Khuyến nghị:
+• Bán 25 tín chỉ trong tuần đầu
+• Giữ lại 7 tín chỉ chờ giá tăng
+• Tăng cường di chuyển cuối tuần`, 'success');
+                
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 3000);
+        }
+
+        // Export functions
+        function exportCSV() {
+            showNotification('📊 Đang tạo file CSV...', 'info');
+            setTimeout(() => {
+                showNotification('✅ Đã xuất thành công "bao-cao-carbon-2024.csv"', 'success');
+            }, 2000);
+        }
+
+        function exportPDF() {
+            showNotification('📄 Đang tạo file PDF...', 'info');
+            setTimeout(() => {
+                showNotification('✅ Đã xuất thành công "bao-cao-carbon-2024.pdf"', 'success');
+            }, 2500);
+        }
+
+        function shareReport() {
+            showNotification('🔗 Link chia sẻ đã được sao chép:\nhttps://carbon.evowner.com/report/share/abc123', 'info');
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.style.whiteSpace = 'pre-line';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dbe3b195d2ce4b',t:'MTc2MDMyNzYwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

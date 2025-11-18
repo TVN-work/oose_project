@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giao dịch của tôi - EV Owner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+        .filter-active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-white font-bold text-lg">📊</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Lịch sử giao dịch</h1>
+                        <p class="text-sm text-gray-600">Theo dõi tất cả giao dịch tín chỉ carbon</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23667EEA'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
+                    <span class="text-gray-700 font-medium">EV Owner</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Summary Stats -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card text-white p-6 rounded-xl card-shadow relative">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-3xl">💰</span>
+                        <span class="text-sm opacity-75">Tháng này</span>
+                    </div>
+                    <p class="text-2xl font-bold mb-1" id="total-revenue">$8,547.30</p>
+                    <p class="text-sm opacity-90">Tổng doanh thu</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">📈</span>
+                    <span class="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+15.2%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1" id="total-sold">156.8</p>
+                <p class="text-sm text-gray-600">Tín chỉ đã bán</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">🛒</span>
+                    <span class="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">+8.7%</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1" id="total-bought">89.5</p>
+                <p class="text-sm text-gray-600">Tín chỉ đã mua</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-3xl">📋</span>
+                    <span class="text-sm text-gray-600">Tổng cộng</span>
+                </div>
+                <p class="text-2xl font-bold text-gray-800 mb-1" id="total-transactions">47</p>
+                <p class="text-sm text-gray-600">Giao dịch</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white p-6 rounded-xl card-shadow mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">🔍 Bộ lọc giao dịch</h3>
+            
+            <div class="grid md:grid-cols-4 gap-4">
+                <!-- Date Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Khoảng thời gian</label>
+                    <select onchange="filterTransactions()" id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="all">Tất cả</option>
+                        <option value="today">Hôm nay</option>
+                        <option value="week">7 ngày qua</option>
+                        <option value="month" selected>30 ngày qua</option>
+                        <option value="quarter">3 tháng qua</option>
+                        <option value="year">1 năm qua</option>
+                    </select>
+                </div>
+
+                <!-- Transaction Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Loại giao dịch</label>
+                    <select onchange="filterTransactions()" id="type-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="all">Tất cả</option>
+                        <option value="sell">Bán</option>
+                        <option value="buy">Mua</option>
+                        <option value="withdraw">Rút tiền</option>
+                        <option value="deposit">Nạp tiền</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                    <select onchange="filterTransactions()" id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="all">Tất cả</option>
+                        <option value="success">Thành công</option>
+                        <option value="pending">Đang xử lý</option>
+                        <option value="cancelled">Đã hủy</option>
+                        <option value="failed">Thất bại</option>
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-end">
+                    <div class="flex gap-2 w-full">
+                        <button onclick="resetFilters()" class="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                            🔄 Đặt lại
+                        </button>
+                        <button onclick="exportData()" class="flex-1 bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors text-sm">
+                            📊 Xuất Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="bg-white rounded-xl card-shadow overflow-hidden">
+            <div class="p-6 border-b bg-purple-50">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">📋 Chi tiết giao dịch</h3>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-600" id="results-count">Hiển thị 15 giao dịch</span>
+                        <div class="flex gap-2">
+                            <button onclick="toggleView('table')" id="table-view" class="px-3 py-1 bg-purple-500 text-white rounded-lg text-sm">
+                                📊 Bảng
+                            </button>
+                            <button onclick="toggleView('chart')" id="chart-view" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100">
+                                📈 Biểu đồ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto" id="table-container">
+                <table class="w-full">
+                    <thead class="bg-purple-50">
+                        <tr>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Mã giao dịch</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Ngày</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Số lượng</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Giá</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Loại</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Trạng thái</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Tổng giá trị</th>
+                            <th class="text-left py-3 px-6 text-sm font-medium text-gray-600">Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100" id="transactions-table">
+                        <!-- Transactions will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Chart Container (hidden by default) -->
+            <div id="chart-container" class="hidden p-6">
+                <div class="bg-gray-100 rounded-lg p-8 text-center">
+                    <span class="text-4xl mb-4 block">📈</span>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Biểu đồ giao dịch</h3>
+                    <p class="text-gray-600">Tính năng biểu đồ sẽ được triển khai trong phiên bản tiếp theo</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="p-6 border-t bg-purple-50">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-600" id="pagination-info">Hiển thị 1-15 trong 47 giao dịch</p>
+                    <div class="flex gap-2">
+                        <button onclick="changePage(-1)" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">Trước</button>
+                        <button class="px-3 py-1 bg-purple-500 text-white rounded-lg text-sm">1</button>
+                        <button onclick="changePage(2)" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">2</button>
+                        <button onclick="changePage(3)" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">3</button>
+                        <button onclick="changePage(1)" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors">Sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample transaction data
+        const allTransactions = [
+            {
+                id: 'TXN-789123',
+                date: '2024-12-18 14:30',
+                amount: 25.3,
+                price: 22.30,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001234'
+            },
+            {
+                id: 'TXN-789122',
+                date: '2024-12-17 16:45',
+                amount: 15.0,
+                price: 24.80,
+                type: 'sell',
+                status: 'success',
+                description: 'Đấu giá thành công #LST-001233'
+            },
+            {
+                id: 'TXN-789121',
+                date: '2024-12-17 09:15',
+                amount: 18.7,
+                price: 29.00,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001232'
+            },
+            {
+                id: 'TXN-789120',
+                date: '2024-12-16 11:20',
+                amount: 50.0,
+                price: 23.50,
+                type: 'buy',
+                status: 'success',
+                description: 'Mua tín chỉ từ Green Energy Co.'
+            },
+            {
+                id: 'TXN-789119',
+                date: '2024-12-16 08:30',
+                amount: 15.0,
+                price: 0,
+                type: 'withdraw',
+                status: 'pending',
+                description: 'Rút 15 tín chỉ về ví'
+            },
+            {
+                id: 'TXN-789118',
+                date: '2024-12-15 15:10',
+                amount: 32.1,
+                price: 27.05,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001230'
+            },
+            {
+                id: 'TXN-789117',
+                date: '2024-12-15 13:45',
+                amount: 12.8,
+                price: 23.20,
+                type: 'sell',
+                status: 'success',
+                description: 'Đấu giá thành công #LST-001229'
+            },
+            {
+                id: 'TXN-789116',
+                date: '2024-12-14 10:30',
+                amount: 8.5,
+                price: 25.00,
+                type: 'sell',
+                status: 'cancelled',
+                description: 'Hủy niêm yết #LST-001228'
+            },
+            {
+                id: 'TXN-789115',
+                date: '2024-12-13 16:20',
+                amount: 30.0,
+                price: 22.80,
+                type: 'buy',
+                status: 'success',
+                description: 'Mua tín chỉ từ Solar Farm Ltd.'
+            },
+            {
+                id: 'TXN-789114',
+                date: '2024-12-12 14:15',
+                amount: 19.8,
+                price: 29.00,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001227'
+            },
+            {
+                id: 'TXN-789113',
+                date: '2024-12-11 09:45',
+                amount: 25.0,
+                price: 0,
+                type: 'deposit',
+                status: 'success',
+                description: 'Nạp 25 tín chỉ từ hành trình xe điện'
+            },
+            {
+                id: 'TXN-789112',
+                date: '2024-12-10 11:30',
+                amount: 22.5,
+                price: 26.50,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001226'
+            },
+            {
+                id: 'TXN-789111',
+                date: '2024-12-09 15:20',
+                amount: 10.0,
+                price: 24.00,
+                type: 'buy',
+                status: 'failed',
+                description: 'Mua tín chỉ thất bại - Không đủ số dư'
+            },
+            {
+                id: 'TXN-789110',
+                date: '2024-12-08 13:10',
+                amount: 35.7,
+                price: 28.30,
+                type: 'sell',
+                status: 'success',
+                description: 'Bán tín chỉ carbon #LST-001225'
+            },
+            {
+                id: 'TXN-789109',
+                date: '2024-12-07 16:45',
+                amount: 20.0,
+                price: 0,
+                type: 'deposit',
+                status: 'success',
+                description: 'Nạp 20 tín chỉ từ hành trình xe điện'
+            }
+        ];
+
+        let filteredTransactions = [...allTransactions];
+        let currentPage = 1;
+        const itemsPerPage = 15;
+
+        // Initialize page
+        function initializePage() {
+            renderTransactions();
+            updateStats();
+        }
+
+        // Render transactions table
+        function renderTransactions() {
+            const tbody = document.getElementById('transactions-table');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+
+            pageTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                const typeInfo = getTypeInfo(transaction.type);
+                const statusInfo = getStatusInfo(transaction.status);
+                const totalValue = transaction.price > 0 ? (transaction.amount * transaction.price).toFixed(2) : '-';
+
+                row.innerHTML = `
+                    <td class="py-4 px-6 text-sm font-mono text-purple-600">${transaction.id}</td>
+                    <td class="py-4 px-6 text-sm text-gray-800">${formatDate(transaction.date)}</td>
+                    <td class="py-4 px-6 text-sm font-medium ${transaction.type === 'sell' || transaction.type === 'withdraw' ? 'text-red-600' : 'text-green-600'}">
+                        ${transaction.type === 'sell' || transaction.type === 'withdraw' ? '-' : '+'}${transaction.amount}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-800">${transaction.price > 0 ? '$' + transaction.price.toFixed(2) : '-'}</td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center px-2 py-1 ${typeInfo.bgColor} ${typeInfo.textColor} text-xs rounded-full">
+                            ${typeInfo.icon} ${typeInfo.label}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center px-2 py-1 ${statusInfo.bgColor} ${statusInfo.textColor} text-xs rounded-full">
+                            ${statusInfo.icon} ${statusInfo.label}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-sm font-semibold text-gray-800">${totalValue !== '-' ? '$' + totalValue : '-'}</td>
+                    <td class="py-4 px-6">
+                        <button onclick="viewDetails('${transaction.id}')" class="text-purple-600 hover:text-purple-800 text-sm">👁️ Xem</button>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            updatePagination();
+        }
+
+        // Get type information
+        function getTypeInfo(type) {
+            const types = {
+                sell: { icon: '💰', label: 'Bán', bgColor: 'bg-green-100', textColor: 'text-green-800' },
+                buy: { icon: '🛒', label: 'Mua', bgColor: 'bg-blue-100', textColor: 'text-blue-800' },
+                withdraw: { icon: '💸', label: 'Rút', bgColor: 'bg-purple-100', textColor: 'text-purple-800' },
+                deposit: { icon: '💳', label: 'Nạp', bgColor: 'bg-orange-100', textColor: 'text-orange-800' }
+            };
+            return types[type] || { icon: '❓', label: 'Khác', bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+        }
+
+        // Get status information
+        function getStatusInfo(status) {
+            const statuses = {
+                success: { icon: '✅', label: 'Thành công', bgColor: 'bg-green-100', textColor: 'text-green-800' },
+                pending: { icon: '⏳', label: 'Đang xử lý', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800' },
+                cancelled: { icon: '❌', label: 'Đã hủy', bgColor: 'bg-red-100', textColor: 'text-red-800' },
+                failed: { icon: '⚠️', label: 'Thất bại', bgColor: 'bg-red-100', textColor: 'text-red-800' }
+            };
+            return statuses[status] || { icon: '❓', label: 'Không xác định', bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        // Filter transactions
+        function filterTransactions() {
+            const dateFilter = document.getElementById('date-filter').value;
+            const typeFilter = document.getElementById('type-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+
+            filteredTransactions = allTransactions.filter(transaction => {
+                // Date filter
+                if (dateFilter !== 'all') {
+                    const transactionDate = new Date(transaction.date);
+                    const now = new Date();
+                    let dateMatch = false;
+
+                    switch (dateFilter) {
+                        case 'today':
+                            dateMatch = transactionDate.toDateString() === now.toDateString();
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            dateMatch = transactionDate >= weekAgo;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                            dateMatch = transactionDate >= monthAgo;
+                            break;
+                        case 'quarter':
+                            const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                            dateMatch = transactionDate >= quarterAgo;
+                            break;
+                        case 'year':
+                            const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                            dateMatch = transactionDate >= yearAgo;
+                            break;
+                    }
+                    if (!dateMatch) return false;
+                }
+
+                // Type filter
+                if (typeFilter !== 'all' && transaction.type !== typeFilter) {
+                    return false;
+                }
+
+                // Status filter
+                if (statusFilter !== 'all' && transaction.status !== statusFilter) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            renderTransactions();
+            updateStats();
+            document.getElementById('results-count').textContent = `Hiển thị ${filteredTransactions.length} giao dịch`;
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('date-filter').value = 'month';
+            document.getElementById('type-filter').value = 'all';
+            document.getElementById('status-filter').value = 'all';
+            filterTransactions();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const successTransactions = filteredTransactions.filter(t => t.status === 'success');
+            
+            const totalRevenue = successTransactions
+                .filter(t => t.type === 'sell')
+                .reduce((sum, t) => sum + (t.amount * t.price), 0);
+            
+            const totalSold = successTransactions
+                .filter(t => t.type === 'sell')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalBought = successTransactions
+                .filter(t => t.type === 'buy')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            document.getElementById('total-revenue').textContent = '$' + totalRevenue.toFixed(2);
+            document.getElementById('total-sold').textContent = totalSold.toFixed(1);
+            document.getElementById('total-bought').textContent = totalBought.toFixed(1);
+            document.getElementById('total-transactions').textContent = filteredTransactions.length;
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, filteredTransactions.length);
+            
+            document.getElementById('pagination-info').textContent = 
+                `Hiển thị ${startIndex}-${endIndex} trong ${filteredTransactions.length} giao dịch`;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTransactions();
+            }
+        }
+
+        // Toggle view
+        function toggleView(view) {
+            const tableContainer = document.getElementById('table-container');
+            const chartContainer = document.getElementById('chart-container');
+            const tableBtn = document.getElementById('table-view');
+            const chartBtn = document.getElementById('chart-view');
+
+            if (view === 'table') {
+                tableContainer.classList.remove('hidden');
+                chartContainer.classList.add('hidden');
+                tableBtn.className = 'px-3 py-1 bg-purple-500 text-white rounded-lg text-sm';
+                chartBtn.className = 'px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100';
+            } else {
+                tableContainer.classList.add('hidden');
+                chartContainer.classList.remove('hidden');
+                chartBtn.className = 'px-3 py-1 bg-purple-500 text-white rounded-lg text-sm';
+                tableBtn.className = 'px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-100';
+            }
+        }
+
+        // View transaction details
+        function viewDetails(transactionId) {
+            const transaction = allTransactions.find(t => t.id === transactionId);
+            if (transaction) {
+                showNotification(`👁️ Chi tiết giao dịch ${transactionId}:\n${transaction.description}`, 'info');
+            }
+        }
+
+        // Export data
+        function exportData() {
+            showNotification('📊 Đang xuất dữ liệu Excel...', 'info');
+            
+            // Simulate export process
+            setTimeout(() => {
+                showNotification('✅ Đã xuất thành công file "giao-dich-carbon.xlsx"', 'success');
+            }, 2000);
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-purple-500';
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${bgColor} text-white max-w-sm fade-in`;
+            notification.style.whiteSpace = 'pre-line';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98dbde68a17afb86',t:'MTc2MDMyNzM4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
