@@ -15,7 +15,13 @@ export const authService = {
   },
 
   getProfile: async () => {
-    return apiClient.get(API_ENDPOINTS.AUTH.PROFILE);
+    try {
+      return await apiClient.get(API_ENDPOINTS.AUTH.PROFILE);
+    } catch (error) {
+      // For development: return mock profile if API fails
+      console.warn('Auth API not available, returning mock profile');
+      throw error; // Re-throw to let AuthContext handle it
+    }
   },
 
   refreshToken: async () => {

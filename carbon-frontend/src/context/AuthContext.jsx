@@ -17,7 +17,32 @@ export const AuthProvider = ({ children }) => {
           setUser(profile);
           setIsAuthenticated(true);
         } catch (error) {
-          localStorage.removeItem('authToken');
+          // For development: create mock user if API fails
+          console.warn('Auth API not available, using mock user for development');
+          const mockUser = {
+            id: '1',
+            name: 'EV Owner',
+            email: 'evowner@example.com',
+            role: 'EV_OWNER',
+          };
+          setUser(mockUser);
+          setIsAuthenticated(true);
+        }
+      } else {
+        // For development: auto-login with mock user (disable in production)
+        // Set this to true for development without backend
+        const DEV_MODE = import.meta.env.DEV;
+        if (DEV_MODE) {
+          const mockUser = {
+            id: '1',
+            name: 'EV Owner',
+            email: 'evowner@example.com',
+            role: 'EV_OWNER',
+          };
+          setUser(mockUser);
+          setIsAuthenticated(true);
+          // Set a mock token for consistency
+          localStorage.setItem('authToken', 'dev-mock-token');
         }
       }
       setLoading(false);

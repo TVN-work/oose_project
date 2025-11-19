@@ -28,10 +28,21 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    // Only handle network errors, not 404s from missing endpoints
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      // In development, don't redirect on network errors
+      if (import.meta.env.DEV) {
+        console.warn('API endpoint not available:', error.config?.url);
+        return Promise.reject(error);
+      }
+    }
+    
     if (error.response?.status === 401) {
       // Handle unauthorized - clear token and redirect to login
       localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

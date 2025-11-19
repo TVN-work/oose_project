@@ -10,15 +10,18 @@ import { USER_ROLES } from '../constants/roles';
 import HomePage from '../pages/HomePage';
 // import LoginPage from '../pages/LoginPage';
 // import RegisterPage from '../pages/RegisterPage';
-// import DashboardPage from '../pages/DashboardPage';
+
+// Layout
+import EVOwnerLayout from '../components/layout/EVOwnerLayout';
 
 // EV Owner pages
-// import EVOwnerDashboard from '../features/ev-owner/pages/Dashboard';
-// import CarbonWallet from '../features/ev-owner/pages/CarbonWallet';
-// import ListingsManagement from '../features/ev-owner/pages/ListingsManagement';
-// import TransactionHistory from '../features/ev-owner/pages/TransactionHistory';
-// import Reports from '../features/ev-owner/pages/Reports';
-// import UploadTrips from '../features/ev-owner/pages/UploadTrips';
+import EVOwnerDashboard from '../features/ev-owner/pages/Dashboard';
+import CarbonWallet from '../features/ev-owner/pages/CarbonWallet';
+import ListingsManagement from '../features/ev-owner/pages/ListingsManagement';
+import TransactionHistory from '../features/ev-owner/pages/TransactionHistory';
+import Reports from '../features/ev-owner/pages/Reports';
+import UploadTrips from '../features/ev-owner/pages/UploadTrips';
+import Settings from '../features/ev-owner/pages/Settings';
 
 // Buyer pages
 // import BuyerDashboard from '../features/buyer/pages/Dashboard';
@@ -53,33 +56,41 @@ export const router = createBrowserRouter([
     path: '/ev-owner',
     element: (
       <ProtectedRoute allowedRoles={[USER_ROLES.EV_OWNER]}>
-        <div>EV Owner Dashboard - To be implemented</div>
+        <EVOwnerLayout />
       </ProtectedRoute>
     ),
     children: [
       {
+        index: true,
+        element: <EVOwnerDashboard />,
+      },
+      {
         path: 'dashboard',
-        element: <div>EV Owner Dashboard</div>,
+        element: <EVOwnerDashboard />,
       },
       {
         path: 'carbon-wallet',
-        element: <div>Carbon Wallet</div>,
+        element: <CarbonWallet />,
       },
       {
         path: 'listings',
-        element: <div>Listings Management</div>,
+        element: <ListingsManagement />,
       },
       {
         path: 'transactions',
-        element: <div>Transaction History</div>,
+        element: <TransactionHistory />,
       },
       {
         path: 'reports',
-        element: <div>Reports</div>,
+        element: <Reports />,
       },
       {
         path: 'upload-trips',
-        element: <div>Upload Trips</div>,
+        element: <UploadTrips />,
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
       },
     ],
   },
