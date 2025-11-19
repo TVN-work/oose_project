@@ -4,17 +4,17 @@ import toast from 'react-hot-toast';
 
 // Query Keys
 export const evOwnerKeys = {
-  all: ['evOwner'] as const,
-  trips: () => [...evOwnerKeys.all, 'trips'] as const,
-  trip: (id) => [...evOwnerKeys.trips(), id] as const,
-  wallet: () => [...evOwnerKeys.all, 'wallet'] as const,
-  walletTransactions: () => [...evOwnerKeys.all, 'wallet', 'transactions'] as const,
-  listings: () => [...evOwnerKeys.all, 'listings'] as const,
-  listing: (id) => [...evOwnerKeys.listings(), id] as const,
-  transactions: () => [...evOwnerKeys.all, 'transactions'] as const,
-  transaction: (id) => [...evOwnerKeys.transactions(), id] as const,
-  reports: () => [...evOwnerKeys.all, 'reports'] as const,
-  dashboardStats: () => [...evOwnerKeys.all, 'dashboard'] as const,
+  all: ['evOwner'],
+  trips: () => [...evOwnerKeys.all, 'trips'],
+  trip: (id) => [...evOwnerKeys.trips(), id],
+  wallet: () => [...evOwnerKeys.all, 'wallet'],
+  walletTransactions: () => [...evOwnerKeys.all, 'wallet', 'transactions'],
+  listings: () => [...evOwnerKeys.all, 'listings'],
+  listing: (id) => [...evOwnerKeys.listings(), id],
+  transactions: () => [...evOwnerKeys.all, 'transactions'],
+  transaction: (id) => [...evOwnerKeys.transactions(), id],
+  reports: () => [...evOwnerKeys.all, 'reports'],
+  dashboardStats: () => [...evOwnerKeys.all, 'dashboard'],
 };
 
 // Dashboard Stats Hook
