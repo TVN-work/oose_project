@@ -8,11 +8,13 @@ import { USER_ROLES } from '../constants/roles';
 
 // Pages
 import HomePage from '../pages/HomePage';
+import NotFound from '../pages/NotFound';
 // import LoginPage from '../pages/LoginPage';
 // import RegisterPage from '../pages/RegisterPage';
 
 // Layout
 import EVOwnerLayout from '../components/layout/EVOwnerLayout';
+import BuyerLayout from '../components/layout/BuyerLayout';
 
 // EV Owner pages
 import EVOwnerDashboard from '../features/ev-owner/pages/Dashboard';
@@ -24,10 +26,14 @@ import UploadTrips from '../features/ev-owner/pages/UploadTrips';
 import Settings from '../features/ev-owner/pages/Settings';
 
 // Buyer pages
-// import BuyerDashboard from '../features/buyer/pages/Dashboard';
-// import Marketplace from '../features/buyer/pages/Marketplace';
-// import PurchaseHistory from '../features/buyer/pages/PurchaseHistory';
-// import Certificates from '../features/buyer/pages/Certificates';
+import BuyerDashboard from '../features/buyer/pages/Dashboard';
+import Marketplace from '../features/buyer/pages/Marketplace';
+import ListingDetail from '../features/buyer/pages/ListingDetail';
+import PurchaseHistory from '../features/buyer/pages/PurchaseHistory';
+import Certificates from '../features/buyer/pages/Certificates';
+import BuyerSettings from '../features/buyer/pages/Settings';
+import Checkout from '../features/buyer/pages/Checkout';
+import AuctionPage from '../features/buyer/pages/AuctionPage';
 
 // Verifier pages
 // import VerifierDashboard from '../features/verifier/pages/Dashboard';
@@ -99,25 +105,45 @@ export const router = createBrowserRouter([
     path: '/buyer',
     element: (
       <ProtectedRoute allowedRoles={[USER_ROLES.BUYER]}>
-        <div>Buyer Dashboard - To be implemented</div>
+        <BuyerLayout />
       </ProtectedRoute>
     ),
     children: [
       {
+        index: true,
+        element: <BuyerDashboard />,
+      },
+      {
         path: 'dashboard',
-        element: <div>Buyer Dashboard</div>,
+        element: <BuyerDashboard />,
       },
       {
         path: 'marketplace',
-        element: <div>Marketplace</div>,
+        element: <Marketplace />,
+      },
+      {
+        path: 'marketplace/:id',
+        element: <ListingDetail />,
+      },
+      {
+        path: 'checkout',
+        element: <Checkout />,
+      },
+      {
+        path: 'auction/:id',
+        element: <AuctionPage />,
       },
       {
         path: 'purchase-history',
-        element: <div>Purchase History</div>,
+        element: <PurchaseHistory />,
       },
       {
         path: 'certificates',
-        element: <div>Certificates</div>,
+        element: <Certificates />,
+      },
+      {
+        path: 'settings',
+        element: <BuyerSettings />,
       },
     ],
   },
@@ -174,6 +200,11 @@ export const router = createBrowserRouter([
         element: <div>Admin Reports</div>,
       },
     ],
+  },
+  // 404 Route - must be last
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ]);
 

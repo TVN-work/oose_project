@@ -11,39 +11,79 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('authToken');
-      if (token) {
+      const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEV_MODE !== 'false');
+      
+      // In dev mode, skip API call if backend is not available
+      if (DEV_MODE && (!token || token === 'dev-mock-token')) {
+        // Use mock user based on current route
+        const path = window.location.pathname;
+        let mockRole = 'EV_OWNER';
+        let mockName = 'EV Owner';
+        
+        if (path.includes('/buyer')) {
+          mockRole = 'BUYER';
+          mockName = 'Carbon Buyer';
+        } else if (path.includes('/verifier')) {
+          mockRole = 'VERIFIER';
+          mockName = 'Verifier';
+        } else if (path.includes('/admin')) {
+          mockRole = 'ADMIN';
+          mockName = 'Admin';
+        }
+        
+        const mockUser = {
+          id: '1',
+          name: mockName,
+          email: `${mockRole.toLowerCase().replace('_', '')}@example.com`,
+          role: mockRole,
+        };
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('authToken', 'dev-mock-token');
+        setLoading(false);
+        return;
+      }
+      
+      if (token && token !== 'dev-mock-token') {
         try {
           const profile = await authService.getProfile();
           setUser(profile);
           setIsAuthenticated(true);
         } catch (error) {
           // For development: create mock user if API fails
-          console.warn('Auth API not available, using mock user for development');
-          const mockUser = {
-            id: '1',
-            name: 'EV Owner',
-            email: 'evowner@example.com',
-            role: 'EV_OWNER',
-          };
-          setUser(mockUser);
-          setIsAuthenticated(true);
+          if (DEV_MODE) {
+            const path = window.location.pathname;
+            let mockRole = 'EV_OWNER';
+            let mockName = 'EV Owner';
+            
+            if (path.includes('/buyer')) {
+              mockRole = 'BUYER';
+              mockName = 'Carbon Buyer';
+            } else if (path.includes('/verifier')) {
+              mockRole = 'VERIFIER';
+              mockName = 'Verifier';
+            } else if (path.includes('/admin')) {
+              mockRole = 'ADMIN';
+              mockName = 'Admin';
+            }
+            
+            const mockUser = {
+              id: '1',
+              name: mockName,
+              email: `${mockRole.toLowerCase().replace('_', '')}@example.com`,
+              role: mockRole,
+            };
+            setUser(mockUser);
+            setIsAuthenticated(true);
+            localStorage.setItem('authToken', 'dev-mock-token');
+          } else {
+            // In production, clear invalid token
+            localStorage.removeItem('authToken');
+          }
         }
       } else {
-        // For development: auto-login with mock user (disable in production)
-        // Set VITE_DEV_MODE=false in .env to disable mock user
-        const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEV_MODE !== 'false');
-        if (DEV_MODE) {
-          const mockUser = {
-            id: '1',
-            name: 'EV Owner',
-            email: 'evowner@example.com',
-            role: 'EV_OWNER',
-          };
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          // Set a mock token for consistency
-          localStorage.setItem('authToken', 'dev-mock-token');
-        }
+        // No token - user needs to login
+        setLoading(false);
       }
       setLoading(false);
     };
