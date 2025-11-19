@@ -15,6 +15,8 @@ import NotFound from '../pages/NotFound';
 // Layout
 import EVOwnerLayout from '../components/layout/EVOwnerLayout';
 import BuyerLayout from '../components/layout/BuyerLayout';
+import VerifierLayout from '../components/layout/VerifierLayout';
+import AdminLayout from '../components/layout/AdminLayout';
 
 // EV Owner pages
 import EVOwnerDashboard from '../features/ev-owner/pages/Dashboard';
@@ -36,12 +38,20 @@ import Checkout from '../features/buyer/pages/Checkout';
 import AuctionPage from '../features/buyer/pages/AuctionPage';
 
 // Verifier pages
-// import VerifierDashboard from '../features/verifier/pages/Dashboard';
-// import VerificationRequests from '../features/verifier/pages/VerificationRequests';
+import VerifierDashboard from '../features/verifier/pages/Dashboard';
+import VerificationRequests from '../features/verifier/pages/VerificationRequests';
+import IssueCredits from '../features/verifier/pages/IssueCredits';
+import VerifierReports from '../features/verifier/pages/Reports';
+import VerifierSettings from '../features/verifier/pages/Settings';
 
 // Admin pages
-// import AdminDashboard from '../features/admin/pages/Dashboard';
-// import UserManagement from '../features/admin/pages/UserManagement';
+import AdminDashboard from '../features/admin/pages/Dashboard';
+import AdminUsers from '../features/admin/pages/Users';
+import AdminTransactions from '../features/admin/pages/Transactions';
+import AdminListings from '../features/admin/pages/Listings';
+import AdminWallets from '../features/admin/pages/Wallets';
+import AdminReports from '../features/admin/pages/Reports';
+import AdminSettings from '../features/admin/pages/Settings';
 // import TransactionManagement from '../features/admin/pages/TransactionManagement';
 
 export const router = createBrowserRouter([
@@ -152,21 +162,33 @@ export const router = createBrowserRouter([
     path: '/verifier',
     element: (
       <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER]}>
-        <div>Verifier Dashboard - To be implemented</div>
+        <VerifierLayout />
       </ProtectedRoute>
     ),
     children: [
       {
+        index: true,
+        element: <VerifierDashboard />,
+      },
+      {
         path: 'dashboard',
-        element: <div>Verifier Dashboard</div>,
+        element: <VerifierDashboard />,
       },
       {
         path: 'verification-requests',
-        element: <div>Verification Requests</div>,
+        element: <VerificationRequests />,
+      },
+      {
+        path: 'issue-credits',
+        element: <IssueCredits />,
       },
       {
         path: 'reports',
-        element: <div>Verifier Reports</div>,
+        element: <VerifierReports />,
+      },
+      {
+        path: 'settings',
+        element: <VerifierSettings />,
       },
     ],
   },
@@ -175,29 +197,41 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
-        <div>Admin Dashboard - To be implemented</div>
+        <AdminLayout />
       </ProtectedRoute>
     ),
     children: [
       {
+        index: true,
+        element: <AdminDashboard />,
+      },
+      {
         path: 'dashboard',
-        element: <div>Admin Dashboard</div>,
+        element: <AdminDashboard />,
       },
       {
         path: 'users',
-        element: <div>User Management</div>,
+        element: <AdminUsers />,
       },
       {
         path: 'transactions',
-        element: <div>Transaction Management</div>,
+        element: <AdminTransactions />,
+      },
+      {
+        path: 'listings',
+        element: <AdminListings />,
       },
       {
         path: 'wallets',
-        element: <div>Wallet Management</div>,
+        element: <AdminWallets />,
       },
       {
         path: 'reports',
-        element: <div>Admin Reports</div>,
+        element: <AdminReports />,
+      },
+      {
+        path: 'settings',
+        element: <AdminSettings />,
       },
     ],
   },
