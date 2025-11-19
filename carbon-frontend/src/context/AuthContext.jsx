@@ -30,8 +30,8 @@ export const AuthProvider = ({ children }) => {
         }
       } else {
         // For development: auto-login with mock user (disable in production)
-        // Set this to true for development without backend
-        const DEV_MODE = import.meta.env.DEV;
+        // Set VITE_DEV_MODE=false in .env to disable mock user
+        const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEV_MODE !== 'false');
         if (DEV_MODE) {
           const mockUser = {
             id: '1',

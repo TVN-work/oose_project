@@ -1,0 +1,36 @@
+version: '3.8'
+
+# ==================================================================
+# CARBON FRONTEND SERVICE
+# ==================================================================
+# Copy nội dung này vào docker-compose.yml chính của cc-marketplace-docker
+# Đặt sau các services khác, trước phần networks
+
+carbon-frontend:
+  build:
+    context: ./carbon-frontend
+    dockerfile: Dockerfile
+    args:
+      # Trong Docker network, API Gateway có tên service là 'api-gateway'
+      - VITE_API_URL=http://api-gateway:8222
+  container_name: carbon-frontend
+  ports:
+    - "3001:80"  # Port 3001 để tránh conflict với Grafana (port 3000)
+  restart: unless-stopped
+  networks:
+    - microservices-network  # Tên network từ docker-compose.yml chính
+  depends_on:
+    api-gateway:
+      condition: service_healthy  # Đợi API Gateway sẵn sàng
+  healthcheck:
+    test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 40s
+
+# Lưu ý: 
+# 1. Thêm service này vào docker-compose.yml chính của cc-marketplace-docker
+# 2. Đảm bảo network 'microservices-network' đã được định nghĩa
+# 3. Đảm bảo thư mục carbon-frontend nằm cùng cấp với docker-compose.yml
+
