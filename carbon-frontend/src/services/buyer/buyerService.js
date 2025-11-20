@@ -36,6 +36,7 @@ export const buyerService = {
 
   // Market Service - Auction (Use Case 11: Join Auction)
   getAuction: async (auctionId) => {
+    // Returns market_listing with listing_type='auction' and related bids
     if (shouldUseMock()) return { id: auctionId, status: 'active', currentBid: 5000 };
     try {
       return await apiClient.get(API_ENDPOINTS.MARKET.AUCTION.replace(':id', auctionId));
@@ -45,10 +46,33 @@ export const buyerService = {
     }
   },
 
-  placeBid: async (auctionId, bidAmount) => {
+  // Market Service - Bids
+  getBids: async (listingId, params = {}) => {
+    // Returns bid table data filtered by listing_id
+    if (shouldUseMock()) return [];
+    try {
+      return await apiClient.get(API_ENDPOINTS.MARKET.BIDS, { params: { listing_id: listingId, ...params } });
+    } catch (error) {
+      if (import.meta.env.DEV) return [];
+      throw error;
+    }
+  },
+
+  getBidById: async (bidId) => {
+    if (shouldUseMock()) return { id: bidId, amount: 5000 };
+    try {
+      return await apiClient.get(API_ENDPOINTS.MARKET.BID_DETAIL.replace(':id', bidId));
+    } catch (error) {
+      if (import.meta.env.DEV) return { id: bidId, amount: 5000 };
+      throw error;
+    }
+  },
+
+  placeBid: async (listingId, bidAmount) => {
+    // Creates bid record in bid table
     if (shouldUseMock()) return { success: true, bidId: 'bid-123' };
     try {
-      return await apiClient.post(API_ENDPOINTS.MARKET.PLACE_BID.replace(':id', auctionId), {
+      return await apiClient.post(API_ENDPOINTS.MARKET.PLACE_BID.replace(':id', listingId), {
         amount: bidAmount,
       });
     } catch (error) {

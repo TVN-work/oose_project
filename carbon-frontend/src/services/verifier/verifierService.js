@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '../../config/api';
 import { mockVerifierService, shouldUseMock } from '../mock';
 
 export const verifierService = {
-  // Verification Service - Verification Requests (Use Case 15, 16, 17)
+  // Verification Service - Verification Requests (from verify_request table)
   getVerificationRequests: async (params = {}) => {
     if (shouldUseMock()) return mockVerifierService?.getVerificationRequests?.(params) || [];
     try {
@@ -20,6 +20,17 @@ export const verifierService = {
       return await apiClient.get(API_ENDPOINTS.VERIFICATION.REQUEST_DETAIL.replace(':id', requestId));
     } catch (error) {
       if (import.meta.env.DEV) return { id: requestId, status: 'pending' };
+      throw error;
+    }
+  },
+
+  createVerificationRequest: async (requestData) => {
+    // Creates verify_request record
+    if (shouldUseMock()) return { success: true, id: 'request-123' };
+    try {
+      return await apiClient.post(API_ENDPOINTS.VERIFICATION.CREATE_VERIFY_REQUEST, requestData);
+    } catch (error) {
+      if (import.meta.env.DEV) return { success: true, id: 'request-123' };
       throw error;
     }
   },

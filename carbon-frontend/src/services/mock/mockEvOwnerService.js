@@ -1,15 +1,66 @@
-import { mockDashboardStats, mockCarbonWallet, mockListings, mockTransactions, delay } from './mockData';
+import { mockDashboardStats, mockCarbonWallet, mockListings, mockTransactions, mockVehicleTypes, mockVehicles, mockJourneys, mockJourneyHistories, mockAudits, delay } from './mockData';
 import { mockVerifierService } from './mockVerifierService';
 
 export const mockEvOwnerService = {
-  getTrips: async (params = {}) => {
+  // Vehicle Types
+  getVehicleTypes: async () => {
+    await delay(400);
+    return mockVehicleTypes || [];
+  },
+
+  // Vehicles
+  getVehicles: async (params = {}) => {
+    await delay(400);
+    return {
+      data: mockVehicles || [],
+      total: mockVehicles?.length || 0,
+      page: params.page || 1,
+      limit: params.limit || 10,
+    };
+  },
+
+  getVehicleById: async (vehicleId) => {
+    await delay(300);
+    const vehicle = mockVehicles?.find(v => v.id === vehicleId);
+    return vehicle || null;
+  },
+
+  // Journeys
+  getJourneys: async (params = {}) => {
     await delay(600);
     return {
-      data: [],
-      total: 0,
-      page: 1,
-      limit: 10,
+      data: mockJourneys || [],
+      total: mockJourneys?.length || 0,
+      page: params.page || 1,
+      limit: params.limit || 10,
     };
+  },
+
+  getJourneyHistories: async (journeyId, params = {}) => {
+    await delay(400);
+    const histories = mockJourneyHistories?.filter(h => h.journey_id === journeyId) || [];
+    return {
+      data: histories,
+      total: histories.length,
+      page: params.page || 1,
+      limit: params.limit || 10,
+    };
+  },
+
+  // Audits
+  getAudits: async (params = {}) => {
+    await delay(400);
+    return {
+      data: mockAudits || [],
+      total: mockAudits?.length || 0,
+      page: params.page || 1,
+      limit: params.limit || 10,
+    };
+  },
+
+  // Legacy methods for backward compatibility
+  getTrips: async (params = {}) => {
+    return mockEvOwnerService.getJourneys(params);
   },
 
   uploadTrip: async (tripData) => {

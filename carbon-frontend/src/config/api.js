@@ -16,11 +16,25 @@ export const API_ENDPOINTS = {
   
   // Vehicle Service - EV Trip Data Management
   VEHICLE: {
-    TRIPS: '/vehicles/trips',
-    UPLOAD_TRIP: '/vehicles/trips/upload',
-    TRIP_DETAIL: '/vehicles/trips/:id',
-    VEHICLE_INFO: '/vehicles/info',
-    UPDATE_VEHICLE: '/vehicles/info',
+    // Vehicle Types
+    VEHICLE_TYPES: '/vehicles/types',
+    VEHICLE_TYPE_DETAIL: '/vehicles/types/:id',
+    
+    // Vehicles
+    VEHICLES: '/vehicles',
+    VEHICLE_DETAIL: '/vehicles/:id',
+    CREATE_VEHICLE: '/vehicles',
+    UPDATE_VEHICLE: '/vehicles/:id',
+    DELETE_VEHICLE: '/vehicles/:id',
+    
+    // Journeys
+    JOURNEYS: '/vehicles/journeys',
+    JOURNEY_DETAIL: '/vehicles/journeys/:id',
+    UPLOAD_TRIP: '/vehicles/journeys/upload',
+    
+    // Journey Histories
+    JOURNEY_HISTORIES: '/vehicles/journeys/:id/histories',
+    JOURNEY_HISTORY_DETAIL: '/vehicles/journeys/histories/:id',
   },
   
   // Carbon Calculation Service - CO2 & Credit Calculation
@@ -32,18 +46,28 @@ export const API_ENDPOINTS = {
   
   // Wallet Service - Carbon Wallet & Payment
   WALLET: {
-    CARBON_WALLET: '/wallets/carbon',
-    CARBON_WALLET_TRANSACTIONS: '/wallets/carbon/transactions',
+    // Payment Wallets
+    WALLETS: '/wallets',
+    WALLET_DETAIL: '/wallets/:id',
     PAYMENT_WALLET: '/wallets/payment',
     PAYMENT_WALLET_TRANSACTIONS: '/wallets/payment/transactions',
     WITHDRAW: '/wallets/withdraw',
     DEPOSIT: '/wallets/deposit',
+    
+    // Carbon Credits (from carbon_credit table)
+    CARBON_WALLET: '/wallets/carbon',
+    CARBON_WALLET_TRANSACTIONS: '/wallets/carbon/transactions',
+    
+    // Audit Logs
+    AUDITS: '/wallets/audits',
+    AUDIT_DETAIL: '/wallets/audits/:id',
   },
   
   // Market Service - Listings & Marketplace
   MARKET: {
-    // EV Owner - Listings
+    // Market Listings (from market_listing table)
     LISTINGS: '/market/listings',
+    LISTING_DETAIL: '/market/listings/:id',
     CREATE_LISTING: '/market/listings',
     UPDATE_LISTING: '/market/listings/:id',
     DELETE_LISTING: '/market/listings/:id',
@@ -51,12 +75,15 @@ export const API_ENDPOINTS = {
     
     // Buyer - Marketplace
     MARKETPLACE: '/market/marketplace',
-    LISTING_DETAIL: '/market/marketplace/:id',
     SEARCH: '/market/marketplace/search',
+    
+    // Bids (from bid table)
+    BIDS: '/market/bids',
+    BID_DETAIL: '/market/bids/:id',
+    PLACE_BID: '/market/listings/:id/bid',
     
     // Auction
     AUCTION: '/market/auctions/:id',
-    PLACE_BID: '/market/auctions/:id/bid',
     AUCTION_STATUS: '/market/auctions/:id/status',
   },
   
@@ -79,13 +106,19 @@ export const API_ENDPOINTS = {
   
   // Verification Service (CVA) - Carbon Verification & Audit
   VERIFICATION: {
+    // Verify Requests (from verify_request table)
     VERIFICATION_REQUESTS: '/verification/requests',
     REQUEST_DETAIL: '/verification/requests/:id',
-    VERIFY_EV_DATA: '/verification/ev-data/:id',
-    VALIDATE_EMISSION: '/verification/emission/:id',
+    CREATE_VERIFY_REQUEST: '/verification/requests',
     APPROVE_REQUEST: '/verification/requests/:id/approve',
     REJECT_REQUEST: '/verification/requests/:id/reject',
+    
+    // Verification Actions
+    VERIFY_EV_DATA: '/verification/ev-data/:id',
+    VALIDATE_EMISSION: '/verification/emission/:id',
     ISSUE_CREDITS: '/verification/issue-credits',
+    
+    // Reports
     REPORTS: '/verification/reports',
   },
   
@@ -122,8 +155,10 @@ export const API_ENDPOINTS = {
     SYSTEM_STATS: '/admin/stats',
   },
   
-  // Media Service - File Storage
+  // Media Service - File Storage (from images table)
   MEDIA: {
+    IMAGES: '/media/images',
+    IMAGE_DETAIL: '/media/images/:id',
     UPLOAD: '/media/upload',
     DOWNLOAD: '/media/:id',
     DELETE: '/media/:id',
