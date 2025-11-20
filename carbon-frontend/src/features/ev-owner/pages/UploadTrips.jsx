@@ -1,20 +1,164 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, Car, Download, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useUploadTrip } from '../../../hooks/useEvOwner';
+import { evOwnerService } from '../../../services/evOwner/evOwnerService';
+import { useQueryClient } from '@tanstack/react-query';
 
 const UploadTrips = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState('pending');
+  const [calculationId, setCalculationId] = useState(null);
+  const [calculationStatus, setCalculationStatus] = useState(null);
+  const [tripId, setTripId] = useState(null);
+  const [verificationRequestId, setVerificationRequestId] = useState(null);
+  
+  const uploadMutation = useUploadTrip();
+  const queryClient = useQueryClient();
 
-  const handleFileSelect = (e) => {
+  // Poll calculation status after upload
+  useEffect(() => {
+    if (!calculationId) return;
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await evOwnerService.getCalculationStatus(calculationId);
+        setCalculationStatus(status);
+        
+        // Update verification request ID if available
+        if (status.verificationRequestId && !verificationRequestId) {
+          setVerificationRequestId(status.verificationRequestId);
+        }
+        
+        if (status.status === 'completed' || status.status === 'pending_verification') {
+          // If completed or pending verification, check if verified
+          if (status.verified) {
+            clearInterval(pollInterval);
+            setVerificationStatus('approved');
+            // Invalidate queries to refresh wallet
+            queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
+            queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
+            toast.success('✅ Tín chỉ carbon đã được xác minh và phê duyệt!');
+          } else if (status.status === 'completed') {
+            clearInterval(pollInterval);
+            setVerificationStatus('approved');
+          } else {
+            // Calculation completed but waiting for CVA verification
+            setVerificationStatus('processing');
+          }
+        } else if (status.status === 'rejected') {
+          clearInterval(pollInterval);
+          setVerificationStatus('rejected');
+        } else if (status.status === 'verifying' || status.status === 'calculating') {
+          setVerificationStatus('processing');
+        }
+      } catch (error) {
+        console.error('Error polling calculation status:', error);
+      }
+    }, 3000); // Poll every 3 seconds
+    
+    return () => clearInterval(pollInterval);
+  }, [calculationId, verificationRequestId, queryClient]);
+
+  // Listen for verification status changes (when Verifier approves/rejects)
+  useEffect(() => {
+    const handleVerificationStatusChange = async (event) => {
+      const notification = event.detail;
+      
+      // Check if this notification is for our calculation
+      // Match by calculationId, requestId, or if we have a calculationId and notification has requestId
+      const isRelevant = 
+        (calculationId && notification.calculationId === calculationId) || 
+        (verificationRequestId && notification.requestId === verificationRequestId) ||
+        (calculationId && notification.requestId) ||
+        (!calculationId && !verificationRequestId); // If we don't have IDs yet, accept all notifications
+      
+      if (isRelevant) {
+        if (notification.type === 'credit_issued') {
+          // Credits have been issued to wallet
+          setVerificationStatus('approved');
+          
+          // Update verification request ID if provided
+          if (notification.requestId && !verificationRequestId) {
+            setVerificationRequestId(notification.requestId);
+          }
+          
+          // Invalidate and refetch wallet data
+          queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
+          queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
+          queryClient.invalidateQueries({ queryKey: ['evOwner', 'dashboard'] });
+          
+          // Refetch calculation status to get updated info
+          if (calculationId) {
+            setTimeout(async () => {
+              try {
+                const updatedStatus = await evOwnerService.getCalculationStatus(calculationId);
+                setCalculationStatus(updatedStatus);
+              } catch (error) {
+                console.error('Error refetching calculation status:', error);
+              }
+            }, 300);
+          }
+          
+          toast.success(
+            <div>
+              <p className="font-semibold">✅ Tín chỉ đã được cấp vào ví!</p>
+              <p className="text-sm">{notification.message}</p>
+              <p className="text-sm mt-1">Số dư mới: <strong>{notification.newBalance?.toFixed(2) || '0.00'} tín chỉ</strong></p>
+            </div>,
+            { duration: 6000 }
+          );
+        } else if (notification.type === 'verification_rejected') {
+          // Verification was rejected
+          setVerificationStatus('rejected');
+          
+          // Update verification request ID if provided
+          if (notification.requestId && !verificationRequestId) {
+            setVerificationRequestId(notification.requestId);
+          }
+          
+          // Refetch calculation status
+          if (calculationId) {
+            setTimeout(async () => {
+              try {
+                const updatedStatus = await evOwnerService.getCalculationStatus(calculationId);
+                setCalculationStatus(updatedStatus);
+              } catch (error) {
+                console.error('Error refetching calculation status:', error);
+              }
+            }, 300);
+          }
+          
+          toast.error(
+            <div>
+              <p className="font-semibold">❌ Yêu cầu xác minh bị từ chối</p>
+              <p className="text-sm">{notification.message}</p>
+              {notification.rejectionReason && (
+                <p className="text-sm mt-1">Lý do: <strong>{notification.rejectionReason}</strong></p>
+              )}
+            </div>,
+            { duration: 6000 }
+          );
+        }
+      }
+    };
+
+    window.addEventListener('verification-status-changed', handleVerificationStatusChange);
+    
+    return () => {
+      window.removeEventListener('verification-status-changed', handleVerificationStatusChange);
+    };
+  }, [calculationId, verificationRequestId, queryClient]);
+
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const fileType = file.name.split('.').pop().toLowerCase();
       if (['csv', 'json', 'gpx'].includes(fileType)) {
         toast.success(`📁 Đã chọn file: ${file.name}`);
-        simulateUpload();
+        await handleUpload(file);
       } else {
         toast.error('❌ Định dạng file không được hỗ trợ. Vui lòng chọn file CSV, JSON hoặc GPX.');
         e.target.value = '';
@@ -22,44 +166,146 @@ const UploadTrips = () => {
     }
   };
 
-  const simulateUpload = () => {
+  const handleUpload = async (file) => {
     setUploadProgress(0);
-    const interval = setInterval(() => {
+    
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setShowPreview(true);
-          setShowSummary(true);
-          toast.success('✅ Tải file thành công! Dữ liệu đã được phân tích.');
-          return 100;
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
         }
         return prev + 10;
       });
     }, 200);
-  };
 
-  const simulateConnection = () => {
-    toast.loading('🚗 Đang kết nối với xe điện...');
-    setTimeout(() => {
-      toast.dismiss();
+    try {
+      // Read file content
+      const fileContent = await readFileContent(file);
+      
+      // Upload trip data to Vehicle Service
+      const tripData = {
+        file: fileContent,
+        fileName: file.name,
+        fileType: file.name.split('.').pop().toLowerCase(),
+      };
+      
+      const response = await uploadMutation.mutateAsync(tripData);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setTripId(response.tripId || response.id);
+      
+      // Show preview and summary
       setShowPreview(true);
       setShowSummary(true);
-      toast.success('✅ Đã tải dữ liệu demo từ xe thành công!');
-    }, 3000);
+      
+      // If calculation was triggered automatically, get calculation ID
+      if (response.calculationId) {
+        setCalculationId(response.calculationId);
+        setVerificationStatus('processing');
+        toast.success('✅ Tải file thành công! Đang tính toán CO₂ và quy đổi tín chỉ...');
+      } else {
+        toast.success('✅ Tải file thành công! Dữ liệu đã được phân tích.');
+      }
+    } catch (error) {
+      clearInterval(progressInterval);
+      setUploadProgress(0);
+      toast.error(error.message || '❌ Lỗi khi tải file');
+    }
   };
 
-  const requestVerification = () => {
-    toast.loading('🔍 Đang gửi yêu cầu xác minh...');
-    setTimeout(() => {
-      setVerificationStatus('processing');
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
+  const simulateConnection = async () => {
+    toast.loading('🚗 Đang kết nối với xe điện...');
+    
+    // Simulate trip data from EV
+    const mockTripData = {
+      file: JSON.stringify([
+        {
+          timestamp: '2024-07-15 08:30:00',
+          latitude: 10.762622,
+          longitude: 106.660172,
+          speed: 45,
+          distance: 0.5,
+          energy: 0.08,
+        },
+      ]),
+      fileName: 'ev_trip_data.json',
+      fileType: 'json',
+    };
+    
+    try {
+      const response = await uploadMutation.mutateAsync(mockTripData);
       toast.dismiss();
-      toast.success('🔍 Đã gửi yêu cầu xác minh tín chỉ carbon!');
+      setTripId(response.tripId || response.id);
+      setShowPreview(true);
+      setShowSummary(true);
       
-      setTimeout(() => {
-        setVerificationStatus('approved');
-        toast.success('✅ Tín chỉ carbon đã được xác minh và phê duyệt!');
-      }, 5000);
-    }, 2000);
+      if (response.calculationId) {
+        setCalculationId(response.calculationId);
+        setVerificationStatus('processing');
+        
+        // Poll for verification request ID after calculation completes
+        setTimeout(async () => {
+          try {
+            const status = await evOwnerService.getCalculationStatus(response.calculationId);
+            if (status.verificationRequestId) {
+              setVerificationRequestId(status.verificationRequestId);
+            }
+          } catch (error) {
+            console.error('Error getting verification request ID:', error);
+          }
+        }, 3000);
+      }
+      
+      toast.success('✅ Đã tải dữ liệu demo từ xe thành công!');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('❌ Lỗi khi kết nối với xe điện');
+    }
+  };
+
+  const requestVerification = async () => {
+    if (!tripId) {
+      toast.error('❌ Vui lòng tải dữ liệu hành trình trước');
+      return;
+    }
+    
+    toast.loading('🔍 Đang gửi yêu cầu xác minh...');
+    
+      try {
+        // Trigger carbon calculation if not already done
+        const response = await evOwnerService.calculateCarbonCredits(tripId);
+        setCalculationId(response.calculationId);
+        setVerificationStatus('processing');
+        toast.dismiss();
+        toast.success('🔍 Đã gửi yêu cầu xác minh tín chỉ carbon!');
+        
+        // Poll for verification request ID after calculation completes
+        setTimeout(async () => {
+          try {
+            const status = await evOwnerService.getCalculationStatus(response.calculationId);
+            if (status.verificationRequestId) {
+              setVerificationRequestId(status.verificationRequestId);
+            }
+          } catch (error) {
+            console.error('Error getting verification request ID:', error);
+          }
+        }, 3000);
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error.message || '❌ Lỗi khi gửi yêu cầu xác minh');
+      }
   };
 
   const downloadSample = (type) => {

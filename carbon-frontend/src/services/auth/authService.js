@@ -44,7 +44,18 @@ export const authService = {
     if (shouldUseMock()) {
       return mockAuthService.refreshToken();
     }
-    return apiClient.post(API_ENDPOINTS.AUTH.REFRESH);
+    const refreshToken = localStorage.getItem('refreshToken');
+    return apiClient.post(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    if (shouldUseMock()) {
+      return { success: true, message: 'Password changed successfully' };
+    }
+    return apiClient.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+      currentPassword,
+      newPassword,
+    });
   },
 };
 

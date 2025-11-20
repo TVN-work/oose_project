@@ -93,8 +93,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     const response = await authService.login(credentials);
-    localStorage.setItem('authToken', response.token);
-    setUser(response.user);
+    // Store JWT token and refresh token
+    if (response.token) {
+      localStorage.setItem('authToken', response.token);
+    }
+    if (response.refreshToken) {
+      localStorage.setItem('refreshToken', response.refreshToken);
+    }
+    // Store token expiration if provided
+    if (response.expiresIn) {
+      const expiresAt = Date.now() + response.expiresIn * 1000;
+      localStorage.setItem('tokenExpiresAt', expiresAt.toString());
+    }
+    setUser(response.user || response.data?.user);
     setIsAuthenticated(true);
     return response;
   };

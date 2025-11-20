@@ -54,7 +54,8 @@ import AdminReports from '../features/admin/pages/Reports';
 import AdminSettings from '../features/admin/pages/Settings';
 // import TransactionManagement from '../features/admin/pages/TransactionManagement';
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
   {
     path: '/',
     element: <HomePage />,
@@ -240,7 +241,14 @@ export const router = createBrowserRouter([
     path: '*',
     element: <NotFound />,
   },
-]);
+  ],
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  }
+);
 
 export default router;
 

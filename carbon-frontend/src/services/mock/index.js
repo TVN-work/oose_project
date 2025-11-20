@@ -3,6 +3,9 @@ export * from './mockData';
 export * from './mockAuthService';
 export * from './mockEvOwnerService';
 export * from './mockBuyerService';
+export * from './mockVerifierService';
+export * from './mockAdminService';
+export * from './mockCarbonCalculationService';
 
 // Check if we should use mock services
 export const shouldUseMock = () => {

@@ -66,7 +66,10 @@ export const useCarbonWallet = () => {
   return useQuery({
     queryKey: evOwnerKeys.wallet(),
     queryFn: () => evOwnerService.getCarbonWallet(),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0, // Always consider stale to allow immediate refetch
+    gcTime: 0, // Don't cache, always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -74,7 +77,10 @@ export const useWalletTransactions = (params = {}) => {
   return useQuery({
     queryKey: [...evOwnerKeys.walletTransactions(), params],
     queryFn: () => evOwnerService.getWalletTransactions(params),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0, // Always consider stale to allow immediate refetch
+    gcTime: 0, // Don't cache, always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 };
 

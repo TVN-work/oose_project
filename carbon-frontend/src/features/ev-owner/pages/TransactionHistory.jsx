@@ -1,54 +1,84 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CreditCard, Download, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useWalletTransactions } from '../../../hooks/useEvOwner';
+import { useQueryClient } from '@tanstack/react-query';
+import Loading from '../../../components/common/Loading';
 
 const TransactionHistory = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  const queryClient = useQueryClient();
+  const { data: transactionsData, isLoading, refetch } = useWalletTransactions();
+  
+  // Get transactions from API
+  const apiTransactions = transactionsData?.data || transactionsData || [];
+  
+  // Format transactions for display
+  const transactions = apiTransactions.map((tx) => {
+    const date = new Date(tx.date || tx.createdAt);
+    const isEarned = tx.type === 'earned' || tx.amount > 0;
+    const isSold = tx.type === 'sold' || tx.amount < 0;
+    
+    return {
+      id: tx.id || `tx-${Date.now()}`,
+      date: date.toLocaleDateString('vi-VN'),
+      time: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      type: isEarned ? 'Tạo tín chỉ' : isSold ? 'Bán tín chỉ' : 'Giao dịch',
+      icon: isEarned ? '🌱' : isSold ? '💰' : '💸',
+      amount: isEarned ? `+${Math.abs(tx.amount || 0).toFixed(2)}` : `${tx.amount?.toFixed(2) || '0.00'}`,
+      value: isEarned ? `${tx.amount || 0} tín chỉ` : isSold ? `+$${Math.abs(tx.amount || 0) * 25}` : `-$${Math.abs(tx.amount || 0) * 25}`,
+      price: tx.description || 'Giao dịch',
+      status: tx.status === 'completed' ? 'Thành công' : tx.status === 'pending' ? 'Đang xử lý' : 'Đã hủy',
+      statusColor: tx.status === 'completed' ? 'green' : tx.status === 'pending' ? 'yellow' : 'red',
+      originalTx: tx,
+    };
+  });
 
-  const transactions = [
-    {
-      id: 'TX001',
-      date: '15/12/2024',
-      time: '09:30 AM',
-      type: 'Bán tín chỉ',
-      icon: '💰',
-      amount: '50',
-      value: '+$1,250.00',
-      price: '$25.00/tín chỉ',
-      status: 'Thành công',
-      statusColor: 'green',
-    },
-    {
-      id: 'TX002',
-      date: '14/12/2024',
-      time: '02:15 PM',
-      type: 'Tạo tín chỉ',
-      icon: '🌱',
-      amount: '+15',
-      value: '125 km',
-      price: 'Hành trình EV',
-      status: 'Thành công',
-      statusColor: 'green',
-    },
-    {
-      id: 'TX003',
-      date: '13/12/2024',
-      time: '11:45 AM',
-      type: 'Rút tiền',
-      icon: '💸',
-      amount: '-',
-      value: '-$800.00',
-      price: 'Chuyển khoản',
-      status: 'Đang xử lý',
-      statusColor: 'yellow',
-    },
-  ];
+  // Listen for wallet updates
+  useEffect(() => {
+    const handleWalletUpdate = async (event) => {
+      if (event.detail.type === 'credit_issued') {
+        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
+        setTimeout(async () => {
+          await refetch();
+          setRefreshKey(prev => prev + 1);
+        }, 300);
+      }
+    };
 
+    window.addEventListener('wallet-updated', handleWalletUpdate);
+    window.addEventListener('verification-status-changed', handleWalletUpdate);
+    
+    return () => {
+      window.removeEventListener('wallet-updated', handleWalletUpdate);
+      window.removeEventListener('verification-status-changed', handleWalletUpdate);
+    };
+  }, [refetch, queryClient]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  // Calculate summary from actual transactions
   const summary = [
-    { label: 'Giao dịch thành công', value: '18', color: 'green' },
-    { label: 'Đang xử lý', value: '3', color: 'yellow' },
-    { label: 'Đã hủy', value: '2', color: 'red' },
+    { 
+      label: 'Giao dịch thành công', 
+      value: transactions.filter(tx => tx.statusColor === 'green').length.toString(), 
+      color: 'green' 
+    },
+    { 
+      label: 'Đang xử lý', 
+      value: transactions.filter(tx => tx.statusColor === 'yellow').length.toString(), 
+      color: 'yellow' 
+    },
+    { 
+      label: 'Đã hủy', 
+      value: transactions.filter(tx => tx.statusColor === 'red').length.toString(), 
+      color: 'red' 
+    },
   ];
 
   const handleExport = () => {
@@ -59,8 +89,17 @@ const TransactionHistory = () => {
     }, 2000);
   };
 
+  // Filter transactions
+  const filteredTransactions = transactions.filter(tx => {
+    if (statusFilter && tx.statusColor !== statusFilter) return false;
+    if (typeFilter === 'sell' && !tx.type.includes('Bán')) return false;
+    if (typeFilter === 'create' && !tx.type.includes('Tạo')) return false;
+    if (typeFilter === 'withdraw' && !tx.type.includes('Rút')) return false;
+    return true;
+  });
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8" key={refreshKey}>
       {/* Filter Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -119,7 +158,14 @@ const TransactionHistory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {transactions.map((tx) => (
+              {filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="py-8 text-center text-gray-500">
+                    Không có giao dịch nào
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 px-4">
                     <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#{tx.id}</span>
@@ -166,7 +212,7 @@ const TransactionHistory = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
