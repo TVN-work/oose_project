@@ -1,0 +1,33 @@
+/* PublicHeader specific styles */
+.public-header {
+  /* Header is fixed, styles are handled by Tailwind classes */
+}
+
+/* Navigation link styles */
+.nav-link {
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #10b981; /* primary-green */
+}
+
+/* Mobile menu styles */
+.mobile-menu {
+  overflow-y: auto;
+}
+
+/* Gradient green utility */
+.gradient-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Primary green color */
+.text-primary-green {
+  color: #10b981;
+}
+
+.hover\:text-primary-green:hover {
+  color: #10b981;
+}
+

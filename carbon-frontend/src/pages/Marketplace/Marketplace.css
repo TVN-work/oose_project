@@ -1,0 +1,413 @@
+/* Custom Colors */
+.bg-primary-green {
+  background-color: #27AE60;
+}
+
+.text-primary-green {
+  color: #27AE60;
+}
+
+.border-primary-green {
+  border-color: #27AE60;
+}
+
+.bg-light-green {
+  background-color: #E8F8F5;
+}
+
+.bg-blue {
+  background-color: #3498DB;
+}
+
+.text-blue {
+  color: #3498DB;
+}
+
+/* Gradients */
+.gradient-green {
+  background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #3498DB 0%, #5DADE2 100%);
+}
+
+.gradient-light-green {
+  background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+}
+
+/* Hero Background */
+.hero-bg {
+  background: linear-gradient(135deg, rgba(39, 174, 96, 0.95) 0%, rgba(52, 152, 219, 0.9) 100%),
+              url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/><circle cx="100" cy="100" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="200" r="1.5" fill="rgba(255,255,255,0.4)"/><circle cx="500" cy="150" r="2.5" fill="rgba(255,255,255,0.2)"/><circle cx="700" cy="300" r="1" fill="rgba(255,255,255,0.5)"/><circle cx="900" cy="250" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="1100" cy="180" r="1.5" fill="rgba(255,255,255,0.4)"/></svg>');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.pulse-green {
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(39, 174, 96, 0);
+  }
+}
+
+/* Trading Card Animations */
+.trading-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.trading-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.trading-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.trading-card:hover::before {
+  left: 100%;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-available {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.status-auction {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.status-sold {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+/* Verified Badge */
+.verified-badge {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Filter Dropdown */
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.filter-dropdown.active .filter-dropdown-content {
+  display: block;
+}
+
+/* Price Animation */
+.price-animation {
+  animation: priceGlow 2s ease-in-out infinite;
+}
+
+@keyframes priceGlow {
+  0%, 100% {
+    color: #27AE60;
+  }
+  50% {
+    color: #2ECC71;
+    text-shadow: 0 0 10px rgba(39, 174, 96, 0.3);
+  }
+}
+
+/* Hover Effects */
+.btn-hover {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+}
+
+.btn-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-hover:hover::before {
+  left: 100%;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+/* Intersection Observer Animations */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s ease;
+}
+
+.animate-on-scroll.animated {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Navigation Styles */
+.nav-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 50%;
+  background: #27AE60;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Stats Cards */
+.stats-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+}
+
+.stats-card.green::before {
+  background: linear-gradient(180deg, #27AE60, #2ECC71);
+}
+
+.stats-card.blue::before {
+  background: linear-gradient(180deg, #3498DB, #5DADE2);
+}
+
+.stats-card.purple::before {
+  background: linear-gradient(180deg, #9333EA, #A855F7);
+}
+
+.stats-card.orange::before {
+  background: linear-gradient(180deg, #F59E0B, #FBBF24);
+}
+
+/* Process Steps */
+.process-step {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.process-step:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Auction Timer */
+.auction-timer {
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Market Trend Indicator */
+.trend-up {
+  color: #10B981;
+}
+
+.trend-down {
+  color: #EF4444;
+}
+
+.trend-stable {
+  color: #6B7280;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27AE60;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #229954;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .trading-card {
+    margin-bottom: 1rem;
+  }
+
+  .filter-dropdown-content {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+

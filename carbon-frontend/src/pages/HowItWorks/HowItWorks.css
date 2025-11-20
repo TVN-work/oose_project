@@ -1,0 +1,431 @@
+/* Custom Colors */
+.bg-primary-green {
+  background-color: #27AE60;
+}
+
+.text-primary-green {
+  color: #27AE60;
+}
+
+.border-primary-green {
+  border-color: #27AE60;
+}
+
+.bg-light-green {
+  background-color: #E8F8F5;
+}
+
+.bg-blue {
+  background-color: #3498DB;
+}
+
+.text-blue {
+  color: #3498DB;
+}
+
+/* Gradients */
+.gradient-green {
+  background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #3498DB 0%, #5DADE2 100%);
+}
+
+.gradient-light-green {
+  background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+}
+
+/* Hero Background */
+.hero-bg {
+  background: linear-gradient(135deg, rgba(39, 174, 96, 0.9) 0%, rgba(52, 152, 219, 0.8) 100%),
+              url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:rgba(135,206,235,0.3);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" /></linearGradient></defs><rect width="100%" height="100%" fill="url(%23skyGrad)"/><circle cx="200" cy="150" r="3" fill="rgba(255,255,255,0.4)"/><circle cx="800" cy="200" r="2" fill="rgba(255,255,255,0.5)"/><circle cx="1000" cy="400" r="4" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="600" r="2" fill="rgba(255,255,255,0.4)"/><circle cx="600" cy="100" r="3" fill="rgba(255,255,255,0.35)"/></svg>');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.pulse-green {
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(39, 174, 96, 0);
+  }
+}
+
+/* Step Animation */
+.step-flow {
+  animation: stepFlow 3s ease-in-out infinite;
+}
+
+@keyframes stepFlow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Hover Effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+}
+
+.btn-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-hover:hover::before {
+  left: 100%;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+/* Intersection Observer Animations */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s ease;
+}
+
+.animate-on-scroll.animated {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Navigation Styles */
+.nav-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 50%;
+  background: #27AE60;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Step Cards */
+.step-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.step-card.green::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #27AE60, #2ECC71);
+}
+
+.step-card.blue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #3498DB, #5DADE2);
+}
+
+/* Flow Arrow */
+.flow-arrow {
+  width: 4px;
+  height: 60px;
+  background: linear-gradient(180deg, #27AE60, #3498DB);
+  margin: 0 auto;
+  position: relative;
+  border-radius: 2px;
+}
+
+.flow-arrow::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid #3498DB;
+}
+
+/* Flowchart */
+.flowchart {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.flowchart-node {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.flowchart-node:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.flowchart-node.green {
+  border-color: #27AE60;
+}
+
+.flowchart-node.blue {
+  border-color: #3498DB;
+}
+
+.flowchart-node.purple {
+  border-color: #9333EA;
+}
+
+.flowchart-node.orange {
+  border-color: #F59E0B;
+}
+
+/* Process Illustration */
+.process-illustration {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+  border-radius: 20px;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.process-illustration::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(39, 174, 96, 0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tech Cards */
+.tech-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.tech-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Benefit Cards */
+.benefit-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.benefit-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.benefit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.benefit-card.green::before {
+  background: linear-gradient(90deg, #27AE60, #2ECC71);
+}
+
+.benefit-card.blue::before {
+  background: linear-gradient(90deg, #3498DB, #5DADE2);
+}
+
+.benefit-card.purple::before {
+  background: linear-gradient(90deg, #9333EA, #A855F7);
+}
+
+.benefit-card.orange::before {
+  background: linear-gradient(90deg, #F59E0B, #D97706);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27AE60;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #229954;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .step-card {
+    padding: 1.5rem;
+  }
+
+  .flowchart {
+    padding: 1.5rem;
+  }
+
+  .process-illustration {
+    padding: 2rem;
+  }
+}
+

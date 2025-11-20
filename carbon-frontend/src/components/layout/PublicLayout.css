@@ -1,0 +1,10 @@
+/* PublicLayout specific styles */
+.public-layout {
+  min-height: 100vh;
+}
+
+/* Ensure main content has proper spacing for fixed header */
+.public-layout main {
+  padding-top: 4rem; /* 64px for fixed header */
+}
+

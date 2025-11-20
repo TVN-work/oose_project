@@ -1,0 +1,19 @@
+/* PublicFooter specific styles */
+.public-footer {
+  /* Footer styles are handled by Tailwind classes */
+}
+
+/* Gradient green utility */
+.gradient-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Primary green color */
+.text-primary-green {
+  color: #10b981;
+}
+
+.hover\:text-primary-green:hover {
+  color: #10b981;
+}
+

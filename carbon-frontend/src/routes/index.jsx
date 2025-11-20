@@ -9,10 +9,18 @@ import { USER_ROLES } from '../constants/roles';
 // Pages
 import HomePage from '../pages/HomePage';
 import NotFound from '../pages/NotFound';
+import AboutUs from '../pages/AboutUs';
+import Auth from '../pages/Auth';
+import Blog from '../pages/Blog';
+import Contact from '../pages/Contact';
+import FAQs from '../pages/FAQs';
+import HowItWorks from '../pages/HowItWorks';
+import PublicMarketplace from '../pages/Marketplace';
 // import LoginPage from '../pages/LoginPage';
 // import RegisterPage from '../pages/RegisterPage';
 
 // Layout
+import PublicLayout from '../components/layout/PublicLayout';
 import EVOwnerLayout from '../components/layout/EVOwnerLayout';
 import BuyerLayout from '../components/layout/BuyerLayout';
 import VerifierLayout from '../components/layout/VerifierLayout';
@@ -56,17 +64,52 @@ import AdminSettings from '../features/admin/pages/Settings';
 
 export const router = createBrowserRouter(
   [
+  // Public routes with shared layout
   {
     path: '/',
-    element: <HomePage />,
-  },
-  {
-    path: '/login',
-    element: <div>Login Page - To be implemented</div>,
-  },
-  {
-    path: '/register',
-    element: <div>Register Page - To be implemented</div>,
+    element: <PublicLayout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: 'about',
+        element: <AboutUs />,
+      },
+      {
+        path: 'auth',
+        element: <Auth />,
+      },
+      {
+        path: 'blog',
+        element: <Blog />,
+      },
+      {
+        path: 'contact',
+        element: <Contact />,
+      },
+      {
+        path: 'faqs',
+        element: <FAQs />,
+      },
+      {
+        path: 'how-it-works',
+        element: <HowItWorks />,
+      },
+      {
+        path: 'marketplace',
+        element: <PublicMarketplace />,
+      },
+      {
+        path: 'login',
+        element: <Auth />,
+      },
+      {
+        path: 'register',
+        element: <Auth />,
+      },
+    ],
   },
   // EV Owner routes
   {
