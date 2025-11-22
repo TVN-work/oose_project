@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, RefreshCw, Eye, CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const PurchaseHistory = () => {
   const [filters, setFilters] = useState({
@@ -255,10 +256,10 @@ const PurchaseHistory = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả mức giá</option>
-              <option value="under-1000">Dưới $1,000</option>
-              <option value="1000-3000">$1,000 - $3,000</option>
-              <option value="3000-5000">$3,000 - $5,000</option>
-              <option value="over-5000">Trên $5,000</option>
+              <option value="under-1000">Dưới {formatCurrencyFromUsd(1000)}</option>
+              <option value="1000-3000">{formatCurrencyFromUsd(1000)} - {formatCurrencyFromUsd(3000)}</option>
+              <option value="3000-5000">{formatCurrencyFromUsd(3000)} - {formatCurrencyFromUsd(5000)}</option>
+              <option value="over-5000">Trên {formatCurrencyFromUsd(5000)}</option>
             </select>
           </div>
 
@@ -395,10 +396,10 @@ const PurchaseHistory = () => {
                     <div className={`text-sm font-bold ${
                       tx.status === 'failed' ? 'text-red-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-green-600'
                     }`}>
-                      ${tx.value > 0 ? tx.value.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
+                      {tx.value > 0 ? formatCurrencyFromUsd(tx.value) : '0.00'}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {tx.value > 0 ? `$${tx.pricePerCredit}/tín chỉ` : 'Giao dịch thất bại'}
+                      {tx.value > 0 ? `${formatCurrencyFromUsd(tx.pricePerCredit)}/tín chỉ` : 'Giao dịch thất bại'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

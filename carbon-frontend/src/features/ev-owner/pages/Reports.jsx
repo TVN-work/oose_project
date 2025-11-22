@@ -1,9 +1,30 @@
 import { useState } from 'react';
-import { FileDown, TrendingUp, Bot, Share2 } from 'lucide-react';
+import { 
+  FileDown, 
+  TrendingUp, 
+  Bot, 
+  Share2, 
+  Leaf, 
+  Zap, 
+  Coins, 
+  DollarSign, 
+  BarChart3, 
+  ClipboardList, 
+  Lightbulb, 
+  Sparkles, 
+  Target, 
+  FileText,
+  CheckCircle,
+  Link2
+} from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import toast from 'react-hot-toast';
+import Alert from '../../../components/common/Alert';
+import { useAlert } from '../../../hooks/useAlert';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const Reports = () => {
+  const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
+  
   const [selectedYear, setSelectedYear] = useState('2024');
   const [showDetailedPrediction, setShowDetailedPrediction] = useState(false);
 
@@ -42,7 +63,9 @@ const Reports = () => {
   // Summary table data
   const summaryTableData = [
     {
-      metric: '🌱 CO₂ giảm (tấn)',
+      metric: 'CO₂ giảm (tấn)',
+      icon: Leaf,
+      iconColor: 'text-green-600',
       thisMonth: '2.8',
       lastMonth: '2.3',
       total: '24.7',
@@ -51,7 +74,9 @@ const Reports = () => {
       totalColor: 'text-green-600',
     },
     {
-      metric: '⚡ Tín chỉ quy đổi',
+      metric: 'Tín chỉ quy đổi',
+      icon: Zap,
+      iconColor: 'text-blue-600',
       thisMonth: '28',
       lastMonth: '23',
       total: '247',
@@ -60,7 +85,9 @@ const Reports = () => {
       totalColor: 'text-blue-600',
     },
     {
-      metric: '💰 Tín chỉ đã bán',
+      metric: 'Tín chỉ đã bán',
+      icon: Coins,
+      iconColor: 'text-purple-600',
       thisMonth: '25',
       lastMonth: '18',
       total: '189',
@@ -69,19 +96,23 @@ const Reports = () => {
       totalColor: 'text-purple-600',
     },
     {
-      metric: '💵 Doanh thu (USD)',
-      thisMonth: '$587.50',
-      lastMonth: '$423.20',
-      total: '$4,347.80',
+      metric: 'Doanh thu (VNĐ)',
+      icon: DollarSign,
+      iconColor: 'text-green-600',
+      thisMonth: formatCurrencyFromUsd(587.50),
+      lastMonth: formatCurrencyFromUsd(423.20),
+      total: formatCurrencyFromUsd(4347.80),
       change: '+38.8%',
       changeType: 'positive',
       totalColor: 'text-green-600',
     },
     {
-      metric: '📊 Giá trung bình/tín chỉ',
-      thisMonth: '$23.50',
-      lastMonth: '$23.51',
-      total: '$23.01',
+      metric: 'Giá trung bình/tín chỉ',
+      icon: BarChart3,
+      iconColor: 'text-blue-600',
+      thisMonth: formatCurrencyFromUsd(23.50),
+      lastMonth: formatCurrencyFromUsd(23.51),
+      total: formatCurrencyFromUsd(23.01),
       change: '-0.04%',
       changeType: 'negative',
       totalColor: 'text-blue-600',
@@ -90,37 +121,35 @@ const Reports = () => {
   ];
 
   const handleExportCSV = () => {
-    toast.loading('📊 Đang tạo file CSV...');
+    showAlert('Đang tạo file CSV...', 'info', 2000);
     setTimeout(() => {
-      toast.dismiss();
-      toast.success('✅ Đã xuất thành công "bao-cao-carbon-2024.csv"');
+      showAlert('Đã xuất thành công "bao-cao-carbon-2024.csv"', 'success');
     }, 2000);
   };
 
   const handleExportPDF = () => {
-    toast.loading('📄 Đang tạo file PDF...');
+    showAlert('Đang tạo file PDF...', 'info', 2500);
     setTimeout(() => {
-      toast.dismiss();
-      toast.success('✅ Đã xuất thành công "bao-cao-carbon-2024.pdf"');
+      showAlert('Đã xuất thành công "bao-cao-carbon-2024.pdf"', 'success');
     }, 2500);
   };
 
   const handleShareReport = () => {
     const shareLink = 'https://carbon.evowner.com/report/share/abc123';
     navigator.clipboard.writeText(shareLink);
-    toast.success(`🔗 Link chia sẻ đã được sao chép:\n${shareLink}`);
+    showAlert(`Link chia sẻ đã được sao chép: ${shareLink}`, 'success');
   };
 
   const handleDetailedPrediction = () => {
-    setShowDetailedPrediction(true);
-    toast.loading('🤖 Đang phân tích...');
+      if (!showDetailedPrediction) {
+        showAlert('Đang phân tích dữ liệu...', 'info', 1500);
     setTimeout(() => {
-      toast.dismiss();
-      toast.success(
-        `🔮 Dự đoán chi tiết tháng 1/2025:\n\n📊 Phân tích xu hướng:\n• CO₂ giảm: 3.2 tấn (+14.3%)\n• Tín chỉ tạo ra: 32 (+14.3%)\n• Doanh thu dự kiến: $672.40 (+14.4%)\n\n💡 Yếu tố ảnh hưởng:\n• Thời tiết thuận lợi cho xe điện\n• Giá tín chỉ tăng nhẹ ($24.20)\n• Nhu cầu thị trường cao\n\n🎯 Khuyến nghị:\n• Bán 25 tín chỉ trong tuần đầu\n• Giữ lại 7 tín chỉ chờ giá tăng\n• Tăng cường di chuyển cuối tuần`,
-        { duration: 8000 }
-      );
-    }, 3000);
+          setShowDetailedPrediction(true);
+          showAlert('Đã tải dự đoán chi tiết!', 'success');
+        }, 1500);
+      } else {
+        setShowDetailedPrediction(false);
+      }
   };
 
   const getCurrentDate = () => {
@@ -135,89 +164,75 @@ const Reports = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b rounded-xl overflow-hidden">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-lg">📊</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">Báo cáo CO₂ & Doanh thu</h1>
-                <p className="text-sm text-gray-600">Theo dõi tác động môi trường và hiệu quả kinh tế</p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="mr-4 text-right">
-                <p className="text-sm text-gray-600">Cập nhật lần cuối</p>
-                <p className="text-sm font-medium text-green-600">{getCurrentDate()}</p>
-              </div>
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-xs">EV</span>
-              </div>
-              <span className="text-gray-700 font-medium">EV Owner</span>
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header - Green theme */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-8 text-white">
+        <h1 className="text-3xl font-bold mb-2">Báo cáo cá nhân</h1>
+        <p className="text-green-100">
+          Theo dõi CO₂ giảm phát thải, tín chỉ đã tạo và doanh thu từ bán tín chỉ
+        </p>
         </div>
-      </header>
 
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+      {/* Summary Cards - Clean Design */}
+      <div className="grid md:grid-cols-4 gap-4">
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-gray-300 hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-3xl">🌱</span>
-            <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">+12.3%</span>
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Leaf className="w-6 h-6 text-green-600" />
+            </div>
+            <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-semibold">+12.3%</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mb-1">24.7 tấn</p>
-          <p className="text-sm text-gray-600">Tổng CO₂ giảm</p>
+          <p className="text-xs text-gray-600 font-medium">Tổng CO₂ giảm</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-gray-300 hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-3xl">⚡</span>
-            <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">+8.9%</span>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Zap className="w-6 h-6 text-blue-600" />
+            </div>
+            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-semibold">+8.9%</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mb-1">247</p>
-          <p className="text-sm text-gray-600">Tín chỉ quy đổi</p>
+          <p className="text-xs text-gray-600 font-medium">Tín chỉ quy đổi</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-gray-300 hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-3xl">💰</span>
-            <span className="text-sm text-purple-600 bg-purple-100 px-2 py-1 rounded-full">+15.2%</span>
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Coins className="w-6 h-6 text-purple-600" />
+            </div>
+            <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full font-semibold">+15.2%</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mb-1">189</p>
-          <p className="text-sm text-gray-600">Tín chỉ đã bán</p>
+          <p className="text-xs text-gray-600 font-medium">Tín chỉ đã bán</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="relative z-10">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-3xl">💵</span>
-              <span className="text-sm opacity-75">Năm 2024</span>
+            <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <p className="text-2xl font-bold mb-1">$4,347.80</p>
-            <p className="text-sm opacity-90">Tổng doanh thu</p>
+            <span className="text-xs opacity-75 font-semibold">Năm 2024</span>
           </div>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
+          <p className="text-2xl font-bold mb-1">{formatCurrencyFromUsd(4347.80)}</p>
+          <p className="text-xs opacity-90 font-medium">Tổng doanh thu</p>
         </div>
       </div>
 
       {/* Charts Section */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* CO2 Reduction Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <span className="mr-2">🌱</span>
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <Leaf className="w-5 h-5 mr-2 text-green-600" />
               CO₂ giảm theo tháng
             </h3>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500"
             >
               <option value="2024">2024</option>
               <option value="2023">2023</option>
@@ -264,16 +279,16 @@ const Reports = () => {
         </div>
 
         {/* Revenue Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <span className="mr-2">💰</span>
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
               Doanh thu theo tháng
             </h3>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500"
             >
               <option value="2024">2024</option>
               <option value="2023">2023</option>
@@ -291,7 +306,7 @@ const Reports = () => {
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
-                  formatter={(value) => [`$${value}`, 'Doanh thu']}
+                  formatter={(value) => [formatCurrencyFromUsd(value), 'Doanh thu']}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -300,30 +315,30 @@ const Reports = () => {
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
               Doanh thu trung bình:{' '}
-              <span className="text-blue-600 font-semibold">$362.32/tháng</span>
+              <span className="text-blue-600 font-semibold">{formatCurrencyFromUsd(362.32)}/tháng</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Detailed Summary Table */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="p-6 border-b bg-green-50">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <span className="mr-2">📋</span>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center">
+            <ClipboardList className="w-5 h-5 mr-2 text-gray-700" />
             Bảng tổng hợp chi tiết
           </h3>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-green-50">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Chỉ số</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Tháng này</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Tháng trước</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Tổng cộng</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Thay đổi</th>
+                <th className="text-left py-3 px-6 text-sm font-semibold text-gray-700">Chỉ số</th>
+                <th className="text-left py-3 px-6 text-sm font-semibold text-gray-700">Tháng này</th>
+                <th className="text-left py-3 px-6 text-sm font-semibold text-gray-700">Tháng trước</th>
+                <th className="text-left py-3 px-6 text-sm font-semibold text-gray-700">Tổng cộng</th>
+                <th className="text-left py-3 px-6 text-sm font-semibold text-gray-700">Thay đổi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -363,7 +378,7 @@ const Reports = () => {
             <div className="relative z-10">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <Bot className="w-5 h-5 mr-2" />
-                Dự đoán AI - Tháng tới
+                Dự đoán AI - Tháng tới (Tháng 1/2025)
               </h3>
 
               <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -374,33 +389,111 @@ const Reports = () => {
                 </div>
                 <div className="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
                   <p className="text-sm opacity-90 mb-1">Dự kiến doanh thu</p>
-                  <p className="text-xl font-bold">$672.40</p>
+                  <p className="text-xl font-bold">{formatCurrencyFromUsd(672.40)}</p>
                   <p className="text-xs opacity-75">+14.4% so với tháng này</p>
                 </div>
               </div>
 
               <div className="bg-white bg-opacity-20 p-4 rounded-lg mb-4 backdrop-blur-sm">
-                <h4 className="font-semibold mb-2">💡 Gợi ý tối ưu:</h4>
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Gợi ý tối ưu
+                </h4>
                 <ul className="text-sm space-y-1 opacity-90">
                   <li>• Tăng cường sử dụng xe điện vào cuối tuần (+15% tín chỉ)</li>
-                  <li>• Giá tín chỉ dự kiến tăng lên $24.20 trong 2 tuần tới</li>
+                  <li>• Giá tín chỉ dự kiến tăng lên {formatCurrencyFromUsd(24.20)} trong 2 tuần tới</li>
                   <li>• Nên bán 20-25 tín chỉ trong tuần đầu tháng sau</li>
                 </ul>
               </div>
 
+              {/* Detailed Prediction - Expandable Section */}
+              {showDetailedPrediction && (
+                <div className="bg-white bg-opacity-20 p-4 rounded-lg mb-4 backdrop-blur-sm border-2 border-white border-opacity-30 transition-all duration-300 ease-in-out">
+                  <h4 className="font-bold mb-3 text-lg flex items-center">
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Phân tích chi tiết
+                  </h4>
+                  
+                  {/* Trend Analysis */}
+                  <div className="mb-4">
+                    <h5 className="font-semibold mb-2 text-sm flex items-center">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Phân tích xu hướng
+                    </h5>
+                    <div className="space-y-2 text-sm opacity-90 ml-6">
+                      <div className="flex justify-between items-center">
+                        <span>• CO₂ giảm:</span>
+                        <span className="font-bold">3.2 tấn (+14.3%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>• Tín chỉ tạo ra:</span>
+                        <span className="font-bold">32 (+14.3%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>• Doanh thu dự kiến:</span>
+                        <span className="font-bold">{formatCurrencyFromUsd(672.40)} (+14.4%)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Influencing Factors */}
+                  <div className="mb-4">
+                    <h5 className="font-semibold mb-2 text-sm flex items-center">
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Yếu tố ảnh hưởng
+                    </h5>
+                    <ul className="text-sm space-y-1 opacity-90 ml-6">
+                      <li>• Thời tiết thuận lợi cho xe điện (nhiệt độ 18-25°C)</li>
+                      <li>• Giá tín chỉ tăng nhẹ: {formatCurrencyFromUsd(23.50)} → {formatCurrencyFromUsd(24.20)} (+3.0%)</li>
+                      <li>• Nhu cầu thị trường cao (end-of-quarter corporate buying)</li>
+                      <li>• Độ tin cậy dự đoán: <span className="font-bold text-green-200">87%</span></li>
+                    </ul>
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="mb-2">
+                    <h5 className="font-semibold mb-2 text-sm flex items-center">
+                      <Target className="w-4 h-4 mr-2" />
+                      Khuyến nghị chiến lược
+                    </h5>
+                    <div className="space-y-2 text-sm opacity-90 ml-6">
+                      <div className="bg-white bg-opacity-10 p-2 rounded">
+                        <span className="font-semibold">Tuần 1:</span> Bán 25 tín chỉ ở giá {formatCurrencyFromUsd(24.00)}-{formatCurrencyFromUsd(24.20)}
+                      </div>
+                      <div className="bg-white bg-opacity-10 p-2 rounded">
+                        <span className="font-semibold">Tuần 2-3:</span> Giữ lại 7 tín chỉ, chờ giá tăng
+                      </div>
+                      <div className="bg-white bg-opacity-10 p-2 rounded">
+                        <span className="font-semibold">Tuần 4:</span> Tăng cường di chuyển cuối tuần (giá cao hơn)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleDetailedPrediction}
-                className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 py-2 px-4 rounded-lg transition-all duration-200 font-medium"
+                className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 py-2 px-4 rounded-lg transition-all duration-200 font-medium flex items-center justify-center"
               >
-                🔮 Xem dự đoán chi tiết
+                {showDetailedPrediction ? (
+                  <>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Thu gọn dự đoán chi tiết
+                  </>
+                ) : (
+                  <>
+                    <Bot className="w-4 h-4 mr-2" />
+                    Xem dự đoán chi tiết
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
 
         {/* Export Section */}
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <FileDown className="w-5 h-5 mr-2" />
             Xuất báo cáo
           </h3>
@@ -410,7 +503,7 @@ const Reports = () => {
               onClick={handleExportCSV}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 flex items-center justify-center"
             >
-              <span className="mr-2">📊</span>
+              <BarChart3 className="w-4 h-4 mr-2" />
               Xuất file CSV
             </button>
 
@@ -418,7 +511,7 @@ const Reports = () => {
               onClick={handleExportPDF}
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 flex items-center justify-center"
             >
-              <span className="mr-2">📄</span>
+              <FileText className="w-4 h-4 mr-2" />
               Xuất file PDF
             </button>
 
@@ -432,7 +525,10 @@ const Reports = () => {
           </div>
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-2">📈 Thống kê nhanh</h4>
+            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+              <TrendingUp className="w-4 h-4 mr-2 text-gray-700" />
+              Thống kê nhanh
+            </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Hiệu suất tháng này:</span>
@@ -444,7 +540,7 @@ const Reports = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Mục tiêu tháng sau:</span>
-                <span className="font-semibold text-purple-600">$700</span>
+                <span className="font-semibold text-purple-600">{formatCurrencyFromUsd(700)}</span>
               </div>
             </div>
           </div>

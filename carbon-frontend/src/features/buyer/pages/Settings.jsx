@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatCurrencyFromUsd } from '../../../utils';
 import { Edit, Wallet, Lock, User, Bell, Download, Pause, Trash2, CreditCard, RefreshCw, FileText, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -187,7 +188,7 @@ const Settings = () => {
               <h4 className="font-semibold">Số dư hiện tại</h4>
               <span className="text-2xl">💰</span>
             </div>
-            <div className="text-3xl font-bold mb-2">$15,750.00</div>
+            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(15750)}</div>
             <div className="text-sm opacity-90">Có thể sử dụng ngay</div>
           </div>
 
@@ -197,7 +198,7 @@ const Settings = () => {
               <h4 className="font-semibold">Đang xử lý</h4>
               <span className="text-2xl">⏳</span>
             </div>
-            <div className="text-3xl font-bold mb-2">$2,420.00</div>
+            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(2420)}</div>
             <div className="text-sm opacity-90">2 giao dịch chờ</div>
           </div>
 
@@ -207,7 +208,7 @@ const Settings = () => {
               <h4 className="font-semibold">Tổng chi tiêu</h4>
               <span className="text-2xl">📊</span>
             </div>
-            <div className="text-3xl font-bold mb-2">$12,450.00</div>
+            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(12450)}</div>
             <div className="text-sm opacity-90">Từ đầu năm</div>
           </div>
         </div>

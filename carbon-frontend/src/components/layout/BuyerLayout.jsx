@@ -8,14 +8,27 @@ import {
   Settings,
   Menu,
   X,
-  Bell
+  Bell,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { formatCurrencyFromUsd } from '../../utils';
 
 const BuyerLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const menuItems = [
     { path: '/buyer/dashboard', icon: LayoutDashboard, label: 'Tổng quan', badge: 'New' },
@@ -145,7 +158,7 @@ const BuyerLayout = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm opacity-80">Tổng chi tiêu:</span>
-                <span className="font-bold">$12,450</span>
+                <span className="font-bold">{formatCurrencyFromUsd(12450)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm opacity-80">Chứng nhận:</span>
@@ -177,40 +190,33 @@ const BuyerLayout = () => {
       {/* Main Content Area */}
       <div className="md:ml-72 min-h-full">
         {/* Header */}
-        <header
-          className="shadow-sm border-b px-6 py-6"
-          style={{
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          }}
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-                <span className="mr-3">👋</span>
-                <span>Chào mừng trở lại!</span>
-              </h1>
-              <p className="text-gray-600 mt-2">Theo dõi hoạt động mua bán tín chỉ carbon của bạn</p>
+        <header className="bg-white shadow-sm border-b px-6 py-4">
+          <div className="flex justify-end items-center">
+            {/* Notifications */}
+            <div className="relative mr-4">
+              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                <Bell className="w-5 h-5" />
+              </button>
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Notifications */}
-              <div className="relative">
-                <button className="p-3 text-gray-600 hover:bg-white hover:bg-opacity-50 rounded-xl transition-all duration-200">
-                  <Bell className="w-6 h-6" />
-                </button>
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            {/* User Info */}
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-xs text-gray-500">{getCurrentDate()}</p>
               </div>
-
-              {/* User Menu */}
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Hôm nay</p>
-                  <p className="text-lg font-semibold text-gray-800">{getCurrentDate()}</p>
-                </div>
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold">CB</span>
-                </div>
+              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">CB</span>
               </div>
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="ml-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 text-sm font-medium"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Đăng xuất</span>
+              </button>
             </div>
           </div>
         </header>

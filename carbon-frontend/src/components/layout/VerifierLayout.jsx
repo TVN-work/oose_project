@@ -17,7 +17,17 @@ import toast from 'react-hot-toast';
 const VerifierLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const menuItems = [
     { path: '/verifier/dashboard', icon: LayoutDashboard, label: 'Tổng quan' },
@@ -228,6 +238,15 @@ const VerifierLayout = () => {
                 <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold">CVA</span>
                 </div>
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="ml-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 text-sm font-medium"
+                  title="Đăng xuất"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Đăng xuất</span>
+                </button>
               </div>
             </div>
           </div>

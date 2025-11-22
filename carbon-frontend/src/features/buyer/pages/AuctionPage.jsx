@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check } from 'lucide-react';
 import Modal from '../../../components/common/Modal';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const AuctionPage = () => {
   const { id } = useParams();
@@ -126,7 +127,7 @@ const AuctionPage = () => {
           totalBids: prev.totalBids + 1,
         }));
 
-        toast.info(`🔔 ${randomBidder} đã đặt giá $${newBid.toFixed(2)}`);
+        toast.info(`🔔 ${randomBidder} đã đặt giá ${formatCurrencyFromUsd(newBid)}`);
       }
     };
 
@@ -154,7 +155,7 @@ const AuctionPage = () => {
     const minBid = auctionData.currentPrice + 0.5;
 
     if (!bidValue || bidValue < minBid) {
-      toast.error(`❌ Giá đặt phải ít nhất $${minBid.toFixed(2)}`);
+      toast.error(`❌ Giá đặt phải ít nhất ${formatCurrencyFromUsd(minBid)}`);
       return;
     }
 
@@ -191,7 +192,7 @@ const AuctionPage = () => {
     }));
 
     setBidAmount('');
-    toast.success(`🎉 Đã đặt giá thành công $${bidValue.toFixed(2)}!`);
+    toast.success(`🎉 Đã đặt giá thành công ${formatCurrencyFromUsd(bidValue)}!`);
   };
 
   const endAuction = () => {
@@ -300,7 +301,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Giá khởi điểm</span>
                         <span className="text-2xl font-bold text-green-600">
-                          ${(initialAuctionData.startingPrice || 18.0).toFixed(2)}
+                          {formatCurrencyFromUsd(initialAuctionData.startingPrice || 18.0)}
                         </span>
                       </div>
                     </div>
@@ -312,7 +313,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Giá hiện tại</span>
                         <span className="text-3xl font-bold text-red-600">
-                          ${auctionData.currentPrice.toFixed(2)}
+                          {formatCurrencyFromUsd(auctionData.currentPrice)}
                         </span>
                       </div>
                     </div>
@@ -321,7 +322,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Tổng giá trị</span>
                         <span className="text-2xl font-bold text-purple-600">
-                          ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatCurrencyFromUsd(totalValue)}
                         </span>
                       </div>
                     </div>
@@ -413,7 +414,7 @@ const AuctionPage = () => {
                           <div
                             className={`text-xl font-bold ${bid.isWinning ? 'text-green-600' : 'text-gray-800'}`}
                           >
-                            ${bid.amount.toFixed(2)}
+                            {formatCurrencyFromUsd(bid.amount)}
                           </div>
                           {bid.isWinning && (
                             <div className="text-sm text-green-600 font-medium">🏆 Đang dẫn đầu</div>
@@ -445,7 +446,7 @@ const AuctionPage = () => {
                 <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">Giá hiện tại cao nhất</div>
-                    <div className="text-3xl font-bold text-blue-600">${auctionData.currentPrice.toFixed(2)}</div>
+                    <div className="text-3xl font-bold text-blue-600">{formatCurrencyFromUsd(auctionData.currentPrice)}</div>
                     <div className="text-sm text-gray-600 mt-1">
                       bởi {bidHistory.find((b) => b.isWinning)?.bidder || 'Buyer***789'}
                     </div>
@@ -454,9 +455,9 @@ const AuctionPage = () => {
 
                 {/* Bid Input */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (USD)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (VNĐ)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">$</span>
+                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">₫</span>
                     <input
                       type="number"
                       value={bidAmount}
@@ -468,7 +469,7 @@ const AuctionPage = () => {
                       className="w-full pl-8 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
-                  <div className="text-xs text-gray-500 mt-2">Giá tối thiểu: ${minBid.toFixed(2)} (cao hơn $0.50)</div>
+                  <div className="text-xs text-gray-500 mt-2">Giá tối thiểu: {formatCurrencyFromUsd(minBid)} (cao hơn {formatCurrencyFromUsd(0.50)})</div>
                 </div>
 
                 {/* Quick Bid Buttons */}
@@ -480,7 +481,7 @@ const AuctionPage = () => {
                       disabled={auctionData.isEnded}
                       className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      +${amount.toFixed(2)}
+                      +{formatCurrencyFromUsd(amount)}
                     </button>
                   ))}
                 </div>
@@ -491,7 +492,7 @@ const AuctionPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Giá mỗi tín chỉ:</span>
                       <span className="font-semibold text-gray-800">
-                        ${(parseFloat(bidAmount) || auctionData.currentPrice).toFixed(2)}
+                        {formatCurrencyFromUsd(parseFloat(bidAmount) || auctionData.currentPrice)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -502,7 +503,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-bold text-gray-800">Tổng nếu thắng:</span>
                         <span className="text-xl font-bold text-blue-600">
-                          ${totalIfWin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatCurrencyFromUsd(totalIfWin)}
                         </span>
                       </div>
                     </div>
@@ -549,7 +550,7 @@ const AuctionPage = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tăng giá trung bình:</span>
-                    <span className="font-semibold text-green-600">$0.75</span>
+                    <span className="font-semibold text-green-600">{formatCurrencyFromUsd(0.75)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Thời gian bắt đầu:</span>
@@ -580,7 +581,7 @@ const AuctionPage = () => {
                     userBids.map((bid) => (
                       <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <div className="font-semibold text-gray-800">${bid.amount.toFixed(2)}</div>
+                          <div className="font-semibold text-gray-800">{formatCurrencyFromUsd(bid.amount)}</div>
                           <div className="text-sm text-gray-600">{bid.time}</div>
                         </div>
                         <div className={`text-sm font-medium ${bid.isWinning ? 'text-green-600' : 'text-gray-500'}`}>
@@ -619,7 +620,7 @@ const AuctionPage = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">{userWon ? 'Giá thắng:' : 'Giá thắng cuộc:'}</span>
                 <span className={`font-bold ${userWon ? 'text-green-600' : 'text-gray-800'}`}>
-                  ${auctionData.currentPrice.toFixed(2)}
+                  {formatCurrencyFromUsd(auctionData.currentPrice)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -630,7 +631,7 @@ const AuctionPage = () => {
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-lg font-bold">Tổng thanh toán:</span>
                   <span className="text-lg font-bold text-green-600">
-                    ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrencyFromUsd(totalValue)}
                   </span>
                 </div>
               )}

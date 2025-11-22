@@ -5,6 +5,7 @@ import { useListingDetail } from '../../../hooks/useBuyer';
 import Modal from '../../../components/common/Modal';
 import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const ListingDetail = () => {
   const { id } = useParams();
@@ -205,7 +206,7 @@ const ListingDetail = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 font-medium">Giá mỗi tín chỉ</span>
                       <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                        ${pricePerCredit.toFixed(2)}
+                        {formatCurrencyFromUsd(pricePerCredit)}
                       </span>
                     </div>
                   </div>
@@ -224,7 +225,7 @@ const ListingDetail = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 font-medium">Tổng giá trị</span>
                       <span className="text-2xl font-bold text-emerald-600">
-                        ${(listingData.credits * pricePerCredit).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {formatCurrencyFromUsd(listingData.credits * pricePerCredit)}
                       </span>
                     </div>
                   </div>
@@ -346,7 +347,7 @@ const ListingDetail = () => {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Giá:</span>
-                        <span className="font-semibold text-green-600">${similar.price.toFixed(2)}</span>
+                        <span className="font-semibold text-green-600">{formatCurrencyFromUsd(similar.price)}</span>
                       </div>
                       <div className="text-center">
                         {getTypeBadge(similar.type)}
@@ -419,7 +420,7 @@ const ListingDetail = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-gray-800">Tổng cộng:</span>
                       <span className="text-2xl font-bold text-green-600">
-                        ${totalPrice.toFixed(2)}
+                        {formatCurrencyFromUsd(totalPrice)}
                       </span>
                     </div>
                   </div>

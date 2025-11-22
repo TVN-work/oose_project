@@ -4,6 +4,7 @@ import { ArrowLeft, Shield, Check, CreditCard, Building2, Wallet } from 'lucide-
 import { usePurchase } from '../../../hooks/useBuyer';
 import Modal from '../../../components/common/Modal';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -146,7 +147,7 @@ const Checkout = () => {
     if (!selectedPaymentMethod) return 'Chọn phương thức thanh toán';
     if (selectedPaymentMethod === 'wallet' && !selectedWallet) return 'Chọn ví điện tử';
     if (!termsAccepted) return 'Đồng ý điều khoản để tiếp tục';
-    return `💳 Thanh toán ngay - $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `💳 Thanh toán ngay - ${formatCurrencyFromUsd(total)}`;
   };
 
   return (
@@ -239,17 +240,17 @@ const Checkout = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Đơn giá:</span>
-                      <span className="font-semibold">${pricePerCredit.toFixed(2)}</span>
+                      <span className="font-semibold">{formatCurrencyFromUsd(pricePerCredit)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Phí giao dịch:</span>
-                      <span className="font-semibold">${transactionFee.toFixed(2)}</span>
+                      <span className="font-semibold">{formatCurrencyFromUsd(transactionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-bold text-gray-800">Tổng cộng:</span>
                         <span className="text-2xl font-bold text-blue-600">
-                          ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatCurrencyFromUsd(total)}
                         </span>
                       </div>
                     </div>

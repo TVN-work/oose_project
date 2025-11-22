@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Leaf, DollarSign, Route, Globe, TrendingUp, TrendingDown, Upload, Wallet, ArrowRight, Activity, Zap, Target } from 'lucide-react';
+import { Leaf, DollarSign, Route, Globe, TrendingUp, TrendingDown, Upload, Wallet, ArrowRight, Activity, Zap, Target, Tag, CheckCircle } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
@@ -82,7 +82,7 @@ const Dashboard = () => {
 
   const recentActivities = [
     {
-      icon: '📤',
+      icon: Upload,
       title: 'Tải dữ liệu hành trình thành công',
       description: '125 km • Tạo 15 tín chỉ carbon',
       time: '2 giờ trước',
@@ -91,7 +91,7 @@ const Dashboard = () => {
       type: 'upload',
     },
     {
-      icon: '💰',
+      icon: DollarSign,
       title: 'Bán tín chỉ thành công',
       description: '50 tín chỉ cho Carbon Buyer',
       time: '1 ngày trước',
@@ -100,7 +100,7 @@ const Dashboard = () => {
       type: 'sale',
     },
     {
-      icon: '🏷️',
+      icon: Tag,
       title: 'Niêm yết tín chỉ mới',
       description: '80 tín chỉ với giá $25/tín chỉ',
       time: '3 ngày trước',
@@ -109,7 +109,7 @@ const Dashboard = () => {
       type: 'listing',
     },
     {
-      icon: '✅',
+      icon: CheckCircle,
       title: 'Tín chỉ được xác minh',
       description: 'CVA đã duyệt 30 tín chỉ',
       time: '5 ngày trước',
@@ -164,7 +164,7 @@ const Dashboard = () => {
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Chào mừng trở lại! 👋</h1>
+              <h1 className="text-3xl font-bold mb-2">Chào mừng trở lại!</h1>
               <p className="text-green-50 text-lg">
                 Quản lý và kiếm tiền từ việc lái xe điện của bạn
               </p>
@@ -217,7 +217,7 @@ const Dashboard = () => {
           return (
             <div
               key={index}
-              className={`${colors.bg} rounded-xl border-2 ${colors.border} shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+              className={`bg-white rounded-xl border-2 ${colors.border} shadow-sm p-6 hover:shadow-lg hover:scale-[1.02] transition-all duration-300`}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-12 h-12 ${colors.icon} rounded-xl flex items-center justify-center`}>
@@ -275,7 +275,7 @@ const Dashboard = () => {
       {/* Charts Section */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* CO2 Reduction Trend */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-gray-800 flex items-center">
@@ -324,7 +324,7 @@ const Dashboard = () => {
         </div>
 
         {/* Revenue Trend */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-gray-800 flex items-center">
@@ -364,7 +364,7 @@ const Dashboard = () => {
         {/* Left Column - Charts and Performance */}
         <div className="lg:col-span-2 space-y-6">
           {/* Credit Distribution */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
               <Leaf className="w-5 h-5 mr-2 text-green-600" />
               Phân bổ tín chỉ
@@ -408,7 +408,7 @@ const Dashboard = () => {
           </div>
 
           {/* Performance Metrics */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
               <Target className="w-5 h-5 mr-2 text-purple-600" />
               Chỉ số hiệu suất
@@ -445,7 +445,7 @@ const Dashboard = () => {
         {/* Right Column - Quick Actions & Recent Activities */}
         <div className="space-y-6">
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
               <Zap className="w-5 h-5 mr-2 text-yellow-500" />
               Hành động nhanh
@@ -454,10 +454,10 @@ const Dashboard = () => {
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 const colorClasses = {
-                  green: 'bg-green-50 hover:bg-green-100 border-green-200 text-green-600',
-                  blue: 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-600',
-                  purple: 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-600',
-                  orange: 'bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-600',
+                  green: 'bg-green-50 hover:bg-green-100 border-green-200 text-green-600 hover:text-green-800',
+                  blue: 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-600 hover:text-blue-800',
+                  purple: 'bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-600 hover:text-purple-800',
+                  orange: 'bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-600 hover:text-orange-800',
                 };
                 return (
                   <Link
@@ -475,7 +475,7 @@ const Dashboard = () => {
           </div>
 
           {/* Recent Activities */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-800 flex items-center">
                 <Activity className="w-5 h-5 mr-2 text-blue-600" />
@@ -506,11 +506,15 @@ const Dashboard = () => {
                 return (
                   <div
                     key={index}
-                    className={`${colorClasses[activity.color]} border rounded-xl p-4 hover:shadow-md transition-all duration-200`}
+                    className={`${colorClasses[activity.color]} border-2 rounded-xl p-4 hover:shadow-md hover:scale-[1.01] transition-all duration-300`}
                   >
                     <div className="flex items-start">
                       <div className={`w-10 h-10 ${colorClasses[activity.color].replace('50', '100')} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                        {typeof activity.icon === 'string' ? (
                         <span className="text-xl">{activity.icon}</span>
+                        ) : (
+                          <activity.icon className={`w-5 h-5 ${textColors[activity.color]}`} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-800 text-sm mb-1">{activity.title}</p>

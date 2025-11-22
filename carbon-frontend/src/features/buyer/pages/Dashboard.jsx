@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Award, DollarSign, Globe } from 'lucide-react';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const Dashboard = () => {
   const stats = [
@@ -11,7 +12,7 @@ const Dashboard = () => {
     },
     {
       icon: DollarSign,
-      value: '$12,450',
+      value: formatCurrencyFromUsd(12450),
       label: 'Tổng chi tiêu',
       color: 'green',
     },
@@ -34,7 +35,7 @@ const Dashboard = () => {
       icon: '✅',
       title: 'Mua thành công 85 tín chỉ',
       description: 'Từ Trần Thị B • 2 giờ trước',
-      value: '+$1,885',
+      value: `+${formatCurrencyFromUsd(1885)}`,
       bgColor: 'bg-green-100',
       iconColor: 'text-green-600',
       valueColor: 'text-green-600',

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, RefreshCw, Award, DollarSign, Globe, CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const Certificates = () => {
   const certificates = [
@@ -135,7 +136,7 @@ const Certificates = () => {
           <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <DollarSign className="w-6 h-6 text-orange-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">$12,450</p>
+          <p className="text-2xl font-bold text-gray-800">{formatCurrencyFromUsd(12450)}</p>
           <p className="text-sm text-gray-600">Tổng giá trị</p>
         </div>
       </div>
@@ -230,8 +231,8 @@ const Certificates = () => {
                     <div className="text-xs text-gray-500">{cert.co2Saved} tấn CO2</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-green-600">${cert.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                    <div className="text-xs text-gray-500">${cert.pricePerCredit}/tín chỉ</div>
+                    <div className="text-sm font-bold text-green-600">{formatCurrencyFromUsd(cert.value)}</div>
+                    <div className="text-xs text-gray-500">{formatCurrencyFromUsd(cert.pricePerCredit)}/tín chỉ</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(cert.status)}

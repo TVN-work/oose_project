@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Eye, Gavel, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrencyFromUsd } from '../../../utils';
 
 const Marketplace = () => {
   const navigate = useNavigate();
@@ -182,10 +183,10 @@ const Marketplace = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả mức giá</option>
-              <option value="under-20">Dưới $20</option>
-              <option value="20-25">$20 - $25</option>
-              <option value="25-30">$25 - $30</option>
-              <option value="over-30">Trên $30</option>
+              <option value="under-20">Dưới {formatCurrencyFromUsd(20)}</option>
+              <option value="20-25">{formatCurrencyFromUsd(20)} - {formatCurrencyFromUsd(25)}</option>
+              <option value="25-30">{formatCurrencyFromUsd(25)} - {formatCurrencyFromUsd(30)}</option>
+              <option value="over-30">Trên {formatCurrencyFromUsd(30)}</option>
             </select>
           </div>
 
@@ -305,7 +306,7 @@ const Marketplace = () => {
                   <span className={`font-bold text-lg ${
                     credit.type === 'auction' ? 'text-purple-600' : 'text-green-600'
                   }`}>
-                    ${credit.price.toFixed(2)}
+                    {formatCurrencyFromUsd(credit.price)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
