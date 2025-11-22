@@ -48,13 +48,28 @@ export const authService = {
     return apiClient.post(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
   },
 
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
     if (shouldUseMock()) {
-      return { success: true, message: 'Password changed successfully' };
+      return mockAuthService.changePassword(currentPassword, newPassword, confirmPassword);
     }
-    return apiClient.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
-      currentPassword,
-      newPassword,
+    // Backend expects: oldPassword, newPassword, confirmPassword
+    return apiClient.patch(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+      oldPassword: currentPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    });
+  },
+
+  updateProfile: async (profileData) => {
+    if (shouldUseMock()) {
+      return mockAuthService.updateProfile(profileData);
+    }
+    // Backend expects: fullName, email, phoneNumber, dob
+    return apiClient.patch(API_ENDPOINTS.AUTH.PROFILE, {
+      fullName: profileData.fullName || profileData.full_name,
+      email: profileData.email,
+      phoneNumber: profileData.phoneNumber || profileData.phone_number,
+      dob: profileData.dob,
     });
   },
 };
