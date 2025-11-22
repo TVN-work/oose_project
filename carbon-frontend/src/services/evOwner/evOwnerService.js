@@ -46,31 +46,31 @@ export const evOwnerService = {
   },
 
   createVehicle: async (vehicleData) => {
-    if (shouldUseMock()) return { success: true, id: 'vehicle-123' };
+    if (shouldUseMock()) return mockEvOwnerService.createVehicle?.(vehicleData) || { success: true, id: 'vehicle-123' };
     try {
       return await apiClient.post(API_ENDPOINTS.VEHICLE.CREATE_VEHICLE, vehicleData);
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true, id: 'vehicle-123' };
+      if (import.meta.env.DEV) return mockEvOwnerService.createVehicle?.(vehicleData) || { success: true, id: 'vehicle-123' };
       throw error;
     }
   },
 
   updateVehicle: async (vehicleId, vehicleData) => {
-    if (shouldUseMock()) return { success: true };
+    if (shouldUseMock()) return mockEvOwnerService.updateVehicle?.(vehicleId, vehicleData) || { success: true };
     try {
       return await apiClient.put(API_ENDPOINTS.VEHICLE.UPDATE_VEHICLE.replace(':id', vehicleId), vehicleData);
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true };
+      if (import.meta.env.DEV) return mockEvOwnerService.updateVehicle?.(vehicleId, vehicleData) || { success: true };
       throw error;
     }
   },
 
   deleteVehicle: async (vehicleId) => {
-    if (shouldUseMock()) return { success: true };
+    if (shouldUseMock()) return mockEvOwnerService.deleteVehicle?.(vehicleId) || { success: true };
     try {
       return await apiClient.delete(API_ENDPOINTS.VEHICLE.DELETE_VEHICLE.replace(':id', vehicleId));
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true };
+      if (import.meta.env.DEV) return mockEvOwnerService.deleteVehicle?.(vehicleId) || { success: true };
       throw error;
     }
   },
@@ -122,6 +122,17 @@ export const evOwnerService = {
       return await apiClient.get(API_ENDPOINTS.VEHICLE.JOURNEY_HISTORIES.replace(':id', journeyId), { params });
     } catch (error) {
       if (import.meta.env.DEV) return mockEvOwnerService.getJourneyHistories?.(journeyId, params) || [];
+      throw error;
+    }
+  },
+  
+  // Get ALL journey histories for current user (for Upload Trips page)
+  getAllJourneyHistories: async (params = {}) => {
+    if (shouldUseMock()) return mockEvOwnerService.getAllJourneyHistories?.(params) || { data: [] };
+    try {
+      return await apiClient.get(API_ENDPOINTS.VEHICLE.ALL_JOURNEY_HISTORIES, { params });
+    } catch (error) {
+      if (import.meta.env.DEV) return mockEvOwnerService.getAllJourneyHistories?.(params) || { data: [] };
       throw error;
     }
   },
@@ -246,11 +257,11 @@ export const evOwnerService = {
 
   getPaymentWalletTransactions: async (params = {}) => {
     // Returns audit table data for payment wallet
-    if (shouldUseMock()) return [];
+    if (shouldUseMock()) return mockEvOwnerService.getPaymentWalletTransactions?.(params) || [];
     try {
       return await apiClient.get(API_ENDPOINTS.WALLET.PAYMENT_WALLET_TRANSACTIONS, { params });
     } catch (error) {
-      if (import.meta.env.DEV) return [];
+      if (import.meta.env.DEV) return mockEvOwnerService.getPaymentWalletTransactions?.(params) || [];
       throw error;
     }
   },

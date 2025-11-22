@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { evOwnerService } from '../services/evOwner/evOwnerService';
-import toast from 'react-hot-toast';
 
 // Query Keys
 export const evOwnerKeys = {
   all: ['evOwner'],
+  vehicles: () => [...evOwnerKeys.all, 'vehicles'],
+  vehicle: (id) => [...evOwnerKeys.vehicles(), id],
+  vehicleTypes: () => [...evOwnerKeys.all, 'vehicleTypes'],
   trips: () => [...evOwnerKeys.all, 'trips'],
   trip: (id) => [...evOwnerKeys.trips(), id],
   wallet: () => [...evOwnerKeys.all, 'wallet'],
@@ -24,6 +26,89 @@ export const useDashboardStats = () => {
     queryFn: () => evOwnerService.getDashboardStats(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+  });
+};
+
+// ============= VEHICLES HOOKS =============
+// Get all vehicles for current user
+export const useVehicles = () => {
+  return useQuery({
+    queryKey: evOwnerKeys.vehicles(),
+    queryFn: () => evOwnerService.getVehicles(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+// Get single vehicle by ID
+export const useVehicle = (vehicleId) => {
+  return useQuery({
+    queryKey: evOwnerKeys.vehicle(vehicleId),
+    queryFn: () => evOwnerService.getVehicleById(vehicleId),
+    enabled: !!vehicleId,
+  });
+};
+
+// Get all vehicle types (for dropdown)
+export const useVehicleTypes = () => {
+  return useQuery({
+    queryKey: evOwnerKeys.vehicleTypes(),
+    queryFn: () => evOwnerService.getVehicleTypes(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (vehicle types rarely change)
+  });
+};
+
+// Create new vehicle
+export const useCreateVehicle = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (vehicleData) => evOwnerService.createVehicle(vehicleData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.vehicles() });
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.dashboardStats() });
+      // Don't show toast here - let the component handle it
+    },
+    onError: (error) => {
+      // Don't show toast here - let the component handle it
+      throw error;
+    },
+  });
+};
+
+// Update existing vehicle
+export const useUpdateVehicle = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...vehicleData }) => evOwnerService.updateVehicle(id, vehicleData),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.vehicles() });
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.vehicle(variables.id) });
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.dashboardStats() });
+      // Don't show toast here - let the component handle it
+    },
+    onError: (error) => {
+      // Don't show toast here - let the component handle it
+      throw error;
+    },
+  });
+};
+
+// Delete vehicle
+export const useDeleteVehicle = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (vehicleId) => evOwnerService.deleteVehicle(vehicleId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.vehicles() });
+      queryClient.invalidateQueries({ queryKey: evOwnerKeys.dashboardStats() });
+      // Don't show toast here - let the component handle it
+    },
+    onError: (error) => {
+      // Don't show toast here - let the component handle it
+      throw error;
+    },
   });
 };
 
@@ -49,14 +134,19 @@ export const useUploadTrip = () => {
   
   return useMutation({
     mutationFn: (tripData) => evOwnerService.uploadTrip(tripData),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Upload trip success:', data);
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.trips() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.dashboardStats() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.wallet() });
-      toast.success('Tải dữ liệu hành trình thành công!');
+      // Toast notifications removed - handled by Alert component in pages
+      return data;
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tải dữ liệu');
+      // Error handling moved to component level with Alert component
+      console.error('❌ Upload trip error:', error);
+      // Re-throw error so component can catch it
+      throw error;
     },
   });
 };
@@ -112,10 +202,11 @@ export const useCreateListing = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.listings() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.wallet() });
-      toast.success('Tạo niêm yết thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo niêm yết');
+      // Error handling moved to component level with Alert component
+      console.error('Create listing error:', error);
     },
   });
 };
@@ -129,10 +220,11 @@ export const useUpdateListing = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.listings() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.listing(variables.listingId) });
-      toast.success('Cập nhật niêm yết thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật');
+      // Error handling moved to component level with Alert component
+      console.error('Update listing error:', error);
     },
   });
 };
@@ -145,10 +237,11 @@ export const useDeleteListing = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.listings() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.wallet() });
-      toast.success('Xóa niêm yết thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi xóa');
+      // Error handling moved to component level with Alert component
+      console.error('Delete listing error:', error);
     },
   });
 };
@@ -185,10 +278,11 @@ export const useCancelTransaction = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.transactions() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.wallet() });
-      toast.success('Hủy giao dịch thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi hủy giao dịch');
+      // Error handling moved to component level with Alert component
+      console.error('Cancel transaction error:', error);
     },
   });
 };
@@ -214,10 +308,11 @@ export const useExportReport = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Xuất báo cáo thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi xuất báo cáo');
+      // Error handling moved to component level with Alert component
+      console.error('Export report error:', error);
     },
   });
 };
@@ -232,10 +327,11 @@ export const useWithdraw = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.wallet() });
       queryClient.invalidateQueries({ queryKey: evOwnerKeys.transactions() });
-      toast.success('Rút tiền thành công!');
+      // Toast notifications removed - handled by Alert component in pages
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi rút tiền');
+      // Error handling moved to component level with Alert component
+      console.error('Withdraw error:', error);
     },
   });
 };
