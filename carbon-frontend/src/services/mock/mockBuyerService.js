@@ -28,12 +28,43 @@ export const mockBuyerService = {
 
   purchase: async ({ creditId, amount, quantity }) => {
     await delay(1200);
+    
+    // Import mockDatabase to create transaction
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    // Get current user ID (buyer)
+    const buyerId = localStorage.getItem('currentUserId') || 'buyer-user-id';
+    
+    // Find listing to get seller_id
+    const listing = mockDatabase.findListingById(creditId);
+    if (!listing) {
+      throw new Error('Listing not found');
+    }
+    
+    // Create transaction in database
+    const transaction = mockDatabase.createTransaction({
+      buyer_id: buyerId,
+      seller_id: listing.seller_id,
+      listing_id: creditId,
+      credit: quantity,
+      amount: amount,
+      payment_method: 'e_wallet',
+      payment_url: `/payment/redirect/${Date.now()}`,
+      status: 'PENDING_PAYMENT', // Use database status format
+    });
+    
+    // Dispatch event to notify other components
+    window.dispatchEvent(new CustomEvent('transaction-created', {
+      detail: { transaction }
+    }));
+    
     return {
-      transactionId: `purchase-${Date.now()}`,
+      transactionId: transaction.id,
       creditId,
       amount,
       quantity,
-      status: 'pending',
+      status: transaction.status,
+      transaction,
     };
   },
 

@@ -392,11 +392,11 @@ export const evOwnerService = {
   },
 
   completeTransaction: async (transactionId) => {
-    if (shouldUseMock()) return { success: true };
+    if (shouldUseMock()) return mockEvOwnerService.completeTransaction(transactionId);
     try {
       return await apiClient.post(API_ENDPOINTS.TRANSACTION.COMPLETE_TRANSACTION.replace(':id', transactionId));
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true };
+      if (import.meta.env.DEV) return mockEvOwnerService.completeTransaction(transactionId);
       throw error;
     }
   },

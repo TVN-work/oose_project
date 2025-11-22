@@ -1,123 +1,96 @@
 import { Link } from 'react-router-dom';
 import { Leaf, DollarSign, Route, Globe, TrendingUp, TrendingDown, Upload, Wallet, ArrowRight, Activity, Zap, Target, Tag, CheckCircle } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useDashboardStats } from '../../../hooks/useEvOwner';
+import Loading from '../../../components/common/Loading';
+import { formatCurrency, formatNumber } from '../../../utils';
 
 const Dashboard = () => {
-  // Weekly revenue data for mini chart
-  const weeklyRevenueData = [
-    { day: 'T2', value: 120 },
-    { day: 'T3', value: 190 },
-    { day: 'T4', value: 150 },
-    { day: 'T5', value: 220 },
-    { day: 'T6', value: 180 },
-    { day: 'T7', value: 250 },
-    { day: 'CN', value: 200 },
-  ];
+  // Fetch dashboard stats from database
+  const { data: dashboardData, isLoading, error } = useDashboardStats();
 
-  // Monthly CO2 reduction trend
-  const co2TrendData = [
-    { month: 'T7', value: 2.2 },
-    { month: 'T8', value: 2.7 },
-    { month: 'T9', value: 2.4 },
-    { month: 'T10', value: 2.6 },
-    { month: 'T11', value: 2.3 },
-    { month: 'T12', value: 2.8 },
-  ];
+  if (isLoading) {
+    return <Loading />;
+  }
 
-  // Revenue trend data
-  const revenueTrendData = [
-    { month: 'T7', value: 520 },
-    { month: 'T8', value: 630 },
-    { month: 'T9', value: 560 },
-    { month: 'T10', value: 610 },
-    { month: 'T11', value: 540 },
-    { month: 'T12', value: 587 },
-  ];
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-600">Không thể tải dữ liệu dashboard. Vui lòng thử lại sau.</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Credit distribution for pie chart
-  const creditDistributionData = [
-    { name: 'Đã bán', value: 189, color: '#10b981' },
-    { name: 'Đang niêm yết', value: 45, color: '#3b82f6' },
-    { name: 'Có sẵn', value: 11, color: '#8b5cf6' },
-  ];
+  // Extract data from API response
+  const statsData = dashboardData?.stats || {
+    availableCredits: 0,
+    totalRevenue: 0,
+    totalDistance: 0,
+    totalCo2Saved: 0,
+  };
+  
+  const trendsData = dashboardData?.trends || {
+    creditsChange: 0,
+    revenueChange: 0,
+    distanceChange: 0,
+    co2Change: 0,
+  };
+  
+  const chartsData = dashboardData?.charts || {
+    weeklyRevenue: [],
+    co2Trend: [],
+    revenueTrend: [],
+    creditDistribution: [],
+  };
+  
+  const recentActivities = dashboardData?.recentActivities || [];
 
+  // Stats cards with real data
   const stats = [
     {
       icon: Leaf,
-      value: '245',
+      value: formatNumber(statsData.availableCredits),
       label: 'Tín chỉ có sẵn',
-      change: '+12.3%',
-      changeType: 'up',
+      change: `${trendsData.creditsChange >= 0 ? '+' : ''}${trendsData.creditsChange.toFixed(1)}%`,
+      changeType: trendsData.creditsChange >= 0 ? 'up' : 'down',
       color: 'green',
-      chartData: weeklyRevenueData,
+      chartData: chartsData.weeklyRevenue || [],
     },
     {
       icon: DollarSign,
-      value: '$8,750',
+      value: formatCurrency(statsData.totalRevenue),
       label: 'Tổng thu nhập',
-      change: '+15.2%',
-      changeType: 'up',
+      change: `${trendsData.revenueChange >= 0 ? '+' : ''}${trendsData.revenueChange.toFixed(1)}%`,
+      changeType: trendsData.revenueChange >= 0 ? 'up' : 'down',
       color: 'blue',
-      chartData: weeklyRevenueData,
+      chartData: chartsData.weeklyRevenue || [],
     },
     {
       icon: Route,
-      value: '12,450',
+      value: formatNumber(statsData.totalDistance),
       label: 'Km đã đi',
-      change: '+8.9%',
-      changeType: 'up',
+      change: `${trendsData.distanceChange >= 0 ? '+' : ''}${trendsData.distanceChange.toFixed(1)}%`,
+      changeType: trendsData.distanceChange >= 0 ? 'up' : 'down',
       color: 'purple',
-      chartData: weeklyRevenueData,
+      chartData: chartsData.weeklyRevenue || [],
     },
     {
       icon: Globe,
-      value: '18.1',
+      value: formatNumber(statsData.totalCo2Saved),
       label: 'Tấn CO₂ tiết kiệm',
-      change: '+12.3%',
-      changeType: 'up',
+      change: `${trendsData.co2Change >= 0 ? '+' : ''}${trendsData.co2Change.toFixed(1)}%`,
+      changeType: trendsData.co2Change >= 0 ? 'up' : 'down',
       color: 'orange',
-      chartData: weeklyRevenueData,
+      chartData: chartsData.weeklyRevenue || [],
     },
   ];
 
-  const recentActivities = [
-    {
-      icon: Upload,
-      title: 'Tải dữ liệu hành trình thành công',
-      description: '125 km • Tạo 15 tín chỉ carbon',
-      time: '2 giờ trước',
-      value: '+15 tín chỉ',
-      color: 'green',
-      type: 'upload',
-    },
-    {
-      icon: DollarSign,
-      title: 'Bán tín chỉ thành công',
-      description: '50 tín chỉ cho Carbon Buyer',
-      time: '1 ngày trước',
-      value: '+$1,250',
-      color: 'blue',
-      type: 'sale',
-    },
-    {
-      icon: Tag,
-      title: 'Niêm yết tín chỉ mới',
-      description: '80 tín chỉ với giá $25/tín chỉ',
-      time: '3 ngày trước',
-      value: null,
-      color: 'purple',
-      type: 'listing',
-    },
-    {
-      icon: CheckCircle,
-      title: 'Tín chỉ được xác minh',
-      description: 'CVA đã duyệt 30 tín chỉ',
-      time: '5 ngày trước',
-      value: '+30 tín chỉ',
-      color: 'green',
-      type: 'verified',
-    },
-  ];
+  // Use real chart data
+  const co2TrendData = chartsData.co2Trend || [];
+  const revenueTrendData = chartsData.revenueTrend || [];
+  const creditDistributionData = chartsData.creditDistribution || [];
 
   const quickActions = [
     {
@@ -150,10 +123,42 @@ const Dashboard = () => {
     },
   ];
 
+  // Calculate performance metrics from real data
+  const totalCredits = creditDistributionData.reduce((sum, item) => sum + (item.value || 0), 0);
+  const soldCredits = creditDistributionData.find(item => item.name === 'Đã bán')?.value || 0;
+  const thisMonthRevenue = revenueTrendData[revenueTrendData.length - 1]?.value || 0;
+  const avgMonthlyRevenue = revenueTrendData.length > 0
+    ? revenueTrendData.reduce((sum, item) => sum + (item.value || 0), 0) / revenueTrendData.length
+    : 0;
+  
+  // Calculate performance (percentage of target)
+  const creditTarget = totalCredits * 0.8; // 80% of total credits as target
+  const revenueTarget = avgMonthlyRevenue * 1.2; // 120% of average as target
+  
   const performanceMetrics = [
-    { label: 'Mục tiêu tháng này', current: 75, target: 100, color: 'green' },
-    { label: 'Tín chỉ đã bán', current: 60, target: 80, color: 'blue' },
-    { label: 'Doanh thu', current: 85, target: 100, color: 'purple' },
+    { 
+      label: 'Tín chỉ đã bán', 
+      current: soldCredits, 
+      target: creditTarget, 
+      color: 'blue',
+      percentage: creditTarget > 0 ? Math.min(100, (soldCredits / creditTarget * 100)) : 0,
+    },
+    { 
+      label: 'Doanh thu tháng này', 
+      current: thisMonthRevenue, 
+      target: revenueTarget, 
+      color: 'purple',
+      percentage: revenueTarget > 0 ? Math.min(100, (thisMonthRevenue / revenueTarget * 100)) : 0,
+    },
+    { 
+      label: 'CO₂ giảm tháng này', 
+      current: co2TrendData[co2TrendData.length - 1]?.value || 0, 
+      target: (co2TrendData.reduce((sum, item) => sum + (item.value || 0), 0) / co2TrendData.length) * 1.2 || 1, 
+      color: 'green',
+      percentage: co2TrendData.length > 0 
+        ? Math.min(100, ((co2TrendData[co2TrendData.length - 1]?.value || 0) / ((co2TrendData.reduce((sum, item) => sum + (item.value || 0), 0) / co2TrendData.length) * 1.2) * 100))
+        : 0,
+    },
   ];
 
   return (
@@ -172,7 +177,11 @@ const Dashboard = () => {
             <div className="hidden md:flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm opacity-90">Hiệu suất tháng này</p>
-                <p className="text-2xl font-bold">87%</p>
+                <p className="text-2xl font-bold">
+                  {performanceMetrics.length > 0
+                    ? Math.round(performanceMetrics.reduce((sum, m) => sum + m.percentage, 0) / performanceMetrics.length)
+                    : 0}%
+                </p>
               </div>
               <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
                 <Zap className="w-8 h-8" />
@@ -350,7 +359,7 @@ const Dashboard = () => {
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
-                  formatter={(value) => [`$${value}`, 'Doanh thu']}
+                  formatter={(value) => [formatCurrency(value), 'Doanh thu']}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -415,25 +424,35 @@ const Dashboard = () => {
             </h3>
             <div className="space-y-6">
               {performanceMetrics.map((metric, index) => {
-                const percentage = (metric.current / metric.target) * 100;
                 const colorClasses = {
                   green: 'bg-green-500',
                   blue: 'bg-blue-500',
                   purple: 'bg-purple-500',
                 };
+                const formatValue = (value, type) => {
+                  if (type === 'revenue') return formatCurrency(value);
+                  if (type === 'co2') return `${formatNumber(value)} tấn`;
+                  return formatNumber(value);
+                };
+                const valueType = metric.label.includes('Doanh thu') ? 'revenue' 
+                  : metric.label.includes('CO₂') ? 'co2' 
+                  : 'number';
                 return (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">{metric.label}</span>
                       <span className="text-sm font-bold text-gray-800">
-                        {metric.current} / {metric.target}
+                        {formatValue(metric.current, valueType)} / {formatValue(metric.target, valueType)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div
                         className={`${colorClasses[metric.color]} h-3 rounded-full transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
+                        style={{ width: `${Math.min(100, metric.percentage)}%` }}
                       ></div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 text-right">
+                      {metric.percentage.toFixed(1)}% hoàn thành
                     </div>
                   </div>
                 );
@@ -490,46 +509,52 @@ const Dashboard = () => {
               </Link>
             </div>
             <div className="space-y-3">
-              {recentActivities.map((activity, index) => {
-                const colorClasses = {
-                  green: 'bg-green-50 border-green-200',
-                  blue: 'bg-blue-50 border-blue-200',
-                  purple: 'bg-purple-50 border-purple-200',
-                  orange: 'bg-orange-50 border-orange-200',
-                };
-                const textColors = {
-                  green: 'text-green-600',
-                  blue: 'text-blue-600',
-                  purple: 'text-purple-600',
-                  orange: 'text-orange-600',
-                };
-                return (
-                  <div
-                    key={index}
-                    className={`${colorClasses[activity.color]} border-2 rounded-xl p-4 hover:shadow-md hover:scale-[1.01] transition-all duration-300`}
-                  >
-                    <div className="flex items-start">
-                      <div className={`w-10 h-10 ${colorClasses[activity.color].replace('50', '100')} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
-                        {typeof activity.icon === 'string' ? (
-                        <span className="text-xl">{activity.icon}</span>
-                        ) : (
-                          <activity.icon className={`w-5 h-5 ${textColors[activity.color]}`} />
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => {
+                  const colorClasses = {
+                    green: 'bg-green-50 border-green-200',
+                    blue: 'bg-blue-50 border-blue-200',
+                    purple: 'bg-purple-50 border-purple-200',
+                    orange: 'bg-orange-50 border-orange-200',
+                  };
+                  const textColors = {
+                    green: 'text-green-600',
+                    blue: 'text-blue-600',
+                    purple: 'text-purple-600',
+                    orange: 'text-orange-600',
+                  };
+                  return (
+                    <div
+                      key={index}
+                      className={`${colorClasses[activity.color]} border-2 rounded-xl p-4 hover:shadow-md hover:scale-[1.01] transition-all duration-300`}
+                    >
+                      <div className="flex items-start">
+                        <div className={`w-10 h-10 ${colorClasses[activity.color].replace('50', '100')} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                          {typeof activity.icon === 'string' ? (
+                            <span className="text-xl">{activity.icon}</span>
+                          ) : (
+                            <activity.icon className={`w-5 h-5 ${textColors[activity.color]}`} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-800 text-sm mb-1">{activity.title}</p>
+                          <p className="text-xs text-gray-600 mb-1">{activity.description}</p>
+                          <p className="text-xs text-gray-500">{activity.time}</p>
+                        </div>
+                        {activity.value && (
+                          <span className={`font-bold text-sm ${textColors[activity.color]} ml-2 flex-shrink-0`}>
+                            {activity.value}
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-800 text-sm mb-1">{activity.title}</p>
-                        <p className="text-xs text-gray-600 mb-1">{activity.description}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                      {activity.value && (
-                        <span className={`font-bold text-sm ${textColors[activity.color]} ml-2 flex-shrink-0`}>
-                          {activity.value}
-                        </span>
-                      )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">Chưa có hoạt động nào</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
