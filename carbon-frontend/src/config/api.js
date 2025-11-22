@@ -1,7 +1,8 @@
 // API Configuration
 // All requests go through API Gateway (Spring Cloud Gateway)
 // Gateway routes requests to appropriate microservices via Eureka Service Discovery
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+// API Gateway Port: 8222 (confirmed from backend docker-compose.yml)
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8222/api/v1';
 
 export const API_ENDPOINTS = {
   // User Service - Authentication & User Management
@@ -11,7 +12,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/users/auth/logout',
     REFRESH: '/users/auth/refresh',
     PROFILE: '/users/profile',
-    CHANGE_PASSWORD: '/users/profile/password',
+    CHANGE_PASSWORD: '/customer/change-password', // Backend: /api/customer/change-password
   },
   
   // Vehicle Service - EV Trip Data Management

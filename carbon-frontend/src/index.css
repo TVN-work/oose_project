@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Google Fonts import moved to index.html to avoid CSP issues */
 
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -101,6 +101,90 @@ button:focus-visible {
 
 .animate-slide-in {
   animation: slideIn 0.4s ease-out;
+}
+
+/* Alert Animations - CoreUI Style */
+@keyframes alertFadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes alertFadeOutSlide {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+}
+
+@keyframes alertIconPop {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.alert-fade-in {
+  animation: alertFadeInSlide 0.3s ease-out forwards;
+  opacity: 1 !important; /* Ensure alert is always visible */
+}
+
+.alert-fade-out {
+  animation: alertFadeOutSlide 0.3s ease-in forwards;
+}
+
+.alert-icon-pop {
+  animation: alertIconPop 0.4s ease-out 0.1s forwards;
+  /* Start with opacity 1, animation will handle the pop effect */
+  opacity: 1;
+}
+
+/* Toast Alert Animations - Slide from right */
+@keyframes alertToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes alertToastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.alert-toast-slide-in {
+  animation: alertToastSlideIn 0.4s ease-out forwards;
+  opacity: 1 !important;
+}
+
+.alert-toast-slide-out {
+  animation: alertToastSlideOut 0.3s ease-in forwards;
 }
 
 /* Hide scrollbar for sidebar */
