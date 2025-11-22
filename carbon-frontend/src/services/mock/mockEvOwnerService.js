@@ -587,38 +587,444 @@ export const mockEvOwnerService = {
 
   getTransactions: async (params = {}) => {
     await delay(500);
+    
+    // Import mockDatabase to get transactions from database
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    // Get current user ID from localStorage or use default
+    const currentUserId = localStorage.getItem('currentUserId') || 'current-user-id';
+    
+    // Get all transactions where user is seller
+    const transactions = mockDatabase.findTransactionsBySellerId(currentUserId);
+    
+    // Populate buyer and seller info if needed
+    const transactionsWithDetails = transactions.map(tx => {
+      const buyer = mockDatabase.findUserById(tx.buyer_id);
+      const seller = mockDatabase.findUserById(tx.seller_id);
+      
+      return {
+        ...tx,
+        buyer: buyer ? {
+          id: buyer.id,
+          full_name: buyer.full_name,
+          email: buyer.email,
+        } : null,
+        seller: seller ? {
+          id: seller.id,
+          full_name: seller.full_name,
+          email: seller.email,
+        } : null,
+      };
+    });
+    
     return {
-      data: mockTransactions,
-      total: mockTransactions.length,
+      data: transactionsWithDetails,
+      total: transactionsWithDetails.length,
     };
   },
 
   getTransactionById: async (transactionId) => {
     await delay(400);
-    return mockTransactions.find(tx => tx.id === transactionId) || mockTransactions[0];
+    
+    // Import mockDatabase to get transaction from database
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    const transaction = mockDatabase.findTransactionById(transactionId);
+    if (!transaction) return null;
+    
+    // Populate buyer and seller info
+    const buyer = mockDatabase.findUserById(transaction.buyer_id);
+    const seller = mockDatabase.findUserById(transaction.seller_id);
+    
+    return {
+      ...transaction,
+      buyer: buyer ? {
+        id: buyer.id,
+        full_name: buyer.full_name,
+        email: buyer.email,
+      } : null,
+      seller: seller ? {
+        id: seller.id,
+        full_name: seller.full_name,
+        email: seller.email,
+      } : null,
+    };
   },
 
   cancelTransaction: async (transactionId) => {
     await delay(500);
-    return { success: true };
+    
+    // Import mockDatabase to update transaction status
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    const updated = mockDatabase.updateTransactionStatus(transactionId, 'CANCELLED');
+    if (!updated) {
+      throw new Error('Transaction not found');
+    }
+    
+    return { success: true, data: updated };
+  },
+
+  completeTransaction: async (transactionId) => {
+    await delay(500);
+    
+    // Import mockDatabase to update transaction status
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    const updated = mockDatabase.updateTransactionStatus(transactionId, 'COMPLETED');
+    if (!updated) {
+      throw new Error('Transaction not found');
+    }
+    
+    return { success: true, data: updated };
   },
 
   getReports: async (params = {}) => {
     await delay(600);
+    
+    // Import mockDatabase to get real data
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    // Get current user ID
+    const currentUserId = localStorage.getItem('currentUserId') || mockUsers.EV_OWNER.id;
+    
+    // Get all journeys for this user (through vehicles)
+    const userVehicles = mockDatabase.vehicles.filter(v => v.owner_id === currentUserId);
+    const vehicleIds = userVehicles.map(v => v.id);
+    const userJourneys = mockDatabase.journeys.filter(j => vehicleIds.includes(j.vehicle_id));
+    
+    // Get all transactions where user is seller
+    const userTransactions = mockDatabase.transactions.filter(t => 
+      t.seller_id === currentUserId && 
+      (t.status?.toUpperCase() === 'COMPLETED' || t.status === 'completed')
+    );
+    
+    // Get carbon credits for user
+    const carbonCredit = mockDatabase.carbonCredits.find(cc => cc.owner_id === currentUserId);
+    
+    // Calculate CO₂ data by month (last 12 months)
+    const co2ByMonth = {};
+    const revenueByMonth = {};
+    const monthNames = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    
+    // Initialize last 12 months
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = monthNames[date.getMonth()];
+      co2ByMonth[monthKey] = { month: monthLabel, value: 0 };
+      revenueByMonth[monthKey] = { month: monthLabel, value: 0 };
+    }
+    
+    // Aggregate CO₂ by month from journeys
+    userJourneys.forEach(journey => {
+      if (journey.co2reduced) {
+        const date = new Date(journey.created_at);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (co2ByMonth[monthKey]) {
+          co2ByMonth[monthKey].value += journey.co2reduced;
+        }
+      }
+    });
+    
+    // Aggregate revenue by month from transactions
+    // Note: transaction.amount is already in the currency used (could be USD or VND)
+    // For now, assume it's in USD and convert to VND
+    const USD_TO_VND_RATE = 25000;
+    userTransactions.forEach(transaction => {
+      if (transaction.amount) {
+        const date = new Date(transaction.created_at);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (revenueByMonth[monthKey]) {
+          // Transaction amount is in USD, convert to VND
+          revenueByMonth[monthKey].value += transaction.amount * USD_TO_VND_RATE;
+        }
+      }
+    });
+    
+    // Convert to arrays and sort by month (oldest first)
+    const co2Data = Object.values(co2ByMonth)
+      .sort((a, b) => {
+        const aKey = Object.keys(co2ByMonth).find(k => co2ByMonth[k] === a);
+        const bKey = Object.keys(co2ByMonth).find(k => co2ByMonth[k] === b);
+        return aKey.localeCompare(bKey);
+      });
+    
+    const revenueData = Object.values(revenueByMonth)
+      .sort((a, b) => {
+        const aKey = Object.keys(revenueByMonth).find(k => revenueByMonth[k] === a);
+        const bKey = Object.keys(revenueByMonth).find(k => revenueByMonth[k] === b);
+        return aKey.localeCompare(bKey);
+      });
+    
+    // Calculate totals
+    const totalCo2 = userJourneys.reduce((sum, j) => sum + (j.co2reduced || 0), 0);
+    const totalRevenue = userTransactions.reduce((sum, t) => sum + (t.amount || 0) * USD_TO_VND_RATE, 0);
+    const totalCredits = carbonCredit?.total_credit || 0;
+    const soldCredits = carbonCredit?.traded_credit || 0;
+    
+    // Calculate this month and last month
+    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+    
+    const thisMonthCo2 = co2ByMonth[thisMonthKey]?.value || 0;
+    const lastMonthCo2 = co2ByMonth[lastMonthKey]?.value || 0;
+    const thisMonthRevenue = revenueByMonth[thisMonthKey]?.value || 0;
+    const lastMonthRevenue = revenueByMonth[lastMonthKey]?.value || 0;
+    
+    // Calculate changes
+    const co2Change = lastMonthCo2 > 0 ? ((thisMonthCo2 - lastMonthCo2) / lastMonthCo2 * 100) : 0;
+    const revenueChange = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+    
+    // AI Prediction: Simple linear regression based on last 3 months
+    const last3MonthsCo2 = co2Data.slice(-3).map(d => d.value);
+    const last3MonthsRevenue = revenueData.slice(-3).map(d => d.value);
+    
+    const avgCo2Growth = last3MonthsCo2.length >= 2 
+      ? (last3MonthsCo2[last3MonthsCo2.length - 1] - last3MonthsCo2[0]) / (last3MonthsCo2.length - 1)
+      : 0;
+    const avgRevenueGrowth = last3MonthsRevenue.length >= 2
+      ? (last3MonthsRevenue[last3MonthsRevenue.length - 1] - last3MonthsRevenue[0]) / (last3MonthsRevenue.length - 1)
+      : 0;
+    
+    const predictedCo2 = Math.max(0, thisMonthCo2 + avgCo2Growth);
+    const predictedRevenue = Math.max(0, thisMonthRevenue + avgRevenueGrowth);
+    
+    const co2PredictionChange = thisMonthCo2 > 0 ? ((predictedCo2 - thisMonthCo2) / thisMonthCo2 * 100) : 0;
+    const revenuePredictionChange = thisMonthRevenue > 0 ? ((predictedRevenue - thisMonthRevenue) / thisMonthRevenue * 100) : 0;
+    
     return {
-      co2Data: mockDashboardStats.EV_OWNER.charts.co2Trend,
-      revenueData: mockDashboardStats.EV_OWNER.charts.revenueTrend,
+      co2Data: co2Data.slice(-12), // Last 12 months
+      revenueData: revenueData.slice(-12), // Last 12 months
       summary: {
-        totalCo2: 18.1,
-        totalRevenue: 8750,
-        totalCredits: 245,
+        totalCo2: parseFloat(totalCo2.toFixed(2)),
+        totalRevenue: totalRevenue,
+        totalCredits: totalCredits,
+        soldCredits: soldCredits,
+        thisMonthCo2: parseFloat(thisMonthCo2.toFixed(2)),
+        lastMonthCo2: parseFloat(lastMonthCo2.toFixed(2)),
+        thisMonthRevenue: thisMonthRevenue,
+        lastMonthRevenue: lastMonthRevenue,
+        co2Change: parseFloat(co2Change.toFixed(1)),
+        revenueChange: parseFloat(revenueChange.toFixed(1)),
+      },
+      prediction: {
+        nextMonthCo2: parseFloat(predictedCo2.toFixed(2)),
+        nextMonthRevenue: predictedRevenue,
+        co2Change: parseFloat(co2PredictionChange.toFixed(1)),
+        revenueChange: parseFloat(revenuePredictionChange.toFixed(1)),
+        confidence: 85, // Based on data availability
       },
     };
   },
 
   getDashboardStats: async () => {
     await delay(500);
-    return mockDashboardStats.EV_OWNER;
+    
+    // Helper function to get time ago
+    const getTimeAgo = (date) => {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 60) return `${minutes} phút trước`;
+      if (hours < 24) return `${hours} giờ trước`;
+      if (days < 7) return `${days} ngày trước`;
+      return `${Math.floor(days / 7)} tuần trước`;
+    };
+    
+    // Helper function to format currency
+    const formatCurrency = (amount) => {
+      const formatted = new Intl.NumberFormat('vi-VN').format(Math.round(amount));
+      return `${formatted} VNĐ`;
+    };
+    
+    // Import mockDatabase to get real data
+    const mockDatabase = (await import('./mockDatabaseService')).default;
+    
+    // Get current user ID
+    const currentUserId = localStorage.getItem('currentUserId') || mockUsers.EV_OWNER.id;
+    
+    // Get all journeys for this user (through vehicles)
+    const userVehicles = mockDatabase.vehicles.filter(v => v.owner_id === currentUserId);
+    const vehicleIds = userVehicles.map(v => v.id);
+    const userJourneys = mockDatabase.journeys.filter(j => vehicleIds.includes(j.vehicle_id));
+    
+    // Get all transactions where user is seller
+    const userTransactions = mockDatabase.transactions.filter(t => 
+      t.seller_id === currentUserId && 
+      (t.status?.toUpperCase() === 'COMPLETED' || t.status === 'completed')
+    );
+    
+    // Get all listings for this user
+    const userListings = mockDatabase.marketListings.filter(l => l.seller_id === currentUserId);
+    
+    // Get carbon credits for user
+    const carbonCredit = mockDatabase.carbonCredits.find(cc => cc.owner_id === currentUserId);
+    
+    // Calculate stats
+    const totalCo2 = userJourneys.reduce((sum, j) => sum + (j.co2reduced || 0), 0);
+    const totalDistance = userJourneys.reduce((sum, j) => sum + (j.distance_km || 0), 0);
+    const USD_TO_VND_RATE = 25000;
+    const totalRevenue = userTransactions.reduce((sum, t) => sum + (t.amount || 0) * USD_TO_VND_RATE, 0);
+    
+    const availableCredits = carbonCredit?.available_credit || 0;
+    const totalCredits = carbonCredit?.total_credit || 0;
+    const soldCredits = carbonCredit?.traded_credit || 0;
+    
+    // Calculate listings stats
+    const activeListings = userListings.filter(l => 
+      !l.buyer_id && (l.listing_type === 'fixed_price' || l.listing_type === 'auction')
+    );
+    const listedCredits = activeListings.reduce((sum, l) => sum + (l.quantity || 0), 0);
+    
+    // Calculate trends (last 6 months)
+    const now = new Date();
+    const co2Trend = [];
+    const revenueTrend = [];
+    const monthNames = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = monthNames[date.getMonth()];
+      
+      // Calculate CO₂ for this month
+      const monthCo2 = userJourneys
+        .filter(j => {
+          const jDate = new Date(j.created_at);
+          return `${jDate.getFullYear()}-${String(jDate.getMonth() + 1).padStart(2, '0')}` === monthKey;
+        })
+        .reduce((sum, j) => sum + (j.co2reduced || 0), 0);
+      
+      // Calculate revenue for this month
+      const monthRevenue = userTransactions
+        .filter(t => {
+          const tDate = new Date(t.created_at);
+          return `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}` === monthKey;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0) * USD_TO_VND_RATE, 0);
+      
+      co2Trend.push({ month: monthLabel, value: parseFloat(monthCo2.toFixed(2)) });
+      revenueTrend.push({ month: monthLabel, value: monthRevenue });
+    }
+    
+    // Calculate changes (this month vs last month)
+    const thisMonth = co2Trend[co2Trend.length - 1];
+    const lastMonth = co2Trend[co2Trend.length - 2] || { value: 0 };
+    const co2Change = lastMonth.value > 0 
+      ? ((thisMonth.value - lastMonth.value) / lastMonth.value * 100) 
+      : 0;
+    
+    const thisMonthRevenue = revenueTrend[revenueTrend.length - 1];
+    const lastMonthRevenue = revenueTrend[revenueTrend.length - 2] || { value: 0 };
+    const revenueChange = lastMonthRevenue.value > 0
+      ? ((thisMonthRevenue.value - lastMonthRevenue.value) / lastMonthRevenue.value * 100)
+      : 0;
+    
+    // Get recent activities (last 10 activities)
+    const recentActivities = [];
+    
+    // Add recent journeys (uploads)
+    userJourneys.slice(-5).forEach(journey => {
+      const timeAgo = getTimeAgo(new Date(journey.created_at));
+      recentActivities.push({
+        icon: '📤',
+        title: 'Tải dữ liệu hành trình thành công',
+        description: `${journey.distance_km?.toFixed(1) || 0} km • Tạo ${(journey.co2reduced || 0).toFixed(2)} tấn CO₂`,
+        time: timeAgo,
+        value: `+${(journey.co2reduced || 0).toFixed(2)} tấn`,
+        color: 'green',
+        type: 'upload',
+        date: journey.created_at,
+      });
+    });
+    
+    // Add recent transactions (sales)
+    userTransactions.slice(-5).forEach(transaction => {
+      const timeAgo = getTimeAgo(new Date(transaction.created_at));
+      recentActivities.push({
+        icon: '💰',
+        title: 'Bán tín chỉ thành công',
+        description: `${transaction.credit || 0} tín chỉ cho người mua`,
+        time: timeAgo,
+        value: `+${formatCurrency(transaction.amount * USD_TO_VND_RATE)}`,
+        color: 'blue',
+        type: 'sale',
+        date: transaction.created_at,
+      });
+    });
+    
+    // Add recent listings
+    userListings.slice(-3).forEach(listing => {
+      const timeAgo = getTimeAgo(new Date(listing.created_at));
+      recentActivities.push({
+        icon: '🏷️',
+        title: 'Niêm yết tín chỉ mới',
+        description: `${listing.quantity || 0} tín chỉ với giá ${formatCurrency((listing.price_per_credit || 0) * USD_TO_VND_RATE)}/tín chỉ`,
+        time: timeAgo,
+        value: null,
+        color: 'purple',
+        type: 'listing',
+        date: listing.created_at,
+      });
+    });
+    
+    // Sort by date (newest first) and take last 4
+    recentActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const finalActivities = recentActivities.slice(0, 4);
+    
+    // Credit distribution
+    const creditDistribution = [
+      { name: 'Đã bán', value: soldCredits, color: '#10b981' },
+      { name: 'Đang niêm yết', value: listedCredits, color: '#3b82f6' },
+      { name: 'Có sẵn', value: availableCredits, color: '#8b5cf6' },
+    ];
+    
+    // Weekly revenue (last 7 days)
+    const weeklyRevenue = [];
+    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayKey = date.toISOString().split('T')[0];
+      const dayName = dayNames[date.getDay()];
+      
+      const dayRevenue = userTransactions
+        .filter(t => {
+          const tDate = new Date(t.created_at);
+          return tDate.toISOString().split('T')[0] === dayKey;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0) * USD_TO_VND_RATE, 0);
+      
+      weeklyRevenue.push({ day: dayName, value: dayRevenue });
+    }
+    
+    return {
+      stats: {
+        availableCredits: availableCredits,
+        totalRevenue: totalRevenue,
+        totalDistance: totalDistance,
+        totalCo2Saved: parseFloat(totalCo2.toFixed(2)),
+      },
+      trends: {
+        creditsChange: 10.0, // Estimate
+        revenueChange: parseFloat(revenueChange.toFixed(1)),
+        distanceChange: 8.9, // Estimate
+        co2Change: parseFloat(co2Change.toFixed(1)),
+      },
+      charts: {
+        weeklyRevenue: weeklyRevenue,
+        co2Trend: co2Trend,
+        revenueTrend: revenueTrend,
+        creditDistribution: creditDistribution,
+      },
+      recentActivities: finalActivities,
+    };
   },
 
   exportReport: async (format, params = {}) => {

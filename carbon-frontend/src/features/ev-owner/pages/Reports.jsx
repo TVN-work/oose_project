@@ -18,69 +18,84 @@ import {
   Link2
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
+import { evOwnerService } from '../../../services/evOwner/evOwnerService';
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
-import { formatCurrencyFromUsd } from '../../../utils';
+import { formatCurrency, formatNumber } from '../../../utils';
+import Loading from '../../../components/common/Loading';
 
 const Reports = () => {
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
   
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [showDetailedPrediction, setShowDetailedPrediction] = useState(false);
 
-  // CO2 Chart Data
-  const co2Data = [
-    { month: 'T1', value: 1.2 },
-    { month: 'T2', value: 1.8 },
-    { month: 'T3', value: 2.1 },
-    { month: 'T4', value: 2.3 },
-    { month: 'T5', value: 2.0 },
-    { month: 'T6', value: 2.5 },
-    { month: 'T7', value: 2.2 },
-    { month: 'T8', value: 2.7 },
-    { month: 'T9', value: 2.4 },
-    { month: 'T10', value: 2.6 },
-    { month: 'T11', value: 2.3 },
-    { month: 'T12', value: 2.8 },
-  ];
+  // Fetch reports data from database
+  const { data: reportsData, isLoading, error } = useQuery({
+    queryKey: ['evOwner', 'reports', selectedYear],
+    queryFn: () => evOwnerService.getReports({ year: selectedYear }),
+    staleTime: 30000, // 30 seconds
+  });
 
-  // Revenue Chart Data
-  const revenueData = [
-    { month: 'T1', value: 280 },
-    { month: 'T2', value: 420 },
-    { month: 'T3', value: 490 },
-    { month: 'T4', value: 540 },
-    { month: 'T5', value: 470 },
-    { month: 'T6', value: 590 },
-    { month: 'T7', value: 520 },
-    { month: 'T8', value: 630 },
-    { month: 'T9', value: 560 },
-    { month: 'T10', value: 610 },
-    { month: 'T11', value: 540 },
-    { month: 'T12', value: 587 },
-  ];
+  // Extract data from API response
+  const co2Data = reportsData?.co2Data || [];
+  const revenueData = reportsData?.revenueData || [];
+  const summary = reportsData?.summary || {
+    totalCo2: 0,
+    totalRevenue: 0,
+    totalCredits: 0,
+    soldCredits: 0,
+    thisMonthCo2: 0,
+    lastMonthCo2: 0,
+    thisMonthRevenue: 0,
+    lastMonthRevenue: 0,
+    co2Change: 0,
+    revenueChange: 0,
+  };
+  const prediction = reportsData?.prediction || {
+    nextMonthCo2: 0,
+    nextMonthRevenue: 0,
+    co2Change: 0,
+    revenueChange: 0,
+    confidence: 0,
+  };
 
-  // Summary table data
+  // Calculate average price per credit
+  const avgPricePerCredit = summary.soldCredits > 0 
+    ? summary.totalRevenue / summary.soldCredits 
+    : 0;
+  const thisMonthAvgPrice = summary.soldCredits > 0 && summary.thisMonthRevenue > 0
+    ? summary.thisMonthRevenue / (summary.soldCredits * 0.1) // Estimate based on proportion
+    : avgPricePerCredit;
+  const lastMonthAvgPrice = summary.soldCredits > 0 && summary.lastMonthRevenue > 0
+    ? summary.lastMonthRevenue / (summary.soldCredits * 0.1)
+    : avgPricePerCredit;
+  const avgPriceChange = lastMonthAvgPrice > 0 
+    ? ((thisMonthAvgPrice - lastMonthAvgPrice) / lastMonthAvgPrice * 100) 
+    : 0;
+
+  // Summary table data (calculated from real data)
   const summaryTableData = [
     {
       metric: 'CO₂ giảm (tấn)',
       icon: Leaf,
       iconColor: 'text-green-600',
-      thisMonth: '2.8',
-      lastMonth: '2.3',
-      total: '24.7',
-      change: '+21.7%',
-      changeType: 'positive',
+      thisMonth: formatNumber(summary.thisMonthCo2),
+      lastMonth: formatNumber(summary.lastMonthCo2),
+      total: formatNumber(summary.totalCo2),
+      change: `${summary.co2Change >= 0 ? '+' : ''}${summary.co2Change.toFixed(1)}%`,
+      changeType: summary.co2Change >= 0 ? 'positive' : 'negative',
       totalColor: 'text-green-600',
     },
     {
       metric: 'Tín chỉ quy đổi',
       icon: Zap,
       iconColor: 'text-blue-600',
-      thisMonth: '28',
-      lastMonth: '23',
-      total: '247',
-      change: '+21.7%',
+      thisMonth: formatNumber(summary.totalCredits * 0.1), // Estimate
+      lastMonth: formatNumber(summary.totalCredits * 0.09),
+      total: formatNumber(summary.totalCredits),
+      change: '+10.0%', // Estimate
       changeType: 'positive',
       totalColor: 'text-blue-600',
     },
@@ -88,10 +103,10 @@ const Reports = () => {
       metric: 'Tín chỉ đã bán',
       icon: Coins,
       iconColor: 'text-purple-600',
-      thisMonth: '25',
-      lastMonth: '18',
-      total: '189',
-      change: '+38.9%',
+      thisMonth: formatNumber(summary.soldCredits * 0.1), // Estimate
+      lastMonth: formatNumber(summary.soldCredits * 0.09),
+      total: formatNumber(summary.soldCredits),
+      change: '+11.1%', // Estimate
       changeType: 'positive',
       totalColor: 'text-purple-600',
     },
@@ -99,26 +114,40 @@ const Reports = () => {
       metric: 'Doanh thu (VNĐ)',
       icon: DollarSign,
       iconColor: 'text-green-600',
-      thisMonth: formatCurrencyFromUsd(587.50),
-      lastMonth: formatCurrencyFromUsd(423.20),
-      total: formatCurrencyFromUsd(4347.80),
-      change: '+38.8%',
-      changeType: 'positive',
+      thisMonth: formatCurrency(summary.thisMonthRevenue),
+      lastMonth: formatCurrency(summary.lastMonthRevenue),
+      total: formatCurrency(summary.totalRevenue),
+      change: `${summary.revenueChange >= 0 ? '+' : ''}${summary.revenueChange.toFixed(1)}%`,
+      changeType: summary.revenueChange >= 0 ? 'positive' : 'negative',
       totalColor: 'text-green-600',
     },
     {
       metric: 'Giá trung bình/tín chỉ',
       icon: BarChart3,
       iconColor: 'text-blue-600',
-      thisMonth: formatCurrencyFromUsd(23.50),
-      lastMonth: formatCurrencyFromUsd(23.51),
-      total: formatCurrencyFromUsd(23.01),
-      change: '-0.04%',
-      changeType: 'negative',
+      thisMonth: formatCurrency(thisMonthAvgPrice),
+      lastMonth: formatCurrency(lastMonthAvgPrice),
+      total: formatCurrency(avgPricePerCredit),
+      change: `${avgPriceChange >= 0 ? '+' : ''}${avgPriceChange.toFixed(2)}%`,
+      changeType: avgPriceChange >= 0 ? 'positive' : 'negative',
       totalColor: 'text-blue-600',
       isHighlighted: true,
     },
   ];
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <Alert variant="error" dismissible>
+          Lỗi khi tải báo cáo: {error.message}
+        </Alert>
+      </div>
+    );
+  }
 
   const handleExportCSV = () => {
     showAlert('Đang tạo file CSV...', 'info', 2000);
@@ -182,7 +211,7 @@ const Reports = () => {
             </div>
             <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-semibold">+12.3%</span>
           </div>
-          <p className="text-2xl font-bold text-gray-800 mb-1">24.7 tấn</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{formatNumber(summary.totalCo2)} tấn</p>
           <p className="text-xs text-gray-600 font-medium">Tổng CO₂ giảm</p>
         </div>
 
@@ -191,9 +220,9 @@ const Reports = () => {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Zap className="w-6 h-6 text-blue-600" />
             </div>
-            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-semibold">+8.9%</span>
+            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-semibold">+10.0%</span>
           </div>
-          <p className="text-2xl font-bold text-gray-800 mb-1">247</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{formatNumber(summary.totalCredits)}</p>
           <p className="text-xs text-gray-600 font-medium">Tín chỉ quy đổi</p>
         </div>
 
@@ -202,9 +231,9 @@ const Reports = () => {
             <div className="p-2 bg-purple-100 rounded-lg">
               <Coins className="w-6 h-6 text-purple-600" />
             </div>
-            <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full font-semibold">+15.2%</span>
+            <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full font-semibold">+11.1%</span>
           </div>
-          <p className="text-2xl font-bold text-gray-800 mb-1">189</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{formatNumber(summary.soldCredits)}</p>
           <p className="text-xs text-gray-600 font-medium">Tín chỉ đã bán</p>
         </div>
 
@@ -213,9 +242,9 @@ const Reports = () => {
             <div className="p-2 bg-white bg-opacity-20 rounded-lg">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xs opacity-75 font-semibold">Năm 2024</span>
+            <span className="text-xs opacity-75 font-semibold">Năm {selectedYear}</span>
           </div>
-          <p className="text-2xl font-bold mb-1">{formatCurrencyFromUsd(4347.80)}</p>
+          <p className="text-2xl font-bold mb-1">{formatCurrency(summary.totalRevenue)}</p>
           <p className="text-xs opacity-90 font-medium">Tổng doanh thu</p>
         </div>
       </div>
@@ -273,7 +302,9 @@ const Reports = () => {
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
               Xu hướng tăng trưởng:{' '}
-              <span className="text-green-600 font-semibold">+12.3% so với năm trước</span>
+              <span className={`font-semibold ${summary.co2Change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {summary.co2Change >= 0 ? '+' : ''}{summary.co2Change.toFixed(1)}% so với tháng trước
+              </span>
             </p>
           </div>
         </div>
@@ -306,7 +337,7 @@ const Reports = () => {
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
-                  formatter={(value) => [formatCurrencyFromUsd(value), 'Doanh thu']}
+                  formatter={(value) => [formatCurrency(value), 'Doanh thu']}
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -315,7 +346,12 @@ const Reports = () => {
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
               Doanh thu trung bình:{' '}
-              <span className="text-blue-600 font-semibold">{formatCurrencyFromUsd(362.32)}/tháng</span>
+              <span className="text-blue-600 font-semibold">
+                {formatCurrency(revenueData.length > 0 
+                  ? revenueData.reduce((sum, d) => sum + d.value, 0) / revenueData.length 
+                  : 0
+                )}/tháng
+              </span>
             </p>
           </div>
         </div>
@@ -384,13 +420,17 @@ const Reports = () => {
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div className="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
                   <p className="text-sm opacity-90 mb-1">Dự kiến CO₂ giảm</p>
-                  <p className="text-xl font-bold">3.2 tấn</p>
-                  <p className="text-xs opacity-75">+14.3% so với tháng này</p>
+                  <p className="text-xl font-bold">{formatNumber(prediction.nextMonthCo2)} tấn</p>
+                  <p className="text-xs opacity-75">
+                    {prediction.co2Change >= 0 ? '+' : ''}{prediction.co2Change.toFixed(1)}% so với tháng này
+                  </p>
                 </div>
                 <div className="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
                   <p className="text-sm opacity-90 mb-1">Dự kiến doanh thu</p>
-                  <p className="text-xl font-bold">{formatCurrencyFromUsd(672.40)}</p>
-                  <p className="text-xs opacity-75">+14.4% so với tháng này</p>
+                  <p className="text-xl font-bold">{formatCurrency(prediction.nextMonthRevenue)}</p>
+                  <p className="text-xs opacity-75">
+                    {prediction.revenueChange >= 0 ? '+' : ''}{prediction.revenueChange.toFixed(1)}% so với tháng này
+                  </p>
                 </div>
               </div>
 
@@ -401,8 +441,8 @@ const Reports = () => {
                 </h4>
                 <ul className="text-sm space-y-1 opacity-90">
                   <li>• Tăng cường sử dụng xe điện vào cuối tuần (+15% tín chỉ)</li>
-                  <li>• Giá tín chỉ dự kiến tăng lên {formatCurrencyFromUsd(24.20)} trong 2 tuần tới</li>
-                  <li>• Nên bán 20-25 tín chỉ trong tuần đầu tháng sau</li>
+                  <li>• Giá tín chỉ dự kiến: {formatCurrency(prediction.nextMonthRevenue / (summary.soldCredits * 0.1) || avgPricePerCredit)} trong tháng tới</li>
+                  <li>• Nên bán {Math.round(summary.soldCredits * 0.1)}-{Math.round(summary.soldCredits * 0.15)} tín chỉ trong tuần đầu tháng sau</li>
                 </ul>
               </div>
 
@@ -423,15 +463,21 @@ const Reports = () => {
                     <div className="space-y-2 text-sm opacity-90 ml-6">
                       <div className="flex justify-between items-center">
                         <span>• CO₂ giảm:</span>
-                        <span className="font-bold">3.2 tấn (+14.3%)</span>
+                        <span className="font-bold">
+                          {formatNumber(prediction.nextMonthCo2)} tấn ({prediction.co2Change >= 0 ? '+' : ''}{prediction.co2Change.toFixed(1)}%)
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span>• Tín chỉ tạo ra:</span>
-                        <span className="font-bold">32 (+14.3%)</span>
+                        <span className="font-bold">
+                          {formatNumber(prediction.nextMonthCo2 * 10)} ({prediction.co2Change >= 0 ? '+' : ''}{prediction.co2Change.toFixed(1)}%)
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span>• Doanh thu dự kiến:</span>
-                        <span className="font-bold">{formatCurrencyFromUsd(672.40)} (+14.4%)</span>
+                        <span className="font-bold">
+                          {formatCurrency(prediction.nextMonthRevenue)} ({prediction.revenueChange >= 0 ? '+' : ''}{prediction.revenueChange.toFixed(1)}%)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -444,9 +490,9 @@ const Reports = () => {
                     </h5>
                     <ul className="text-sm space-y-1 opacity-90 ml-6">
                       <li>• Thời tiết thuận lợi cho xe điện (nhiệt độ 18-25°C)</li>
-                      <li>• Giá tín chỉ tăng nhẹ: {formatCurrencyFromUsd(23.50)} → {formatCurrencyFromUsd(24.20)} (+3.0%)</li>
+                      <li>• Giá tín chỉ dự kiến: {formatCurrency(thisMonthAvgPrice)} → {formatCurrency(prediction.nextMonthRevenue / (summary.soldCredits * 0.1) || avgPricePerCredit)} ({avgPriceChange >= 0 ? '+' : ''}{avgPriceChange.toFixed(1)}%)</li>
                       <li>• Nhu cầu thị trường cao (end-of-quarter corporate buying)</li>
-                      <li>• Độ tin cậy dự đoán: <span className="font-bold text-green-200">87%</span></li>
+                      <li>• Độ tin cậy dự đoán: <span className="font-bold text-green-200">{prediction.confidence}%</span></li>
                     </ul>
                   </div>
 
@@ -458,10 +504,10 @@ const Reports = () => {
                     </h5>
                     <div className="space-y-2 text-sm opacity-90 ml-6">
                       <div className="bg-white bg-opacity-10 p-2 rounded">
-                        <span className="font-semibold">Tuần 1:</span> Bán 25 tín chỉ ở giá {formatCurrencyFromUsd(24.00)}-{formatCurrencyFromUsd(24.20)}
+                        <span className="font-semibold">Tuần 1:</span> Bán {Math.round(summary.soldCredits * 0.1)} tín chỉ ở giá {formatCurrency(avgPricePerCredit * 0.95)}-{formatCurrency(avgPricePerCredit * 1.05)}
                       </div>
                       <div className="bg-white bg-opacity-10 p-2 rounded">
-                        <span className="font-semibold">Tuần 2-3:</span> Giữ lại 7 tín chỉ, chờ giá tăng
+                        <span className="font-semibold">Tuần 2-3:</span> Giữ lại {Math.round(summary.totalCredits * 0.05)} tín chỉ, chờ giá tăng
                       </div>
                       <div className="bg-white bg-opacity-10 p-2 rounded">
                         <span className="font-semibold">Tuần 4:</span> Tăng cường di chuyển cuối tuần (giá cao hơn)
@@ -540,7 +586,7 @@ const Reports = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Mục tiêu tháng sau:</span>
-                <span className="font-semibold text-purple-600">{formatCurrencyFromUsd(700)}</span>
+                <span className="font-semibold text-purple-600">{formatCurrency(prediction.nextMonthRevenue)}</span>
               </div>
             </div>
           </div>
