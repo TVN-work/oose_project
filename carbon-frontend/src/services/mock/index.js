@@ -6,6 +6,7 @@ export * from './mockBuyerService';
 export * from './mockVerifierService';
 export * from './mockAdminService';
 export * from './mockCarbonCalculationService';
+export { default as mockDatabase } from './mockDatabaseService';
 
 // Check if we should use mock services
 export const shouldUseMock = () => {
