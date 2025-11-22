@@ -1,6 +1,37 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Car, 
+  Building2, 
+  Lock, 
+  Mail, 
+  User, 
+  Phone, 
+  CheckCircle2, 
+  Shield, 
+  BarChart3, 
+  X,
+  Loader2,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  MessageCircle,
+  HelpCircle,
+  Upload,
+  Calendar,
+  FileText,
+  Bike,
+  Truck,
+  Container,
+  ChevronDown
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import Alert from '../../components/common/Alert';
+import { useAlert } from '../../hooks/useAlert';
+import authService from '../../services/auth/authService';
+import { evOwnerService } from '../../services/evOwner/evOwnerService';
+import mockDatabase from '../../services/mock/mockDatabaseService';
 import './Auth.css';
 
 const Auth = () => {
@@ -8,46 +39,57 @@ const Auth = () => {
   const [currentRole, setCurrentRole] = useState('ev-owner');
   const [currentForm, setCurrentForm] = useState('login');
   const [isLoading, setIsLoading] = useState(false);
-  const observerRef = useRef(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
 
-  // Intersection Observer for scroll animations
+  // Signup form state
+  const [signupData, setSignupData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    // EV Owner vehicle fields
+    vehicleTypeId: '',
+    vin: '',
+    licensePlate: '',
+    registrationDate: '',
+    registrationImageUrl: '',
+    mileage: 0,
+    // Buyer fields
+    accountType: '',
+    companyName: '',
+    taxId: '',
+  });
+
+  // Vehicle type selection (2-step)
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+  const vehicleDropdownRef = useRef(null);
+
+  // Fetch vehicle types on mount
   useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    observerRef.current = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animated');
-        }
+    if (currentForm === 'signup' && currentRole === 'ev-owner') {
+      evOwnerService.getVehicleTypes().then(data => {
+        const types = data?.data || data || [];
+        setVehicleTypes(types);
       });
-    }, observerOptions);
+    }
+  }, [currentForm, currentRole]);
 
-    document.querySelectorAll('.animate-on-scroll').forEach(el => {
-      observerRef.current.observe(el);
-    });
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target)) {
+        setIsVehicleDropdownOpen(false);
       }
     };
-  }, []);
-
-
-  // Welcome message on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      toast.success('🏠 Chào mừng đến với Carbon Credit Marketplace!', {
-        duration: 4000,
-        icon: '🌱',
-      });
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const openAuthModal = (role, formType) => {
@@ -58,297 +100,394 @@ const Auth = () => {
 
   const closeAuthModal = () => {
     setAuthModalOpen(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    // Reset signup form
+    setSignupData({
+      fullName: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      vehicleTypeId: '',
+      vin: '',
+      licensePlate: '',
+      registrationDate: '',
+      registrationImageUrl: '',
+      mileage: 0,
+      accountType: '',
+      companyName: '',
+      taxId: '',
+    });
+    setSelectedCategory('');
   };
 
   const toggleAuthForm = (formType) => {
     setCurrentForm(formType);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const formData = new FormData(e.target);
+      const email = formData.get('email');
+      const password = formData.get('password');
+      
+      if (!email || !password) {
+        showAlert('Vui lòng nhập đầy đủ email và mật khẩu!', 'error');
+        setIsLoading(false);
+        return;
+      }
+      
+      let role = 'EV_OWNER';
+      if (currentRole === 'buyer') role = 'BUYER';
+      else if (currentRole === 'verifier') role = 'VERIFIER';
+      else if (currentRole === 'admin') role = 'ADMIN';
+      
+      await login({
+        email: email,
+        password: password,
+        role: role,
+      });
+      
       setIsLoading(false);
-      toast.success(`✅ Đăng nhập thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'}!`);
+      showAlert(`Đăng nhập thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : currentRole === 'buyer' ? 'Buyer' : currentRole === 'verifier' ? 'Verifier' : 'Admin'}!`, 'success');
       closeAuthModal();
       
-      // Navigate to appropriate dashboard
       setTimeout(() => {
         if (currentRole === 'ev-owner') {
           navigate('/ev-owner/dashboard');
-        } else {
+        } else if (currentRole === 'buyer') {
           navigate('/buyer/dashboard');
+        } else if (currentRole === 'verifier') {
+          navigate('/verifier/dashboard');
+        } else if (currentRole === 'admin') {
+          navigate('/admin/dashboard');
         }
-      }, 1000);
-    }, 2000);
+      }, 500);
+    } catch (error) {
+      setIsLoading(false);
+      showAlert('Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin đăng nhập.', 'error');
+      console.error('Login error:', error);
+    }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      // Validate passwords match
+      if (signupData.password !== signupData.confirmPassword) {
+        showAlert('Mật khẩu xác nhận không khớp!', 'error');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if email already exists in database (client-side validation)
+      const existingUser = mockDatabase.findUserByEmail(signupData.email);
+      if (existingUser) {
+        showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate EV Owner vehicle fields
+      if (currentRole === 'ev-owner') {
+        if (!signupData.vehicleTypeId || !signupData.vin || !signupData.licensePlate) {
+          showAlert('Vui lòng điền đầy đủ thông tin xe điện!', 'error');
+          setIsLoading(false);
+          return;
+        }
+
+        // Check for duplicate VIN or license plate
+        const existingVin = mockDatabase.findVehicleByVin(signupData.vin);
+        const existingPlate = mockDatabase.findVehicleByLicensePlate(signupData.licensePlate);
+        if (existingVin) {
+          showAlert('VIN đã tồn tại trong hệ thống!', 'error');
+          setIsLoading(false);
+          return;
+        }
+        if (existingPlate) {
+          showAlert('Biển số xe đã tồn tại trong hệ thống!', 'error');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const roleKey = currentRole === 'ev-owner' ? 'EV_OWNER' : 'BUYER';
+
+      // Register via auth service FIRST (server-side validation)
+      // This will throw error if email already exists
+      let registerResult;
+      try {
+        registerResult = await authService.register({
+          email: signupData.email,
+          fullName: signupData.fullName,
+          phone: signupData.phone,
+          password: signupData.password,
+          role: roleKey,
+        });
+      } catch (registerError) {
+        // If registration fails (e.g., email duplicate), don't create user
+        if (registerError?.response?.status === 409) {
+          showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
+        } else {
+          showAlert(registerError?.response?.data?.message || 'Đăng ký thất bại! Vui lòng thử lại.', 'error');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Only create user in mock database AFTER successful registration
+      const newUser = mockDatabase.createUser({
+        email: signupData.email,
+        full_name: signupData.fullName,
+        phone_number: signupData.phone,
+        roles: roleKey,
+        dob: null,
+        password: signupData.password, // Store password for login validation
+      });
+
+      // Create wallet
+      mockDatabase.createWallet({
+        owner_id: newUser.id,
+        balance: 0.0,
+      });
+
+      // Create carbon credit wallet
+      mockDatabase.createCarbonCredit({
+        owner_id: newUser.id,
+        available_credit: 0.0,
+        total_credit: 0.0,
+        traded_credit: 0.0,
+      });
+
+      // Create vehicle for EV Owner
+      if (currentRole === 'ev-owner') {
+        const vehicle = mockDatabase.createVehicle({
+          owner_id: newUser.id,
+          vehicle_type_id: signupData.vehicleTypeId,
+          vin: signupData.vin,
+          license_plate: signupData.licensePlate,
+          registration_date: signupData.registrationDate || null,
+          registration_image_url: signupData.registrationImageUrl || null,
+          mileage: signupData.mileage || 0,
+        });
+
+        // Create journey record for the vehicle
+        mockDatabase.createJourney({
+          vehicle_id: vehicle.id,
+          distance_km: 0,
+          energy_used: 0,
+          avg_speed: 0,
+          co2reduced: 0,
+          journey_status: 'INACTIVE',
+        });
+      }
+
+      // Store password for mock password change validation
+      localStorage.setItem('mockCurrentPassword', signupData.password);
+
+      // Auto login after successful signup
+      try {
+        await login({
+          email: signupData.email,
+          password: signupData.password,
+          role: roleKey,
+        });
+      } catch (loginError) {
+        console.error('Auto login after signup failed:', loginError);
+        // If auto login fails, still show success but ask user to login manually
+        setIsLoading(false);
+        showAlert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
+        closeAuthModal();
+        return;
+      }
+
       setIsLoading(false);
-      toast.success(`🎉 Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`);
+      showAlert(`Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`, 'success');
       closeAuthModal();
       
-      // Show verification message
+      // Navigate to dashboard after successful signup and login
+      // Wait a bit longer to ensure AuthContext has updated
       setTimeout(() => {
-        toast.success('📧 Vui lòng kiểm tra email để xác minh tài khoản!', { duration: 5000 });
+        if (currentRole === 'ev-owner') {
+          navigate('/ev-owner/dashboard');
+        } else if (currentRole === 'buyer') {
+          navigate('/buyer/dashboard');
+        }
       }, 1000);
-    }, 3000);
-  };
-
-  const redirectToLogin = (role) => {
-    openAuthModal(role, 'login');
-  };
-
-  const redirectToSignup = (role) => {
-    openAuthModal(role, 'signup');
+    } catch (error) {
+      setIsLoading(false);
+      // This catch block handles any unexpected errors during the signup process
+      // Email duplicate errors are already handled in the try block above
+      showAlert(error?.response?.data?.message || 'Đăng ký thất bại! Vui lòng thử lại.', 'error');
+      console.error('Signup error:', error);
+    }
   };
 
   return (
-    <div className="bg-gray-50">
-      {/* Hero Section */}
-      <section className="hero-bg min-h-screen flex items-center relative">
-        {/* Particle Background */}
-        <div className="particles">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="particle"
-              style={{
-                left: `${10 + i * 15}%`,
-                top: `${20 + (i % 3) * 30}%`,
-                width: `${4 + (i % 3)}px`,
-                height: `${4 + (i % 3)}px`,
-                animationDelay: `${i}s`
-              }}
-            />
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+      {/* Alert Messages */}
+      {alertMessage && (
+        <Alert 
+          key={`alert-${alertMessage}`}
+          variant={alertType} 
+          dismissible 
+          position="toast"
+          onDismiss={hideAlert}
+        >
+          {alertMessage}
+        </Alert>
+      )}
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Carbon Credit Marketplace
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Nền tảng giao dịch tín chỉ carbon cho chủ sở hữu xe điện và người mua tín chỉ
+          </p>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-          {/* Header Content */}
-          <div className="text-center mb-16 slide-in-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Tham gia nền tảng 
-              <span className="text-yellow-300"> Giao dịch Tín chỉ Carbon</span>
-              <br />cho Chủ sở hữu Xe điện
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed">
-              Đăng nhập hoặc đăng ký để bắt đầu quản lý và giao dịch tín chỉ carbon. 
-              Chọn vai trò phù hợp với bạn để truy cập vào hệ thống.
-            </p>
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-300">1,247</div>
-                <div className="text-sm text-gray-200">EV Owners</div>
-              </div>
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-300">856</div>
-                <div className="text-sm text-gray-200">Buyers</div>
-              </div>
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-300">3,521</div>
-                <div className="text-sm text-gray-200">Tín chỉ đã bán</div>
-              </div>
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-300">$158K</div>
-                <div className="text-sm text-gray-200">Tổng giao dịch</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Role Selection Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* EV Owner Card */}
-            <div className="role-card p-8 animate-on-scroll">
-              <div className="text-center">
-                <div className="feature-icon role-icon">
-                  🚗
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Chủ sở hữu xe điện</h2>
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                  Tạo và bán tín chỉ carbon từ việc sử dụng xe điện của bạn. 
-                  Kiếm thu nhập từ việc bảo vệ môi trường.
-                </p>
+        {/* Role Selection Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+          {/* EV Owner Card */}
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-8 hover:shadow-xl hover:border-green-500 transition-all duration-300">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <Car className="w-8 h-8 text-green-600" />
               </div>
-              
-              {/* Benefits */}
-              <div className="mb-8">
-                <h4 className="font-semibold text-gray-900 mb-4">✨ Lợi ích dành cho bạn:</h4>
-                <div className="space-y-2">
-                  <div className="benefit-item">
-                    <span className="text-green-500 mr-3">✓</span>
-                    <span className="text-gray-700">Tạo tín chỉ carbon từ hành trình xe điện</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-green-500 mr-3">✓</span>
-                    <span className="text-gray-700">Theo dõi thu nhập từ bán tín chỉ</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-green-500 mr-3">✓</span>
-                    <span className="text-gray-700">Quản lý hồ sơ xe và chứng nhận</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-green-500 mr-3">✓</span>
-                    <span className="text-gray-700">Nhận thông báo về giá thị trường</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="space-y-4">
-                <button onClick={() => redirectToLogin('ev-owner')} className="w-full bg-primary-green text-white py-4 px-6 rounded-lg font-bold text-lg btn-hover">
-                  🔐 Đăng nhập EV Owner
-                </button>
-                <button onClick={() => redirectToSignup('ev-owner')} className="w-full bg-transparent border-2 border-primary-green text-primary-green py-4 px-6 rounded-lg font-bold text-lg btn-secondary">
-                  📝 Đăng ký làm EV Owner
-                </button>
-              </div>
-              
-              {/* Quick Info */}
-              <div className="mt-6 p-4 bg-light-green rounded-lg">
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">💡</span>
-                  <span>Cần có xe điện và giấy tờ chứng minh sở hữu để đăng ký</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Buyer Card */}
-            <div className="role-card p-8 animate-on-scroll" style={{ animationDelay: '0.2s' }}>
-              <div className="text-center">
-                <div className="feature-icon role-icon">
-                  🏢
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Người mua tín chỉ carbon</h2>
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                  Mua tín chỉ carbon để bù đắp phát thải CO₂ của doanh nghiệp hoặc cá nhân. 
-                  Đóng góp vào mục tiêu Net Zero.
-                </p>
-              </div>
-              
-              {/* Benefits */}
-              <div className="mb-8">
-                <h4 className="font-semibold text-gray-900 mb-4">✨ Lợi ích dành cho bạn:</h4>
-                <div className="space-y-2">
-                  <div className="benefit-item">
-                    <span className="text-blue mr-3">✓</span>
-                    <span className="text-gray-700">Mua tín chỉ carbon đã xác minh</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-blue mr-3">✓</span>
-                    <span className="text-gray-700">Theo dõi danh mục tín chỉ sở hữu</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-blue mr-3">✓</span>
-                    <span className="text-gray-700">Nhận chứng nhận bù đắp carbon</span>
-                  </div>
-                  <div className="benefit-item">
-                    <span className="text-blue mr-3">✓</span>
-                    <span className="text-gray-700">Tham gia đấu giá tín chỉ premium</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="space-y-4">
-                <button onClick={() => redirectToLogin('buyer')} className="w-full bg-blue text-white py-4 px-6 rounded-lg font-bold text-lg btn-hover">
-                  🔐 Đăng nhập Buyer
-                </button>
-                <button onClick={() => redirectToSignup('buyer')} className="w-full bg-transparent border-2 border-blue text-blue py-4 px-6 rounded-lg font-bold text-lg btn-secondary">
-                  📝 Đăng ký làm Buyer
-                </button>
-              </div>
-              
-              {/* Quick Info */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">💡</span>
-                  <span>Dành cho doanh nghiệp và cá nhân muốn bù đắp carbon</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div className="text-center mt-16 animate-on-scroll" style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-white mb-4">🔒 Bảo mật & Tin cậy</h3>
-              <p className="text-gray-100 mb-6">
-                Tất cả giao dịch được mã hóa và bảo mật. Tín chỉ carbon được xác minh bởi các tổ chức kiểm toán uy tín.
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Chủ sở hữu xe điện</h2>
+              <p className="text-gray-600 leading-relaxed">
+                Tạo và bán tín chỉ carbon từ việc sử dụng xe điện của bạn. 
+                Kiếm thu nhập từ việc bảo vệ môi trường.
               </p>
-              
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="text-3xl mb-2">🛡️</div>
-                  <div className="font-semibold text-white">Bảo mật SSL</div>
-                  <div className="text-sm text-gray-200">Mã hóa 256-bit</div>
-                </div>
-                <div>
-                  <div className="text-3xl mb-2">✅</div>
-                  <div className="font-semibold text-white">Xác minh CVA</div>
-                  <div className="text-sm text-gray-200">Kiểm toán độc lập</div>
-                </div>
-                <div>
-                  <div className="text-3xl mb-2">📊</div>
-                  <div className="font-semibold text-white">Minh bạch</div>
-                  <div className="text-sm text-gray-200">Theo dõi real-time</div>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Support Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="animate-on-scroll">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">🤝 Cần hỗ trợ?</h3>
-            <p className="text-lg text-gray-600 mb-8">
-              Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp bạn bắt đầu hành trình giao dịch carbon.
-            </p>
             
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <div className="text-3xl mb-3">📞</div>
-                <h4 className="font-semibold text-gray-900 mb-2">Hotline hỗ trợ</h4>
-                <p className="text-gray-600">1900 1234</p>
-                <p className="text-sm text-gray-500">8:00 - 18:00 (T2-T6)</p>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Tạo tín chỉ carbon từ hành trình xe điện</span>
               </div>
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <div className="text-3xl mb-3">💬</div>
-                <h4 className="font-semibold text-gray-900 mb-2">Live Chat</h4>
-                <p className="text-gray-600">Trò chuyện trực tiếp</p>
-                <p className="text-sm text-gray-500">24/7 online</p>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Theo dõi thu nhập từ bán tín chỉ</span>
               </div>
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <div className="text-3xl mb-3">📧</div>
-                <h4 className="font-semibold text-gray-900 mb-2">Email hỗ trợ</h4>
-                <p className="text-gray-600">support@carbonmarket.vn</p>
-                <p className="text-sm text-gray-500">Phản hồi trong 2h</p>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Quản lý hồ sơ xe và chứng nhận</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Nhận thông báo về giá thị trường</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => openAuthModal('ev-owner', 'login')} 
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-5 h-5" />
+                Đăng nhập
+              </button>
+              <button 
+                onClick={() => openAuthModal('ev-owner', 'signup')} 
+                className="w-full bg-transparent border-2 border-green-600 text-green-600 py-3 px-6 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-5 h-5" />
+                Đăng ký
+              </button>
+            </div>
+            
+            <div className="mt-6 p-3 bg-green-50 rounded-lg">
+              <div className="flex items-start gap-2 text-sm text-gray-600">
+                <HelpCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>Cần có xe điện và giấy tờ chứng minh sở hữu để đăng ký</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Buyer Card */}
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-lg p-8 hover:shadow-xl hover:border-blue-500 transition-all duration-300">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Building2 className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Người mua tín chỉ carbon</h2>
+              <p className="text-gray-600 leading-relaxed">
+                Mua tín chỉ carbon để bù đắp phát thải CO₂ của doanh nghiệp hoặc cá nhân. 
+                Đóng góp vào mục tiêu Net Zero.
+              </p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Mua tín chỉ carbon đã xác minh</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Theo dõi danh mục tín chỉ sở hữu</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Nhận chứng nhận bù đắp carbon</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">Tham gia đấu giá tín chỉ premium</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => openAuthModal('buyer', 'login')} 
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-5 h-5" />
+                Đăng nhập
+              </button>
+              <button 
+                onClick={() => openAuthModal('buyer', 'signup')} 
+                className="w-full bg-transparent border-2 border-blue-600 text-blue-600 py-3 px-6 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-5 h-5" />
+                Đăng ký
+              </button>
+            </div>
+            
+            <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-start gap-2 text-sm text-gray-600">
+                <HelpCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span>Dành cho doanh nghiệp và cá nhân muốn bù đắp carbon</span>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Login/Signup Modal */}
       {authModalOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={closeAuthModal}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className={`bg-white rounded-xl shadow-2xl w-full ${
+              currentForm === 'signup' ? 'max-w-4xl' : 'max-w-md'
+            } max-h-[95vh] ${
+              currentForm === 'signup' ? 'overflow-hidden' : 'overflow-y-auto'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -356,81 +495,112 @@ const Auth = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {currentForm === 'login' 
-                      ? `Đăng nhập ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'}`
-                      : `Đăng ký ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'}`
-                    }
+                    {currentForm === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                   </h2>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-gray-600 mt-1 text-sm">
                     {currentForm === 'login' 
                       ? 'Truy cập vào tài khoản của bạn'
                       : 'Tạo tài khoản mới'
                     }
                   </p>
                 </div>
-                <button onClick={closeAuthModal} className="text-gray-400 hover:text-gray-600 transition-colors">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                <button 
+                  onClick={closeAuthModal} 
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                >
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
-              {/* Role Icon */}
-              <div className="text-center mb-6">
-                <div className={`w-20 h-20 mx-auto ${currentRole === 'ev-owner' ? 'gradient-green' : 'gradient-blue'} rounded-2xl flex items-center justify-center text-4xl mb-4`}>
-                  {currentRole === 'ev-owner' ? '🚗' : '🏢'}
-                </div>
-                <div className="text-gray-600">
-                  {currentRole === 'ev-owner' 
-                    ? 'Chủ sở hữu xe điện - Tạo và bán tín chỉ carbon'
-                    : 'Người mua tín chỉ carbon - Bù đắp phát thải CO₂'
+            <div className={`p-6 ${currentForm === 'signup' ? 'overflow-y-auto max-h-[calc(95vh-80px)]' : ''}`} style={currentForm === 'signup' ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}>
+              <style>{`
+                ${currentForm === 'signup' ? `
+                  .signup-form::-webkit-scrollbar {
+                    display: none;
                   }
+                ` : ''}
+              `}</style>
+              <div className={currentForm === 'signup' ? 'signup-form' : ''}>
+                {/* Role Badge */}
+                <div className="text-center mb-6">
+                  <div className={`w-16 h-16 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-3`}>
+                    {currentRole === 'ev-owner' ? (
+                      <Car className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <Building2 className="w-8 h-8 text-blue-600" />
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {currentRole === 'ev-owner' 
+                      ? 'Chủ sở hữu xe điện'
+                      : 'Người mua tín chỉ carbon'
+                    }
+                  </div>
                 </div>
-              </div>
 
               {/* Login Form */}
               {currentForm === 'login' && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </label>
                     <input 
                       type="email" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
+                      name="email"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
                       placeholder="your.email@example.com"
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
-                    <input 
-                      type="password" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                      placeholder="••••••••"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Lock className="w-4 h-4" />
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                        title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-primary-green focus:ring-primary-green" />
+                      <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
                       <span className="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
                     </label>
-                    <a href="#" className="text-sm text-primary-green hover:underline">Quên mật khẩu?</a>
+                    <a href="#" className="text-sm text-green-600 hover:underline">Quên mật khẩu?</a>
                   </div>
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover disabled:opacity-50"
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
-                        <span className="loading-spinner"></span>
+                        <Loader2 className="w-5 h-5 animate-spin" />
                         Đang đăng nhập...
                       </>
                     ) : (
-                      '🔐 Đăng nhập'
+                      <>
+                        <LogIn className="w-5 h-5" />
+                        Đăng nhập
+                      </>
                     )}
                   </button>
                 </form>
@@ -438,181 +608,417 @@ const Auth = () => {
 
               {/* Signup Form */}
               {currentForm === 'signup' && (
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
-                    <input 
-                      type="text" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                      placeholder="Nguyễn Văn A"
-                    />
+                <form onSubmit={handleSignup} className="space-y-5" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+                  {/* Hidden fields to trick password managers */}
+                  <input type="text" name="username" autoComplete="username" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
+                  <input type="password" name="password" autoComplete="current-password" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
+                  
+                  {/* Basic Information - 2 columns */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Họ và tên <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={signupData.fullName}
+                        onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                        placeholder="Nguyễn Văn A"
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        Số điện thoại <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="tel" 
+                        required 
+                        value={signupData.phone}
+                        onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                        placeholder="0123 456 789"
+                        autoComplete="off"
+                      />
+                    </div>
                   </div>
+
+                  {/* Email - Full width */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email <span className="text-red-500">*</span>
+                    </label>
                     <input 
                       type="email" 
                       required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
                       placeholder="your.email@example.com"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-1p-ignore="true"
+                      data-bwignore="true"
+                      name="signup-email"
+                      id="signup-email-field"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
-                    <input 
-                      type="tel" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                      placeholder="0123 456 789"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
-                    <input 
-                      type="password" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</label>
-                    <input 
-                      type="password" 
-                      required 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                      placeholder="••••••••"
-                    />
+
+                  {/* Password - 2 columns */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        Mật khẩu <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input 
+                          type={showPassword ? 'text' : 'password'}
+                          required 
+                          value={signupData.password}
+                          onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          name="new-password"
+                          id="new-password-field"
+                          spellCheck="false"
+                          autoCapitalize="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                          title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        Xác nhận mật khẩu <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input 
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          required 
+                          value={signupData.confirmPassword}
+                          onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          name="confirm-new-password"
+                          id="confirm-new-password-field"
+                          spellCheck="false"
+                          autoCapitalize="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                          title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* EV Owner specific fields */}
                   {currentRole === 'ev-owner' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Biển số xe điện</label>
-                        <input 
-                          type="text" 
-                          required 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                          placeholder="30A-12345"
-                        />
+                    <div className="pt-4 border-t border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Thông tin xe điện</h3>
+                      
+                      {/* Vehicle Type Selection (2-step) */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Loại xe <span className="text-red-500">*</span>
+                        </label>
+                        {!selectedCategory ? (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCategory('motorcycle')}
+                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
+                            >
+                              <Bike className="w-8 h-8 text-blue-600 mb-2" />
+                              <span className="text-sm font-medium">Xe máy điện</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCategory('car')}
+                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
+                            >
+                              <Car className="w-8 h-8 text-green-600 mb-2" />
+                              <span className="text-sm font-medium">Ô tô điện</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCategory('truck')}
+                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
+                            >
+                              <Truck className="w-8 h-8 text-purple-600 mb-2" />
+                              <span className="text-sm font-medium">Xe tải điện</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCategory('heavy_truck')}
+                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
+                            >
+                              <Container className="w-8 h-8 text-orange-600 mb-2" />
+                              <span className="text-sm font-medium">Xe tải hạng nặng</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative" ref={vehicleDropdownRef}>
+                            <div className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent transition-all text-sm flex items-center justify-between bg-white">
+                              <span>
+                                {signupData.vehicleTypeId 
+                                  ? vehicleTypes.find(t => t.id === signupData.vehicleTypeId)?.manufacturer + ' ' + vehicleTypes.find(t => t.id === signupData.vehicleTypeId)?.model
+                                  : 'Chọn loại xe cụ thể'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {signupData.vehicleTypeId && (
+                                  <span
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedCategory('');
+                                      setSignupData({...signupData, vehicleTypeId: ''});
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                                    title="Xóa lựa chọn"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+                                  className="text-gray-400 hover:text-gray-600 p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                                >
+                                  <ChevronDown className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                            {isVehicleDropdownOpen && (
+                              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-xl overflow-hidden">
+                                <div className="max-h-60 overflow-y-auto">
+                                  {vehicleTypes
+                                    .filter(type => type.category === selectedCategory)
+                                    .map((type) => (
+                                      <button
+                                        key={type.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSignupData({...signupData, vehicleTypeId: type.id});
+                                          setIsVehicleDropdownOpen(false);
+                                        }}
+                                        className={`w-full px-4 py-3 text-left text-sm font-medium transition-all
+                                                   hover:bg-green-50 hover:text-green-700
+                                                   ${
+                                                     signupData.vehicleTypeId === type.id
+                                                       ? 'bg-green-100 text-green-700 font-semibold'
+                                                       : 'text-gray-800'
+                                                   }`}
+                                      >
+                                        {type.manufacturer} {type.model} (CO₂: {type.co2per_km || type.co2PerKm} kg/km)
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Hãng xe</label>
-                        <select required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent">
-                          <option value="">Chọn hãng xe</option>
-                          <option value="vinfast">VinFast</option>
-                          <option value="tesla">Tesla</option>
-                          <option value="bmw">BMW</option>
-                          <option value="mercedes">Mercedes</option>
-                          <option value="audi">Audi</option>
-                          <option value="other">Khác</option>
-                        </select>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            VIN (Số khung) <span className="text-red-500">*</span>
+                          </label>
+                          <input 
+                            type="text" 
+                            required 
+                            value={signupData.vin}
+                            onChange={(e) => setSignupData({...signupData, vin: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                            placeholder="VF9A12345B6789012"
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Biển số xe <span className="text-red-500">*</span>
+                          </label>
+                          <input 
+                            type="text" 
+                            required 
+                            value={signupData.licensePlate}
+                            onChange={(e) => setSignupData({...signupData, licensePlate: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                            placeholder="30A-12345"
+                            autoComplete="off"
+                          />
+                        </div>
                       </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Ngày đăng ký
+                          </label>
+                          <input 
+                            type="date" 
+                            value={signupData.registrationDate}
+                            onChange={(e) => setSignupData({...signupData, registrationDate: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Số km đã đi
+                          </label>
+                          <input 
+                            type="number" 
+                            min="0"
+                            value={signupData.mileage}
+                            onChange={(e) => setSignupData({...signupData, mileage: parseInt(e.target.value) || 0})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                            placeholder="0"
+                            autoComplete="off"
+                          />
+                        </div>
+                      </div>
+
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Model xe</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          URL ảnh giấy đăng ký xe
+                        </label>
                         <input 
-                          type="text" 
-                          required 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                          placeholder="VF8, Model 3, iX3..."
+                          type="url" 
+                          value={signupData.registrationImageUrl}
+                          onChange={(e) => setSignupData({...signupData, registrationImageUrl: e.target.value})}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                          placeholder="https://example.com/registration.jpg"
+                          autoComplete="off"
                         />
+                        <p className="text-xs text-gray-500 mt-1">Có thể để trống và cập nhật sau</p>
                       </div>
                     </div>
                   )}
 
                   {/* Buyer specific fields */}
                   {currentRole === 'buyer' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại tài khoản</label>
-                        <select required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent">
-                          <option value="">Chọn loại tài khoản</option>
-                          <option value="individual">Cá nhân</option>
-                          <option value="company">Doanh nghiệp</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tên công ty (nếu có)</label>
-                        <input 
-                          type="text" 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                          placeholder="Công ty ABC"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mã số thuế (nếu có)</label>
-                        <input 
-                          type="text" 
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent" 
-                          placeholder="0123456789"
-                        />
+                    <div className="pt-4 border-t border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Thông tin doanh nghiệp</h3>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Loại tài khoản <span className="text-red-500">*</span>
+                          </label>
+                          <select 
+                            required 
+                            value={signupData.accountType}
+                            onChange={(e) => setSignupData({...signupData, accountType: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+                          >
+                            <option value="">Chọn loại</option>
+                            <option value="individual">Cá nhân</option>
+                            <option value="company">Doanh nghiệp</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tên công ty
+                          </label>
+                          <input 
+                            type="text" 
+                            value={signupData.companyName}
+                            onChange={(e) => setSignupData({...signupData, companyName: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                            placeholder="Công ty ABC"
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Mã số thuế
+                          </label>
+                          <input 
+                            type="text" 
+                            value={signupData.taxId}
+                            onChange={(e) => setSignupData({...signupData, taxId: e.target.value})}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                            placeholder="0123456789"
+                            autoComplete="off"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-center">
-                    <input type="checkbox" required className="rounded border-gray-300 text-primary-green focus:ring-primary-green" />
-                    <span className="ml-2 text-sm text-gray-600">
-                      Tôi đồng ý với <a href="#" className="text-primary-green hover:underline">Điều khoản sử dụng</a> và <a href="#" className="text-primary-green hover:underline">Chính sách bảo mật</a>
+                  <div className="flex items-start gap-2 pt-2">
+                    <input type="checkbox" required className="mt-1 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+                    <span className="text-sm text-gray-600">
+                      Tôi đồng ý với <a href="#" className="text-green-600 hover:underline">Điều khoản sử dụng</a> và <a href="#" className="text-green-600 hover:underline">Chính sách bảo mật</a>
                     </span>
                   </div>
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="w-full bg-primary-green text-white py-3 rounded-lg font-semibold btn-hover disabled:opacity-50"
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
-                        <span className="loading-spinner"></span>
+                        <Loader2 className="w-5 h-5 animate-spin" />
                         Đang tạo tài khoản...
                       </>
                     ) : (
-                      '📝 Đăng ký tài khoản'
+                      <>
+                        <UserPlus className="w-5 h-5" />
+                        Đăng ký tài khoản
+                      </>
                     )}
                   </button>
                 </form>
               )}
 
               {/* Toggle between Login/Signup */}
-              <div className="mt-6 text-center">
+              <div className={`text-center ${currentForm === 'signup' ? 'mt-4' : 'mt-6'}`}>
                 {currentForm === 'login' ? (
                   <div>
                     <span className="text-gray-600">Chưa có tài khoản? </span>
-                    <button onClick={() => toggleAuthForm('signup')} className="text-primary-green font-semibold hover:underline">
+                    <button onClick={() => toggleAuthForm('signup')} className="text-green-600 font-semibold hover:underline">
                       Đăng ký ngay
                     </button>
                   </div>
                 ) : (
                   <div>
                     <span className="text-gray-600">Đã có tài khoản? </span>
-                    <button onClick={() => toggleAuthForm('login')} className="text-primary-green font-semibold hover:underline">
+                    <button onClick={() => toggleAuthForm('login')} className="text-green-600 font-semibold hover:underline">
                       Đăng nhập
                     </button>
                   </div>
                 )}
               </div>
-
-              {/* Social Login */}
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                    <span className="mr-2">📧</span>
-                    Google
-                  </button>
-                  <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                    <span className="mr-2">📘</span>
-                    Facebook
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -623,4 +1029,3 @@ const Auth = () => {
 };
 
 export default Auth;
-

@@ -1,19 +1,60 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useContext } from 'react';
+import AuthContext from '../context/AuthContext';
+import { hasAnyRole } from '../utils/roleHelpers';
 
+/**
+ * ProtectedRoute Component
+ * Protects routes based on authentication and role authorization
+ * 
+ * Supports multiple roles per user (e.g., user can be both EV_OWNER and BUYER)
+ * Uses roleHelpers to parse roles from backend (string or array format)
+ */
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+  // Use useContext directly instead of useAuth hook to avoid throwing error
+  // if context is not available yet (during router initialization)
+  const authContext = useContext(AuthContext);
+  
+  // If context is not available yet, show loading
+  if (!authContext) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const { isAuthenticated, user, loading } = authContext;
 
+  // Show loading state while checking authentication
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    );
   }
 
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/unauthorized" replace />;
+  // Check role authorization if roles specified
+  if (allowedRoles.length > 0) {
+    // Use roleHelpers to support multiple roles
+    const hasAccess = hasAnyRole(user, allowedRoles);
+    
+    if (!hasAccess) {
+      // Redirect to unauthorized page or home
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return children;

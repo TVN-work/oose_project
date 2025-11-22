@@ -9,6 +9,7 @@ import { USER_ROLES } from '../constants/roles';
 // Pages
 import HomePage from '../pages/HomePage';
 import NotFound from '../pages/NotFound';
+import Unauthorized from '../pages/Unauthorized';
 import AboutUs from '../pages/AboutUs';
 import Auth from '../pages/Auth';
 import Blog from '../pages/Blog';
@@ -62,7 +63,8 @@ import AdminReports from '../features/admin/pages/Reports';
 import AdminSettings from '../features/admin/pages/Settings';
 // import TransactionManagement from '../features/admin/pages/TransactionManagement';
 
-export const router = createBrowserRouter(
+// Create router configuration
+const createRouter = () => createBrowserRouter(
   [
   // Public routes with shared layout
   {
@@ -279,6 +281,11 @@ export const router = createBrowserRouter(
       },
     ],
   },
+  // Unauthorized Route
+  {
+    path: '/unauthorized',
+    element: <Unauthorized />,
+  },
   // 404 Route - must be last
   {
     path: '*',
@@ -293,5 +300,5 @@ export const router = createBrowserRouter(
   }
 );
 
-export default router;
+export default createRouter;
 

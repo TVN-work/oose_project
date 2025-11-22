@@ -13,9 +13,35 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('authToken');
       const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEV_MODE !== 'false');
       
-      // In dev mode, skip API call if backend is not available
-      if (DEV_MODE && (!token || token === 'dev-mock-token')) {
-        // Use mock user based on current route
+      // If no token, user needs to login
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
+      // In dev mode with mock token, try to get user from database first
+      if (DEV_MODE && token === 'dev-mock-token') {
+        try {
+          // Try to get user profile from auth service (which will check database)
+          const profile = await authService.getProfile();
+          if (profile) {
+            // Map database fields to frontend format
+            const mappedUser = {
+              ...profile,
+              name: profile.full_name || profile.name || 'User',
+              phone: profile.phone_number || profile.phone,
+              roles: profile.roles || profile.role,
+            };
+            setUser(mappedUser);
+            setIsAuthenticated(true);
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.warn('Failed to get user profile, using fallback:', error);
+        }
+        
+        // Fallback: create mock user based on route if profile fetch fails
         const path = window.location.pathname;
         let mockRole = 'EV_OWNER';
         let mockName = 'EV Owner';
@@ -35,56 +61,28 @@ export const AuthProvider = ({ children }) => {
           id: '1',
           name: mockName,
           email: `${mockRole.toLowerCase().replace('_', '')}@example.com`,
-          role: mockRole,
+          roles: mockRole, // Use 'roles' (plural) to match roleHelpers expectations
         };
         setUser(mockUser);
         setIsAuthenticated(true);
-        localStorage.setItem('authToken', 'dev-mock-token');
         setLoading(false);
         return;
       }
       
+      // Try to fetch user profile with real token
       if (token && token !== 'dev-mock-token') {
         try {
           const profile = await authService.getProfile();
           setUser(profile);
           setIsAuthenticated(true);
         } catch (error) {
-          // For development: create mock user if API fails
-          if (DEV_MODE) {
-            const path = window.location.pathname;
-            let mockRole = 'EV_OWNER';
-            let mockName = 'EV Owner';
-            
-            if (path.includes('/buyer')) {
-              mockRole = 'BUYER';
-              mockName = 'Carbon Buyer';
-            } else if (path.includes('/verifier')) {
-              mockRole = 'VERIFIER';
-              mockName = 'Verifier';
-            } else if (path.includes('/admin')) {
-              mockRole = 'ADMIN';
-              mockName = 'Admin';
-            }
-            
-            const mockUser = {
-              id: '1',
-              name: mockName,
-              email: `${mockRole.toLowerCase().replace('_', '')}@example.com`,
-              role: mockRole,
-            };
-            setUser(mockUser);
-            setIsAuthenticated(true);
-            localStorage.setItem('authToken', 'dev-mock-token');
-          } else {
-            // In production, clear invalid token
+          console.error('Failed to fetch profile:', error);
+          // Clear invalid token
             localStorage.removeItem('authToken');
-          }
+          setIsAuthenticated(false);
         }
-      } else {
-        // No token - user needs to login
-        setLoading(false);
       }
+      
       setLoading(false);
     };
 
@@ -117,6 +115,9 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('mockUserEmail'); // Clear stored email
+      localStorage.removeItem('mockCurrentPassword'); // Clear stored password
       setUser(null);
       setIsAuthenticated(false);
     }
