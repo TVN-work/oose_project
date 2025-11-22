@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Car, 
@@ -17,20 +17,12 @@ import {
   LogIn,
   UserPlus,
   MessageCircle,
-  HelpCircle,
-  Upload,
-  Calendar,
-  FileText,
-  Bike,
-  Truck,
-  Container,
-  ChevronDown
+  HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Alert from '../../components/common/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import authService from '../../services/auth/authService';
-import { evOwnerService } from '../../services/evOwner/evOwnerService';
 import mockDatabase from '../../services/mock/mockDatabaseService';
 import './Auth.css';
 
@@ -52,45 +44,11 @@ const Auth = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    // EV Owner vehicle fields
-    vehicleTypeId: '',
-    vin: '',
-    licensePlate: '',
-    registrationDate: '',
-    registrationImageUrl: '',
-    mileage: 0,
     // Buyer fields
     accountType: '',
     companyName: '',
     taxId: '',
   });
-
-  // Vehicle type selection (2-step)
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [vehicleTypes, setVehicleTypes] = useState([]);
-  const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
-  const vehicleDropdownRef = useRef(null);
-
-  // Fetch vehicle types on mount
-  useEffect(() => {
-    if (currentForm === 'signup' && currentRole === 'ev-owner') {
-      evOwnerService.getVehicleTypes().then(data => {
-        const types = data?.data || data || [];
-        setVehicleTypes(types);
-      });
-    }
-  }, [currentForm, currentRole]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target)) {
-        setIsVehicleDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const openAuthModal = (role, formType) => {
     setCurrentRole(role);
@@ -109,17 +67,10 @@ const Auth = () => {
       phone: '',
       password: '',
       confirmPassword: '',
-      vehicleTypeId: '',
-      vin: '',
-      licensePlate: '',
-      registrationDate: '',
-      registrationImageUrl: '',
-      mileage: 0,
       accountType: '',
       companyName: '',
       taxId: '',
     });
-    setSelectedCategory('');
   };
 
   const toggleAuthForm = (formType) => {
@@ -196,29 +147,6 @@ const Auth = () => {
         return;
       }
 
-      // Validate EV Owner vehicle fields
-      if (currentRole === 'ev-owner') {
-        if (!signupData.vehicleTypeId || !signupData.vin || !signupData.licensePlate) {
-          showAlert('Vui lòng điền đầy đủ thông tin xe điện!', 'error');
-          setIsLoading(false);
-          return;
-        }
-
-        // Check for duplicate VIN or license plate
-        const existingVin = mockDatabase.findVehicleByVin(signupData.vin);
-        const existingPlate = mockDatabase.findVehicleByLicensePlate(signupData.licensePlate);
-        if (existingVin) {
-          showAlert('VIN đã tồn tại trong hệ thống!', 'error');
-          setIsLoading(false);
-          return;
-        }
-        if (existingPlate) {
-          showAlert('Biển số xe đã tồn tại trong hệ thống!', 'error');
-          setIsLoading(false);
-          return;
-        }
-      }
-
       const roleKey = currentRole === 'ev-owner' ? 'EV_OWNER' : 'BUYER';
 
       // Register via auth service FIRST (server-side validation)
@@ -266,29 +194,6 @@ const Auth = () => {
         total_credit: 0.0,
         traded_credit: 0.0,
       });
-
-      // Create vehicle for EV Owner
-      if (currentRole === 'ev-owner') {
-        const vehicle = mockDatabase.createVehicle({
-          owner_id: newUser.id,
-          vehicle_type_id: signupData.vehicleTypeId,
-          vin: signupData.vin,
-          license_plate: signupData.licensePlate,
-          registration_date: signupData.registrationDate || null,
-          registration_image_url: signupData.registrationImageUrl || null,
-          mileage: signupData.mileage || 0,
-        });
-
-        // Create journey record for the vehicle
-        mockDatabase.createJourney({
-          vehicle_id: vehicle.id,
-          distance_km: 0,
-          energy_used: 0,
-          avg_speed: 0,
-          co2reduced: 0,
-          journey_status: 'INACTIVE',
-        });
-      }
 
       // Store password for mock password change validation
       localStorage.setItem('mockCurrentPassword', signupData.password);
@@ -483,11 +388,7 @@ const Auth = () => {
           onClick={closeAuthModal}
         >
           <div 
-            className={`bg-white rounded-xl shadow-2xl w-full ${
-              currentForm === 'signup' ? 'max-w-4xl' : 'max-w-md'
-            } max-h-[95vh] ${
-              currentForm === 'signup' ? 'overflow-hidden' : 'overflow-y-auto'
-            }`}
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -514,15 +415,7 @@ const Auth = () => {
             </div>
 
             {/* Modal Content */}
-            <div className={`p-6 ${currentForm === 'signup' ? 'overflow-y-auto max-h-[calc(95vh-80px)]' : ''}`} style={currentForm === 'signup' ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}>
-              <style>{`
-                ${currentForm === 'signup' ? `
-                  .signup-form::-webkit-scrollbar {
-                    display: none;
-                  }
-                ` : ''}
-              `}</style>
-              <div className={currentForm === 'signup' ? 'signup-form' : ''}>
+            <div className="p-6">
                 {/* Role Badge */}
                 <div className="text-center mb-6">
                   <div className={`w-16 h-16 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-3`}>
@@ -739,192 +632,6 @@ const Auth = () => {
                     </div>
                   </div>
                   
-                  {/* EV Owner specific fields */}
-                  {currentRole === 'ev-owner' && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Thông tin xe điện</h3>
-                      
-                      {/* Vehicle Type Selection (2-step) */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Loại xe <span className="text-red-500">*</span>
-                        </label>
-                        {!selectedCategory ? (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCategory('motorcycle')}
-                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
-                            >
-                              <Bike className="w-8 h-8 text-blue-600 mb-2" />
-                              <span className="text-sm font-medium">Xe máy điện</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCategory('car')}
-                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
-                            >
-                              <Car className="w-8 h-8 text-green-600 mb-2" />
-                              <span className="text-sm font-medium">Ô tô điện</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCategory('truck')}
-                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
-                            >
-                              <Truck className="w-8 h-8 text-purple-600 mb-2" />
-                              <span className="text-sm font-medium">Xe tải điện</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCategory('heavy_truck')}
-                              className="flex flex-col items-center p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
-                            >
-                              <Container className="w-8 h-8 text-orange-600 mb-2" />
-                              <span className="text-sm font-medium">Xe tải hạng nặng</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="relative" ref={vehicleDropdownRef}>
-                            <div className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent transition-all text-sm flex items-center justify-between bg-white">
-                              <span>
-                                {signupData.vehicleTypeId 
-                                  ? vehicleTypes.find(t => t.id === signupData.vehicleTypeId)?.manufacturer + ' ' + vehicleTypes.find(t => t.id === signupData.vehicleTypeId)?.model
-                                  : 'Chọn loại xe cụ thể'}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                {signupData.vehicleTypeId && (
-                                  <span
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedCategory('');
-                                      setSignupData({...signupData, vehicleTypeId: ''});
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600 cursor-pointer p-1"
-                                    title="Xóa lựa chọn"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </span>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
-                                  className="text-gray-400 hover:text-gray-600 p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
-                                >
-                                  <ChevronDown className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </div>
-                            {isVehicleDropdownOpen && (
-                              <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-xl overflow-hidden">
-                                <div className="max-h-60 overflow-y-auto">
-                                  {vehicleTypes
-                                    .filter(type => type.category === selectedCategory)
-                                    .map((type) => (
-                                      <button
-                                        key={type.id}
-                                        type="button"
-                                        onClick={() => {
-                                          setSignupData({...signupData, vehicleTypeId: type.id});
-                                          setIsVehicleDropdownOpen(false);
-                                        }}
-                                        className={`w-full px-4 py-3 text-left text-sm font-medium transition-all
-                                                   hover:bg-green-50 hover:text-green-700
-                                                   ${
-                                                     signupData.vehicleTypeId === type.id
-                                                       ? 'bg-green-100 text-green-700 font-semibold'
-                                                       : 'text-gray-800'
-                                                   }`}
-                                      >
-                                        {type.manufacturer} {type.model} (CO₂: {type.co2per_km || type.co2PerKm} kg/km)
-                                      </button>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            VIN (Số khung) <span className="text-red-500">*</span>
-                          </label>
-                          <input 
-                            type="text" 
-                            required 
-                            value={signupData.vin}
-                            onChange={(e) => setSignupData({...signupData, vin: e.target.value})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
-                            placeholder="VF9A12345B6789012"
-                            autoComplete="off"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Biển số xe <span className="text-red-500">*</span>
-                          </label>
-                          <input 
-                            type="text" 
-                            required 
-                            value={signupData.licensePlate}
-                            onChange={(e) => setSignupData({...signupData, licensePlate: e.target.value})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
-                            placeholder="30A-12345"
-                            autoComplete="off"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            Ngày đăng ký
-                          </label>
-                          <input 
-                            type="date" 
-                            value={signupData.registrationDate}
-                            onChange={(e) => setSignupData({...signupData, registrationDate: e.target.value})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
-                            autoComplete="off"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Số km đã đi
-                          </label>
-                          <input 
-                            type="number" 
-                            min="0"
-                            value={signupData.mileage}
-                            onChange={(e) => setSignupData({...signupData, mileage: parseInt(e.target.value) || 0})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
-                            placeholder="0"
-                            autoComplete="off"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          URL ảnh giấy đăng ký xe
-                        </label>
-                        <input 
-                          type="url" 
-                          value={signupData.registrationImageUrl}
-                          onChange={(e) => setSignupData({...signupData, registrationImageUrl: e.target.value})}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
-                          placeholder="https://example.com/registration.jpg"
-                          autoComplete="off"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Có thể để trống và cập nhật sau</p>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Buyer specific fields */}
                   {currentRole === 'buyer' && (
                     <div className="pt-4 border-t border-gray-200">
@@ -1002,7 +709,7 @@ const Auth = () => {
               )}
 
               {/* Toggle between Login/Signup */}
-              <div className={`text-center ${currentForm === 'signup' ? 'mt-4' : 'mt-6'}`}>
+              <div className="text-center mt-6">
                 {currentForm === 'login' ? (
                   <div>
                     <span className="text-gray-600">Chưa có tài khoản? </span>
@@ -1018,7 +725,6 @@ const Auth = () => {
                     </button>
                   </div>
                 )}
-              </div>
               </div>
             </div>
           </div>
