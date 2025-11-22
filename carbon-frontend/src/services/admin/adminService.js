@@ -128,11 +128,15 @@ export const adminService = {
   },
 
   rejectListing: async (listingId, reason) => {
-    if (shouldUseMock()) return { success: true, rejected: true };
+    if (shouldUseMock()) {
+      return mockAdminService?.rejectListing?.(listingId, reason) || { success: true, rejected: true };
+    }
     try {
       return await apiClient.post(API_ENDPOINTS.ADMIN.REJECT_LISTING.replace(':id', listingId), { reason });
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true, rejected: true };
+      if (import.meta.env.DEV) {
+        return mockAdminService?.rejectListing?.(listingId, reason) || { success: true, rejected: true };
+      }
       throw error;
     }
   },

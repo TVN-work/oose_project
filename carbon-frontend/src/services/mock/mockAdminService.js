@@ -48,5 +48,33 @@ export const mockAdminService = {
       },
     ];
   },
+
+  rejectListing: async (listingId, reason) => {
+    // Import evOwnerService to refund credits
+    const { mockEvOwnerService } = await import('./mockEvOwnerService');
+    
+    // Get listing info to find quantity
+    const LISTINGS_STORAGE_KEY = 'mock_listings';
+    try {
+      const storedListings = localStorage.getItem(LISTINGS_STORAGE_KEY);
+      if (storedListings) {
+        const listings = JSON.parse(storedListings);
+        const listing = listings.find(l => l.id === listingId);
+        
+        if (listing && listing.quantity) {
+          // Refund credits back to wallet
+          await mockEvOwnerService.refundCreditsFromListing(
+            listingId,
+            listing.quantity,
+            reason || 'Niêm yết không hợp lệ'
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error refunding credits:', error);
+    }
+    
+    return { success: true, rejected: true };
+  },
 };
 
