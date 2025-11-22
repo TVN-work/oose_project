@@ -2,7 +2,7 @@
 // Based on backend database schema
 
 // Helper function to generate UUID-like ID
-const generateId = () => {
+export const generateId = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -11,7 +11,7 @@ const generateId = () => {
 };
 
 // Helper function to get current timestamp
-const getTimestamp = () => new Date().toISOString();
+export const getTimestamp = () => new Date().toISOString();
 
 // Helper function to simulate API delay
 export const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
@@ -26,7 +26,8 @@ export const mockUsers = {
     email: 'evowner@example.com',
     full_name: 'Nguyễn Văn A',
     phone_number: '+84901234567',
-    roles: 'EV Owner',
+    roles: 'EV_OWNER', // Match USER_ROLES constant
+    password: 'password', // Default password for mock users
   },
   BUYER: {
     id: generateId(),
@@ -36,7 +37,8 @@ export const mockUsers = {
     email: 'buyer@example.com',
     full_name: 'Trần Thị B',
     phone_number: '+84901234568',
-    roles: 'CC Buyer',
+    roles: 'BUYER', // Match USER_ROLES constant
+    password: 'password', // Default password for mock users
   },
   VERIFIER: {
     id: generateId(),
@@ -46,7 +48,8 @@ export const mockUsers = {
     email: 'verifier@example.com',
     full_name: 'Lê Văn C',
     phone_number: '+84901234569',
-    roles: 'CVA',
+    roles: 'VERIFIER', // Match USER_ROLES constant
+    password: 'password', // Default password for mock users
   },
   ADMIN: {
     id: generateId(),
@@ -56,7 +59,8 @@ export const mockUsers = {
     email: 'admin@example.com',
     full_name: 'Phạm Thị D',
     phone_number: '+84901234570',
-    roles: 'Admin',
+    roles: 'ADMIN', // Match USER_ROLES constant
+    password: 'password', // Default password for mock users
   },
 };
 
@@ -79,12 +83,44 @@ export const mockWallets = {
 };
 
 // ========== VEHICLE TYPES ==========
+// Category values: 'motorcycle', 'car', 'truck', 'heavy_truck'
 export const mockVehicleTypes = [
+  // === MOTORCYCLE (Xe máy điện) ===
   {
     id: generateId(),
     created_at: getTimestamp(),
     updated_at: getTimestamp(),
-    co2per_km: 0.052,
+    category: 'motorcycle',
+    co2per_km: 0.050,
+    manufacturer: 'VinFast',
+    model: 'Klara',
+  },
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'motorcycle',
+    co2per_km: 0.045,
+    manufacturer: 'Pega',
+    model: 'Newtech',
+  },
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'motorcycle',
+    co2per_km: 0.048,
+    manufacturer: 'Yadea',
+    model: 'S3',
+  },
+  
+  // === CAR (Ô tô điện) ===
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'car',
+    co2per_km: 0.150,
     manufacturer: 'Tesla',
     model: 'Model 3',
   },
@@ -92,7 +128,8 @@ export const mockVehicleTypes = [
     id: generateId(),
     created_at: getTimestamp(),
     updated_at: getTimestamp(),
-    co2per_km: 0.045,
+    category: 'car',
+    co2per_km: 0.155,
     manufacturer: 'VinFast',
     model: 'VF8',
   },
@@ -100,9 +137,59 @@ export const mockVehicleTypes = [
     id: generateId(),
     created_at: getTimestamp(),
     updated_at: getTimestamp(),
-    co2per_km: 0.030,
-    manufacturer: 'Pega',
-    model: 'Scooter',
+    category: 'car',
+    co2per_km: 0.145,
+    manufacturer: 'BYD',
+    model: 'Atto 3',
+  },
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'car',
+    co2per_km: 0.160,
+    manufacturer: 'Hyundai',
+    model: 'Ioniq 5',
+  },
+  
+  // === TRUCK (Xe tải điện) ===
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'truck',
+    co2per_km: 0.250,
+    manufacturer: 'BYD',
+    model: 'T5',
+  },
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'truck',
+    co2per_km: 0.260,
+    manufacturer: 'Rivian',
+    model: 'EDV 700',
+  },
+  
+  // === HEAVY_TRUCK (Xe tải hạng nặng) ===
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'heavy_truck',
+    co2per_km: 0.350,
+    manufacturer: 'Tesla',
+    model: 'Semi',
+  },
+  {
+    id: generateId(),
+    created_at: getTimestamp(),
+    updated_at: getTimestamp(),
+    category: 'heavy_truck',
+    co2per_km: 0.370,
+    manufacturer: 'Volvo',
+    model: 'FH Electric',
   },
 ];
 
@@ -126,7 +213,7 @@ export const mockVehicles = [
 export const mockJourneys = [
   {
     id: generateId(),
-    created_at: getTimestamp(),
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
     updated_at: getTimestamp(),
     vehicle_id: mockVehicles[0].id,
     distance_km: 125.5,
@@ -134,6 +221,39 @@ export const mockJourneys = [
     avg_speed: 45.2,
     co2reduced: 6.526,
     journey_status: 'completed',
+  },
+  {
+    id: generateId(),
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    updated_at: getTimestamp(),
+    vehicle_id: mockVehicles[0].id,
+    distance_km: 89.3,
+    energy_used: 13.2,
+    avg_speed: 42.1,
+    co2reduced: 4.644,
+    journey_status: 'completed',
+  },
+  {
+    id: generateId(),
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    updated_at: getTimestamp(),
+    vehicle_id: mockVehicles[0].id,
+    distance_km: 156.8,
+    energy_used: 22.1,
+    avg_speed: 51.3,
+    co2reduced: 8.154,
+    journey_status: 'verifying',
+  },
+  {
+    id: generateId(),
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    updated_at: getTimestamp(),
+    vehicle_id: mockVehicles[0].id,
+    distance_km: 45.2,
+    energy_used: 6.8,
+    avg_speed: 38.5,
+    co2reduced: 2.350,
+    journey_status: 'calculating',
   },
 ];
 
@@ -182,24 +302,104 @@ export const mockCarbonWallet = {
     availableCredits: mockCarbonCredits.EV_OWNER.available_credit,
   },
   transactions: [
+    // Tăng tín chỉ từ hành trình
     {
       id: generateId(),
       type: 'earned',
-      amount: 15.5,
-      description: 'Từ hành trình #123',
-      date: '2024-01-15T10:30:00Z',
+      amount: 12.5,
+      description: 'Tạo tín chỉ từ hành trình',
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
       status: 'completed',
     },
     {
       id: generateId(),
-      type: 'sold',
+      type: 'earned',
+      amount: 8.3,
+      description: 'Tạo tín chỉ từ hành trình',
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+      status: 'completed',
+    },
+    {
+      id: generateId(),
+      type: 'earned',
+      amount: 15.2,
+      description: 'Tạo tín chỉ từ hành trình',
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+      status: 'completed',
+    },
+    // Giảm tín chỉ khi tạo niêm yết
+    {
+      id: generateId(),
+      type: 'listing_created',
+      amount: -25.0,
+      description: 'Tạo niêm yết tín chỉ',
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      status: 'completed',
+    },
+    {
+      id: generateId(),
+      type: 'listing_created',
       amount: -50.0,
-      description: 'Bán cho Carbon Buyer',
-      date: '2024-01-14T14:20:00Z',
+      description: 'Tạo niêm yết tín chỉ',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+      status: 'completed',
+    },
+    {
+      id: generateId(),
+      type: 'listing_created',
+      amount: -30.0,
+      description: 'Tạo niêm yết tín chỉ',
+      date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days ago
       status: 'completed',
     },
   ],
 };
+
+// Payment wallet transactions (sales history)
+export const mockPaymentWalletTransactions = [
+  // Bán tín chỉ - Giá cố định
+  {
+    id: generateId(),
+    type: 'sale',
+    amount: 625000, // 25 credits * 25000 VND
+    description: 'Bán tín chỉ - Giá cố định',
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    status: 'completed',
+    listingType: 'fixed_price',
+    credits: 25.0,
+  },
+  {
+    id: generateId(),
+    type: 'sale',
+    amount: 500000, // 20 credits * 25000 VND
+    description: 'Bán tín chỉ - Giá cố định',
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+    status: 'completed',
+    listingType: 'fixed_price',
+    credits: 20.0,
+  },
+  // Bán tín chỉ - Đấu giá
+  {
+    id: generateId(),
+    type: 'sale',
+    amount: 750000, // 30 credits * 25000 VND (auction price)
+    description: 'Bán tín chỉ - Đấu giá',
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    status: 'completed',
+    listingType: 'auction',
+    credits: 30.0,
+  },
+  {
+    id: generateId(),
+    type: 'sale',
+    amount: 875000, // 35 credits * 25000 VND (auction price)
+    description: 'Bán tín chỉ - Đấu giá',
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    status: 'completed',
+    listingType: 'auction',
+    credits: 35.0,
+  },
+];
 
 // ========== MARKET LISTINGS ==========
 export const mockMarketListings = [
