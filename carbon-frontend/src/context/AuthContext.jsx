@@ -11,78 +11,33 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('authToken');
-      const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEV_MODE !== 'false');
-      
+
       // If no token, user needs to login
       if (!token) {
         setLoading(false);
         return;
       }
-      
-      // In dev mode with mock token, try to get user from database first
-      if (DEV_MODE && token === 'dev-mock-token') {
-        try {
-          // Try to get user profile from auth service (which will check database)
-          const profile = await authService.getProfile();
-          if (profile) {
-            // Map database fields to frontend format
-            const mappedUser = {
-              ...profile,
-              name: profile.full_name || profile.name || 'User',
-              phone: profile.phone_number || profile.phone,
-              roles: profile.roles || profile.role,
-            };
-            setUser(mappedUser);
-            setIsAuthenticated(true);
-            setLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.warn('Failed to get user profile, using fallback:', error);
-        }
-        
-        // Fallback: create mock user based on route if profile fetch fails
-        const path = window.location.pathname;
-        let mockRole = 'EV_OWNER';
-        let mockName = 'EV Owner';
-        
-        if (path.includes('/buyer')) {
-          mockRole = 'BUYER';
-          mockName = 'Carbon Buyer';
-        } else if (path.includes('/verifier')) {
-          mockRole = 'VERIFIER';
-          mockName = 'Verifier';
-        } else if (path.includes('/admin')) {
-          mockRole = 'ADMIN';
-          mockName = 'Admin';
-        }
-        
-        const mockUser = {
-          id: '1',
-          name: mockName,
-          email: `${mockRole.toLowerCase().replace('_', '')}@example.com`,
-          roles: mockRole, // Use 'roles' (plural) to match roleHelpers expectations
+
+      // Try to fetch user profile with token
+      try {
+        const profile = await authService.getProfile();
+        // Map backend fields to frontend format
+        const mappedUser = {
+          ...profile,
+          name: profile.fullName || profile.name || 'User',
+          phone: profile.phoneNumber || profile.phone,
+          roles: profile.role || profile.roles,
         };
-        setUser(mockUser);
+        setUser(mappedUser);
         setIsAuthenticated(true);
-        setLoading(false);
-        return;
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+        // Clear invalid token
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        setIsAuthenticated(false);
       }
-      
-      // Try to fetch user profile with real token
-      if (token && token !== 'dev-mock-token') {
-        try {
-          const profile = await authService.getProfile();
-          setUser(profile);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-          // Clear invalid token
-            localStorage.removeItem('authToken');
-          setIsAuthenticated(false);
-        }
-      }
-      
+
       setLoading(false);
     };
 
@@ -91,19 +46,39 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     const response = await authService.login(credentials);
-    // Store JWT token and refresh token
-    if (response.token) {
-      localStorage.setItem('authToken', response.token);
+
+    // Response format: { id, token, refreshToken, username, role }
+    const data = response.data || response;
+
+    // Store tokens
+    if (data.token) {
+      localStorage.setItem('authToken', data.token);
     }
-    if (response.refreshToken) {
-      localStorage.setItem('refreshToken', response.refreshToken);
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
     }
-    // Store token expiration if provided
-    if (response.expiresIn) {
-      const expiresAt = Date.now() + response.expiresIn * 1000;
-      localStorage.setItem('tokenExpiresAt', expiresAt.toString());
+
+    // Store user info
+    if (data.id) {
+      localStorage.setItem('userId', data.id);
     }
-    setUser(response.user || response.data?.user);
+    if (data.username) {
+      localStorage.setItem('username', data.username);
+    }
+    if (data.role) {
+      localStorage.setItem('userRole', data.role);
+    }
+
+    // Create user object for state
+    const mappedUser = {
+      id: data.id,
+      email: data.username,
+      name: data.username,
+      roles: data.role,
+      role: data.role,
+    };
+
+    setUser(mappedUser);
     setIsAuthenticated(true);
     return response;
   };
@@ -116,8 +91,10 @@ export const AuthProvider = ({ children }) => {
     } finally {
       localStorage.removeItem('authToken');
       localStorage.removeItem('refreshToken');
-      localStorage.removeItem('mockUserEmail'); // Clear stored email
-      localStorage.removeItem('mockCurrentPassword'); // Clear stored password
+      localStorage.removeItem('tokenExpiresAt');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('userRole');
       setUser(null);
       setIsAuthenticated(false);
     }

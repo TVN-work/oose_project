@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext'
@@ -16,17 +16,12 @@ const queryClient = new QueryClient({
   },
 })
 
-// Component to render router inside AuthProvider
+// RouterWrapper component ensures router is created after AuthProvider is mounted
 function RouterWrapper() {
-  // Create router inside component that's already wrapped by AuthProvider
-  // Use useState lazy initialization to ensure router is created after AuthProvider is mounted
-  // This ensures AuthContext is available when ProtectedRoute components are evaluated
-  const [router] = useState(() => {
-    // Router creation is deferred until this component mounts
-    // At this point, AuthProvider is already mounted and AuthContext is available
-    return createRouter();
-  });
-  
+  // Use useMemo to create router only once when component mounts
+  // At this point, AuthProvider is already mounted and context is available
+  const router = useMemo(() => createRouter(), [])
+
   return <RouterProvider router={router} />
 }
 
