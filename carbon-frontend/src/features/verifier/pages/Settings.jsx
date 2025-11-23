@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Building2, Lock, User, Bell, Plus } from 'lucide-react';
+import { Settings as SettingsIcon, Building2, Lock, User, Bell, Plus, Save, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
@@ -42,21 +42,21 @@ const Settings = () => {
 
   const updateOrganization = (e) => {
     e.preventDefault();
-    toast.success('💾 Đã cập nhật thông tin tổ chức!');
+    toast.success('Đã cập nhật thông tin tổ chức!');
   };
 
   const changePassword = (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('❌ Mật khẩu xác nhận không khớp!');
+      toast.error('Mật khẩu xác nhận không khớp!');
       return;
     }
-    toast.success('🔒 Đã đổi mật khẩu thành công!');
+    toast.success('Đã đổi mật khẩu thành công!');
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
   const addAuditor = () => {
-    toast.info('➕ Chức năng thêm kiểm toán viên đang được phát triển');
+    toast.info('Chức năng thêm kiểm toán viên đang được phát triển');
   };
 
   return (
@@ -121,9 +121,10 @@ const Settings = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold"
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center"
             >
-              💾 Lưu thay đổi
+              <Save className="w-4 h-4 mr-2" />
+              Lưu thay đổi
             </button>
           </div>
         </form>
@@ -179,9 +180,10 @@ const Settings = () => {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                 >
-                  🔒 Đổi mật khẩu
+                  <Lock className="w-4 h-4 mr-2" />
+                  Đổi mật khẩu
                 </button>
               </div>
             </form>

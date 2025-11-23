@@ -35,10 +35,10 @@ export const useVerifyEVData = () => {
       verifierService.verifyEVData(requestId, verificationData),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequest(variables.requestId) });
-      toast.success('✅ Đã xác thực dữ liệu xe điện');
+      toast.success('Đã xác thực dữ liệu xe điện');
     },
     onError: (error) => {
-      toast.error(error.message || '❌ Lỗi khi xác thực dữ liệu');
+      toast.error(error.message || 'Lỗi khi xác thực dữ liệu');
     },
   });
 };
@@ -50,10 +50,10 @@ export const useValidateEmissionData = () => {
       verifierService.validateEmissionData(requestId, validationData),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequest(variables.requestId) });
-      toast.success('✅ Đã kiểm tra dữ liệu phát thải');
+      toast.success('Đã kiểm tra dữ liệu phát thải');
     },
     onError: (error) => {
-      toast.error(error.message || '❌ Lỗi khi kiểm tra dữ liệu');
+      toast.error(error.message || 'Lỗi khi kiểm tra dữ liệu');
     },
   });
 };
@@ -66,10 +66,10 @@ export const useApproveRequest = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequests() });
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequest(variables.requestId) });
-      toast.success(`✅ Đã duyệt yêu cầu ${variables.requestId}`);
+      toast.success(`Đã duyệt yêu cầu ${variables.requestId}`);
     },
     onError: (error) => {
-      toast.error(error.message || '❌ Lỗi khi duyệt yêu cầu');
+      toast.error(error.message || 'Lỗi khi duyệt yêu cầu');
     },
   });
 };
@@ -82,10 +82,10 @@ export const useRejectRequest = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequests() });
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequest(variables.requestId) });
-      toast.error(`❌ Đã từ chối yêu cầu ${variables.requestId}`);
+      toast.error(`Đã từ chối yêu cầu ${variables.requestId}`);
     },
     onError: (error) => {
-      toast.error(error.message || '❌ Lỗi khi từ chối yêu cầu');
+      toast.error(error.message || 'Lỗi khi từ chối yêu cầu');
     },
   });
 };
@@ -99,10 +99,10 @@ export const useIssueCredits = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequests() });
       queryClient.invalidateQueries({ queryKey: verifierKeys.verificationRequest(variables.requestId) });
-      toast.success(`🏷️ Đã phát hành ${creditData.amount} tín chỉ carbon`);
+      toast.success(`Đã phát hành ${creditData.amount} tín chỉ carbon`);
     },
     onError: (error) => {
-      toast.error(error.message || '❌ Lỗi khi phát hành tín chỉ');
+      toast.error(error.message || 'Lỗi khi phát hành tín chỉ');
     },
   });
 };
