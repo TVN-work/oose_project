@@ -70,10 +70,16 @@ export const mockAuthService = {
       phone_number: user.phone_number,
     };
     
+    // Return format compatible with both backend and frontend expectations
     return {
+      id: mappedUser.id,
       token: 'dev-mock-token', // Use consistent token for dev mode
       refreshToken: 'dev-mock-refresh-token',
-      user: mappedUser,
+      username: mappedUser.email,
+      role: mappedUser.roles || mappedUser.role, // Map roles to role for compatibility
+      user: mappedUser, // Keep user object for backward compatibility
+      // Also include role at root level for easier access
+      ...(mappedUser.roles && { role: mappedUser.roles }),
     };
   },
 

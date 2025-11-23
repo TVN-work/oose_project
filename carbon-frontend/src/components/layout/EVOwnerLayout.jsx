@@ -47,12 +47,8 @@ const EVOwnerLayout = () => {
   const isActive = (path) => location.pathname === path;
 
   useEffect(() => {
-    updateCurrentDate();
-  }, []);
-
-  const updateCurrentDate = () => {
-    // Date is displayed in header
-  };
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const getCurrentDate = () => {
     const now = new Date();
@@ -114,7 +110,7 @@ const EVOwnerLayout = () => {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{user?.name || 'EV Owner'}</h3>
+                <h3 className="font-semibold text-lg">{user?.name || user?.fullName || user?.full_name || user?.username || 'EV Owner'}</h3>
                 <div className="flex items-center mt-1">
                   <span className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></span>
                   <span className="text-sm opacity-90">Đã xác minh</span>
@@ -157,27 +153,6 @@ const EVOwnerLayout = () => {
           </div>
         </nav>
 
-        {/* Stats Summary */}
-        <div className="px-4 mt-8">
-          <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-filter backdrop-blur-sm">
-            <h4 className="font-semibold mb-3 text-center">Thống kê nhanh</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Tín chỉ có sẵn:</span>
-                <span className="font-bold">245</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Đã bán:</span>
-                <span className="font-bold">{formatCurrencyFromUsd(8750)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Km đã đi:</span>
-                <span className="font-bold">12,450</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Footer */}
         <div className="mt-8 mb-6 px-4">
           <div className="border-t border-green-400 border-opacity-30 pt-4">
@@ -188,6 +163,14 @@ const EVOwnerLayout = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content Area */}
       <div className="md:ml-72 min-h-screen">
@@ -228,17 +211,8 @@ const EVOwnerLayout = () => {
           <Outlet />
         </main>
       </div>
-
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
     </div>
   );
 };
 
 export default EVOwnerLayout;
-
