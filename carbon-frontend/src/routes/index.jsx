@@ -12,6 +12,7 @@ import NotFound from '../pages/NotFound';
 import Unauthorized from '../pages/Unauthorized';
 import AboutUs from '../pages/AboutUs';
 import Auth from '../pages/Auth';
+import AdminAuth from '../pages/Auth/AdminAuth';
 import Blog from '../pages/Blog';
 import Contact from '../pages/Contact';
 import FAQs from '../pages/FAQs';
@@ -280,6 +281,15 @@ const createRouter = () => createBrowserRouter(
         element: <AdminSettings />,
       },
     ],
+  },
+  // Admin/CVA Login (Hidden - not linked from public pages)
+  {
+    path: '/admin/login',
+    element: <AdminAuth />,
+  },
+  {
+    path: '/verifier/login',
+    element: <AdminAuth />,
   },
   // Unauthorized Route
   {
