@@ -388,7 +388,7 @@ const Auth = () => {
 
               {/* Login Form */}
               {currentForm === 'login' && (
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-4 pb-20">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                       <Mail className="w-4 h-4" />
@@ -397,7 +397,7 @@ const Auth = () => {
                     <input
                       type="email"
                       name="email"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
                       placeholder="your.email@example.com"
                       required
                     />
@@ -411,7 +411,7 @@ const Auth = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
-                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
+                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
                         placeholder="••••••••"
                         required
                       />
