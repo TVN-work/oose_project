@@ -383,6 +383,16 @@
   backdrop-filter: blur(4px);
 }
 
+/* Hide scrollbar but keep scroll functionality */
+.auth-modal-scrollable {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.auth-modal-scrollable::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* Form Input Focus States */
 input:focus,
 select:focus,

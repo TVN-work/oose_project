@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Car,
-  Building2,
-  Lock,
-  Mail,
-  User,
-  Phone,
-  CheckCircle2,
-  Shield,
-  BarChart3,
-  X,
+import { 
+  Car, 
+  Building2, 
+  Lock, 
+  Mail, 
+  User, 
+  Phone, 
+  CheckCircle2, 
+  Shield, 
+  BarChart3, 
   Loader2,
   Eye,
   EyeOff,
@@ -43,10 +42,6 @@ const Auth = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    // Buyer fields
-    accountType: '',
-    companyName: '',
-    taxId: '',
   });
 
   const openAuthModal = (role, formType) => {
@@ -66,9 +61,6 @@ const Auth = () => {
       phone: '',
       password: '',
       confirmPassword: '',
-      accountType: '',
-      companyName: '',
-      taxId: '',
     });
   };
 
@@ -356,51 +348,43 @@ const Auth = () => {
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={closeAuthModal}
         >
-          <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto"
+          <div 
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-y-auto auth-modal-scrollable"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {currentForm === 'login' ? 'Đăng nhập' : 'Đăng ký'}
-                  </h2>
-                  <p className="text-gray-600 mt-1 text-sm">
-                    {currentForm === 'login'
-                      ? 'Truy cập vào tài khoản của bạn'
-                      : 'Tạo tài khoản mới'
-                    }
-                  </p>
-                </div>
-                <button
-                  onClick={closeAuthModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+            <div className="p-5 border-b border-gray-200">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {currentForm === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+                </h2>
+                <p className="text-gray-600 mt-1 text-sm">
+                  {currentForm === 'login' 
+                    ? 'Truy cập vào tài khoản của bạn'
+                    : 'Tạo tài khoản mới'
+                  }
+                </p>
               </div>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
-              {/* Role Badge */}
-              <div className="text-center mb-6">
-                <div className={`w-16 h-16 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-3`}>
-                  {currentRole === 'ev-owner' ? (
-                    <Car className="w-8 h-8 text-green-600" />
-                  ) : (
-                    <Building2 className="w-8 h-8 text-blue-600" />
-                  )}
+            <div className="p-5">
+                {/* Role Badge */}
+                <div className="text-center mb-5">
+                  <div className={`w-14 h-14 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-2.5`}>
+                    {currentRole === 'ev-owner' ? (
+                      <Car className="w-7 h-7 text-green-600" />
+                    ) : (
+                      <Building2 className="w-7 h-7 text-blue-600" />
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {currentRole === 'ev-owner' 
+                      ? 'Chủ sở hữu xe điện'
+                      : 'Người mua tín chỉ carbon'
+                    }
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {currentRole === 'ev-owner'
-                    ? 'Chủ sở hữu xe điện'
-                    : 'Người mua tín chỉ carbon'
-                  }
-                </div>
-              </div>
 
               {/* Login Form */}
               {currentForm === 'login' && (
@@ -413,7 +397,7 @@ const Auth = () => {
                     <input
                       type="email"
                       name="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
                       placeholder="your.email@example.com"
                       required
                     />
@@ -427,7 +411,7 @@ const Auth = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
                         placeholder="••••••••"
                         required
                       />
@@ -451,7 +435,7 @@ const Auth = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
@@ -470,7 +454,7 @@ const Auth = () => {
 
               {/* Signup Form */}
               {currentForm === 'signup' && (
-                <form onSubmit={handleSignup} className="space-y-5" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+                <form onSubmit={handleSignup} className="space-y-4" autoComplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                   {/* Hidden fields to trick password managers */}
                   <input type="text" name="username" autoComplete="username" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
                   <input type="password" name="password" autoComplete="current-password" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
@@ -601,56 +585,6 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  {/* Buyer specific fields */}
-                  {currentRole === 'buyer' && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Thông tin doanh nghiệp</h3>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Loại tài khoản <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            value={signupData.accountType}
-                            onChange={(e) => setSignupData({ ...signupData, accountType: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                          >
-                            <option value="">Chọn loại</option>
-                            <option value="individual">Cá nhân</option>
-                            <option value="company">Doanh nghiệp</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tên công ty
-                          </label>
-                          <input
-                            type="text"
-                            value={signupData.companyName}
-                            onChange={(e) => setSignupData({ ...signupData, companyName: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                            placeholder="Công ty ABC"
-                            autoComplete="off"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Mã số thuế
-                          </label>
-                          <input
-                            type="text"
-                            value={signupData.taxId}
-                            onChange={(e) => setSignupData({ ...signupData, taxId: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                            placeholder="0123456789"
-                            autoComplete="off"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="flex items-start gap-2 pt-2">
                     <input type="checkbox" required className="mt-1 rounded border-gray-300 text-green-600 focus:ring-green-500" />
                     <span className="text-sm text-gray-600">
@@ -660,7 +594,7 @@ const Auth = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
@@ -678,7 +612,7 @@ const Auth = () => {
               )}
 
               {/* Toggle between Login/Signup */}
-              <div className="text-center mt-6">
+              <div className="text-center mt-5">
                 {currentForm === 'login' ? (
                   <div>
                     <span className="text-gray-600">Chưa có tài khoản? </span>
