@@ -1,6 +1,23 @@
 // Mock Verifier Service
 // This will be used when backend is not available
 // Uses localStorage to persist verification requests across sessions
+//
+// Database Schema Mapping (verify_request table):
+// - id: UUID PK
+// - user_id: FK users.id (not null) - EV Owner
+// - type: VEHICLE, JOURNEY, CREDIT
+// - reference_id: UUID - link to journey/vehicle/etc
+// - title: varchar(255)
+// - description: varchar(255)
+// - document_url: List<String> - document URLs
+// - status: PENDING, APPROVED, REJECTED
+// - note: text
+//
+// Frontend uses additional computed fields for display:
+// - evOwner/owner: from users table via user_id
+// - vehicle: from vehicles table via reference_id
+// - credits/creditAmount: calculated from journey data
+// - mileage, co2Saved: from journey data
 
 const STORAGE_KEY = 'mock_verification_requests';
 

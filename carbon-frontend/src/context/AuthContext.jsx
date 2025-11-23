@@ -69,16 +69,33 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userRole', data.role);
     }
 
-    // Create user object for state
-    const mappedUser = {
-      id: data.id,
-      email: data.username,
-      name: data.username,
-      roles: data.role,
-      role: data.role,
-    };
+    // Try to fetch profile to get fullName
+    try {
+      const profile = await authService.getProfile();
+      // Map backend fields to frontend format
+      const mappedUser = {
+        ...profile,
+        id: profile.id || data.id,
+        email: profile.email || data.username,
+        name: profile.fullName || profile.full_name || profile.name || data.username,
+        phone: profile.phoneNumber || profile.phone,
+        roles: profile.role || profile.roles || data.role,
+        role: profile.role || data.role,
+      };
+      setUser(mappedUser);
+    } catch (error) {
+      console.error('Failed to fetch profile after login:', error);
+      // Fallback to basic user object if profile fetch fails
+      const mappedUser = {
+        id: data.id,
+        email: data.username,
+        name: data.username,
+        roles: data.role,
+        role: data.role,
+      };
+      setUser(mappedUser);
+    }
 
-    setUser(mappedUser);
     setIsAuthenticated(true);
     return response;
   };

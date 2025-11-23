@@ -60,7 +60,7 @@ export const mockUsers = {
     full_name: 'Phạm Thị D',
     phone_number: '+84901234570',
     roles: 'ADMIN', // Match USER_ROLES constant
-    password: 'password', // Default password for mock users
+    password: 'Admin@123', // Match backend default admin password
   },
 };
 
