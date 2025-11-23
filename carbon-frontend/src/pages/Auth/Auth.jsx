@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Car, 
-  Building2, 
-  Lock, 
-  Mail, 
-  User, 
-  Phone, 
-  CheckCircle2, 
-  Shield, 
-  BarChart3, 
+import {
+  Car,
+  Building2,
+  Lock,
+  Mail,
+  User,
+  Phone,
+  CheckCircle2,
+  Shield,
+  BarChart3,
   X,
   Loader2,
   Eye,
@@ -23,7 +23,6 @@ import { useAuth } from '../../context/AuthContext';
 import Alert from '../../components/common/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import authService from '../../services/auth/authService';
-import mockDatabase from '../../services/mock/mockDatabaseService';
 import './Auth.css';
 
 const Auth = () => {
@@ -82,47 +81,57 @@ const Auth = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const formData = new FormData(e.target);
       const email = formData.get('email');
       const password = formData.get('password');
-      
+
       if (!email || !password) {
         showAlert('Vui lòng nhập đầy đủ email và mật khẩu!', 'error');
         setIsLoading(false);
         return;
       }
-      
-      let role = 'EV_OWNER';
-      if (currentRole === 'buyer') role = 'BUYER';
-      else if (currentRole === 'verifier') role = 'VERIFIER';
-      else if (currentRole === 'admin') role = 'ADMIN';
-      
-      await login({
+
+      const response = await login({
         email: email,
         password: password,
-        role: role,
       });
-      
+
       setIsLoading(false);
-      showAlert(`Đăng nhập thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : currentRole === 'buyer' ? 'Buyer' : currentRole === 'verifier' ? 'Verifier' : 'Admin'}!`, 'success');
+      showAlert(`Đăng nhập thành công!`, 'success');
       closeAuthModal();
-      
+
+      // Navigate based on user's actual role from API response
       setTimeout(() => {
-        if (currentRole === 'ev-owner') {
+        const userData = response.data || response;
+        const userRole = userData.role || userData.user?.role;
+
+        if (userRole === 'EV_OWNER') {
           navigate('/ev-owner/dashboard');
-        } else if (currentRole === 'buyer') {
+        } else if (userRole === 'BUYER') {
           navigate('/buyer/dashboard');
-        } else if (currentRole === 'verifier') {
+        } else if (userRole === 'VERIFIER') {
           navigate('/verifier/dashboard');
-        } else if (currentRole === 'admin') {
+        } else if (userRole === 'ADMIN') {
           navigate('/admin/dashboard');
+        } else {
+          // Default fallback based on selected role in UI
+          if (currentRole === 'ev-owner') {
+            navigate('/ev-owner/dashboard');
+          } else if (currentRole === 'buyer') {
+            navigate('/buyer/dashboard');
+          } else if (currentRole === 'verifier') {
+            navigate('/verifier/dashboard');
+          } else if (currentRole === 'admin') {
+            navigate('/admin/dashboard');
+          }
         }
       }, 500);
     } catch (error) {
       setIsLoading(false);
-      showAlert('Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin đăng nhập.', 'error');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin đăng nhập.';
+      showAlert(errorMessage, 'error');
       console.error('Login error:', error);
     }
   };
@@ -139,21 +148,11 @@ const Auth = () => {
         return;
       }
 
-      // Check if email already exists in database (client-side validation)
-      const existingUser = mockDatabase.findUserByEmail(signupData.email);
-      if (existingUser) {
-        showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
-        setIsLoading(false);
-        return;
-      }
-
       const roleKey = currentRole === 'ev-owner' ? 'EV_OWNER' : 'BUYER';
 
-      // Register via auth service FIRST (server-side validation)
-      // This will throw error if email already exists
-      let registerResult;
+      // Register via auth service
       try {
-        registerResult = await authService.register({
+        await authService.register({
           email: signupData.email,
           fullName: signupData.fullName,
           phone: signupData.phone,
@@ -161,77 +160,47 @@ const Auth = () => {
           role: roleKey,
         });
       } catch (registerError) {
-        // If registration fails (e.g., email duplicate), don't create user
+        // Handle registration errors
         if (registerError?.response?.status === 409) {
           showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
         } else {
-          showAlert(registerError?.response?.data?.message || 'Đăng ký thất bại! Vui lòng thử lại.', 'error');
+          const errorMessage = registerError?.response?.data?.message || registerError?.message || 'Đăng ký thất bại! Vui lòng thử lại.';
+          showAlert(errorMessage, 'error');
         }
         setIsLoading(false);
         return;
       }
-
-      // Only create user in mock database AFTER successful registration
-      const newUser = mockDatabase.createUser({
-        email: signupData.email,
-        full_name: signupData.fullName,
-        phone_number: signupData.phone,
-        roles: roleKey,
-        dob: null,
-        password: signupData.password, // Store password for login validation
-      });
-
-      // Create wallet
-      mockDatabase.createWallet({
-        owner_id: newUser.id,
-        balance: 0.0,
-      });
-
-      // Create carbon credit wallet
-      mockDatabase.createCarbonCredit({
-        owner_id: newUser.id,
-        available_credit: 0.0,
-        total_credit: 0.0,
-        traded_credit: 0.0,
-      });
-
-      // Store password for mock password change validation
-      localStorage.setItem('mockCurrentPassword', signupData.password);
 
       // Auto login after successful signup
       try {
         await login({
           email: signupData.email,
           password: signupData.password,
-          role: roleKey,
         });
+
+        setIsLoading(false);
+        showAlert(`Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`, 'success');
+        closeAuthModal();
+
+        // Navigate to dashboard after successful signup and login
+        setTimeout(() => {
+          if (currentRole === 'ev-owner') {
+            navigate('/ev-owner/dashboard');
+          } else if (currentRole === 'buyer') {
+            navigate('/buyer/dashboard');
+          }
+        }, 500);
       } catch (loginError) {
         console.error('Auto login after signup failed:', loginError);
         // If auto login fails, still show success but ask user to login manually
         setIsLoading(false);
         showAlert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
-        closeAuthModal();
-        return;
+        toggleAuthForm('login');
       }
-
-      setIsLoading(false);
-      showAlert(`Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`, 'success');
-      closeAuthModal();
-      
-      // Navigate to dashboard after successful signup and login
-      // Wait a bit longer to ensure AuthContext has updated
-      setTimeout(() => {
-        if (currentRole === 'ev-owner') {
-          navigate('/ev-owner/dashboard');
-        } else if (currentRole === 'buyer') {
-          navigate('/buyer/dashboard');
-        }
-      }, 1000);
     } catch (error) {
       setIsLoading(false);
-      // This catch block handles any unexpected errors during the signup process
-      // Email duplicate errors are already handled in the try block above
-      showAlert(error?.response?.data?.message || 'Đăng ký thất bại! Vui lòng thử lại.', 'error');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Đăng ký thất bại! Vui lòng thử lại.';
+      showAlert(errorMessage, 'error');
       console.error('Signup error:', error);
     }
   };
@@ -240,10 +209,10 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       {/* Alert Messages */}
       {alertMessage && (
-        <Alert 
+        <Alert
           key={`alert-${alertMessage}`}
-          variant={alertType} 
-          dismissible 
+          variant={alertType}
+          dismissible
           position="toast"
           onDismiss={hideAlert}
         >
@@ -273,11 +242,11 @@ const Auth = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Chủ sở hữu xe điện</h2>
               <p className="text-gray-600 leading-relaxed">
-                Tạo và bán tín chỉ carbon từ việc sử dụng xe điện của bạn. 
+                Tạo và bán tín chỉ carbon từ việc sử dụng xe điện của bạn.
                 Kiếm thu nhập từ việc bảo vệ môi trường.
               </p>
             </div>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -296,24 +265,24 @@ const Auth = () => {
                 <span className="text-gray-700 text-sm">Nhận thông báo về giá thị trường</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
-              <button 
-                onClick={() => openAuthModal('ev-owner', 'login')} 
+              <button
+                onClick={() => openAuthModal('ev-owner', 'login')}
                 className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
                 <LogIn className="w-5 h-5" />
                 Đăng nhập
               </button>
-              <button 
-                onClick={() => openAuthModal('ev-owner', 'signup')} 
+              <button
+                onClick={() => openAuthModal('ev-owner', 'signup')}
                 className="w-full bg-transparent border-2 border-green-600 text-green-600 py-3 px-6 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
                 Đăng ký
               </button>
             </div>
-            
+
             <div className="mt-6 p-3 bg-green-50 rounded-lg">
               <div className="flex items-start gap-2 text-sm text-gray-600">
                 <HelpCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -330,11 +299,11 @@ const Auth = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Người mua tín chỉ carbon</h2>
               <p className="text-gray-600 leading-relaxed">
-                Mua tín chỉ carbon để bù đắp phát thải CO₂ của doanh nghiệp hoặc cá nhân. 
+                Mua tín chỉ carbon để bù đắp phát thải CO₂ của doanh nghiệp hoặc cá nhân.
                 Đóng góp vào mục tiêu Net Zero.
               </p>
             </div>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -353,24 +322,24 @@ const Auth = () => {
                 <span className="text-gray-700 text-sm">Tham gia đấu giá tín chỉ premium</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
-              <button 
-                onClick={() => openAuthModal('buyer', 'login')} 
+              <button
+                onClick={() => openAuthModal('buyer', 'login')}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               >
                 <LogIn className="w-5 h-5" />
                 Đăng nhập
               </button>
-              <button 
-                onClick={() => openAuthModal('buyer', 'signup')} 
+              <button
+                onClick={() => openAuthModal('buyer', 'signup')}
                 className="w-full bg-transparent border-2 border-blue-600 text-blue-600 py-3 px-6 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
                 Đăng ký
               </button>
             </div>
-            
+
             <div className="mt-6 p-3 bg-blue-50 rounded-lg">
               <div className="flex items-start gap-2 text-sm text-gray-600">
                 <HelpCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -383,11 +352,11 @@ const Auth = () => {
 
       {/* Login/Signup Modal */}
       {authModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={closeAuthModal}
         >
-          <div 
+          <div
             className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -399,14 +368,14 @@ const Auth = () => {
                     {currentForm === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                   </h2>
                   <p className="text-gray-600 mt-1 text-sm">
-                    {currentForm === 'login' 
+                    {currentForm === 'login'
                       ? 'Truy cập vào tài khoản của bạn'
                       : 'Tạo tài khoản mới'
                     }
                   </p>
                 </div>
-                <button 
-                  onClick={closeAuthModal} 
+                <button
+                  onClick={closeAuthModal}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 >
                   <X className="w-6 h-6" />
@@ -416,22 +385,22 @@ const Auth = () => {
 
             {/* Modal Content */}
             <div className="p-6">
-                {/* Role Badge */}
-                <div className="text-center mb-6">
-                  <div className={`w-16 h-16 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-3`}>
-                    {currentRole === 'ev-owner' ? (
-                      <Car className="w-8 h-8 text-green-600" />
-                    ) : (
-                      <Building2 className="w-8 h-8 text-blue-600" />
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {currentRole === 'ev-owner' 
-                      ? 'Chủ sở hữu xe điện'
-                      : 'Người mua tín chỉ carbon'
-                    }
-                  </div>
+              {/* Role Badge */}
+              <div className="text-center mb-6">
+                <div className={`w-16 h-16 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-3`}>
+                  {currentRole === 'ev-owner' ? (
+                    <Car className="w-8 h-8 text-green-600" />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-blue-600" />
+                  )}
                 </div>
+                <div className="text-sm text-gray-600">
+                  {currentRole === 'ev-owner'
+                    ? 'Chủ sở hữu xe điện'
+                    : 'Người mua tín chỉ carbon'
+                  }
+                </div>
+              </div>
 
               {/* Login Form */}
               {currentForm === 'login' && (
@@ -441,10 +410,10 @@ const Auth = () => {
                       <Mail className="w-4 h-4" />
                       Email
                     </label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       name="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       placeholder="your.email@example.com"
                       required
                     />
@@ -455,10 +424,10 @@ const Auth = () => {
                       Mật khẩu
                     </label>
                     <div className="relative">
-                      <input 
+                      <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" 
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                         placeholder="••••••••"
                         required
                       />
@@ -479,8 +448,8 @@ const Auth = () => {
                     </label>
                     <a href="#" className="text-sm text-green-600 hover:underline">Quên mật khẩu?</a>
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isLoading}
                     className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
@@ -505,7 +474,7 @@ const Auth = () => {
                   {/* Hidden fields to trick password managers */}
                   <input type="text" name="username" autoComplete="username" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
                   <input type="password" name="password" autoComplete="current-password" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} readOnly />
-                  
+
                   {/* Basic Information - 2 columns */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -513,12 +482,12 @@ const Auth = () => {
                         <User className="w-4 h-4" />
                         Họ và tên <span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="text" 
-                        required 
+                      <input
+                        type="text"
+                        required
                         value={signupData.fullName}
-                        onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                        onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                         placeholder="Nguyễn Văn A"
                         autoComplete="off"
                       />
@@ -528,12 +497,12 @@ const Auth = () => {
                         <Phone className="w-4 h-4" />
                         Số điện thoại <span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        type="tel" 
-                        required 
+                      <input
+                        type="tel"
+                        required
                         value={signupData.phone}
-                        onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                        onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                         placeholder="0123 456 789"
                         autoComplete="off"
                       />
@@ -546,12 +515,12 @@ const Auth = () => {
                       <Mail className="w-4 h-4" />
                       Email <span className="text-red-500">*</span>
                     </label>
-                    <input 
-                      type="email" 
-                      required 
+                    <input
+                      type="email"
+                      required
                       value={signupData.email}
-                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                       placeholder="your.email@example.com"
                       autoComplete="off"
                       data-lpignore="true"
@@ -570,12 +539,12 @@ const Auth = () => {
                         Mật khẩu <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <input 
+                        <input
                           type={showPassword ? 'text' : 'password'}
-                          required 
+                          required
                           value={signupData.password}
-                          onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                           placeholder="••••••••"
                           autoComplete="new-password"
                           data-lpignore="true"
@@ -603,12 +572,12 @@ const Auth = () => {
                         Xác nhận mật khẩu <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <input 
+                        <input
                           type={showConfirmPassword ? 'text' : 'password'}
-                          required 
+                          required
                           value={signupData.confirmPassword}
-                          onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
-                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                          onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                           placeholder="••••••••"
                           autoComplete="new-password"
                           data-lpignore="true"
@@ -631,7 +600,7 @@ const Auth = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Buyer specific fields */}
                   {currentRole === 'buyer' && (
                     <div className="pt-4 border-t border-gray-200">
@@ -641,10 +610,10 @@ const Auth = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Loại tài khoản <span className="text-red-500">*</span>
                           </label>
-                          <select 
-                            required 
+                          <select
+                            required
                             value={signupData.accountType}
-                            onChange={(e) => setSignupData({...signupData, accountType: e.target.value})}
+                            onChange={(e) => setSignupData({ ...signupData, accountType: e.target.value })}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                           >
                             <option value="">Chọn loại</option>
@@ -656,11 +625,11 @@ const Auth = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Tên công ty
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={signupData.companyName}
-                            onChange={(e) => setSignupData({...signupData, companyName: e.target.value})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                            onChange={(e) => setSignupData({ ...signupData, companyName: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                             placeholder="Công ty ABC"
                             autoComplete="off"
                           />
@@ -669,11 +638,11 @@ const Auth = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Mã số thuế
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={signupData.taxId}
-                            onChange={(e) => setSignupData({...signupData, taxId: e.target.value})}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" 
+                            onChange={(e) => setSignupData({ ...signupData, taxId: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                             placeholder="0123456789"
                             autoComplete="off"
                           />
@@ -688,8 +657,8 @@ const Auth = () => {
                       Tôi đồng ý với <a href="#" className="text-green-600 hover:underline">Điều khoản sử dụng</a> và <a href="#" className="text-green-600 hover:underline">Chính sách bảo mật</a>
                     </span>
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isLoading}
                     className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
