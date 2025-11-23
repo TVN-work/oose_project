@@ -100,7 +100,7 @@ const BuyerLayout = () => {
                 <span className="text-2xl">🛒</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">Carbon Buyer</h3>
+                <h3 className="font-semibold text-lg">{user?.name || user?.fullName || user?.full_name || user?.username || 'Carbon Buyer'}</h3>
                 <div className="flex items-center mt-1">
                   <span className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></span>
                   <span className="text-sm opacity-90">Đã xác minh</span>
@@ -114,7 +114,7 @@ const BuyerLayout = () => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="mt-6 px-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+        <nav className="mt-6 px-4">
           <div className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -124,21 +124,17 @@ const BuyerLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all ${
+                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
                     active
                       ? 'bg-blue-400 border-r-4 border-white shadow-inner'
                       : 'hover:bg-white hover:bg-opacity-15 hover:translate-x-1'
                   }`}
                 >
-                  <Icon className="mr-4 text-xl" />
+                  <Icon className="mr-4 w-5 h-5" />
                   <span className="font-medium flex-1">{item.label}</span>
                   {item.badge && (
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      typeof item.badge === 'number'
-                        ? 'bg-red-500 text-white w-5 h-5 flex items-center justify-center'
-                        : 'bg-white bg-opacity-20'
-                    }`}>
-                      {item.badge}
+                    <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">
+                      {typeof item.badge === 'number' ? item.badge : item.badge}
                     </span>
                   )}
                 </Link>
@@ -147,29 +143,8 @@ const BuyerLayout = () => {
           </div>
         </nav>
 
-        {/* Stats Summary */}
-        <div className="px-4 mt-8 mb-6">
-          <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-filter backdrop-blur-sm">
-            <h4 className="font-semibold mb-3 text-center">Thống kê nhanh</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Tín chỉ đã mua:</span>
-                <span className="font-bold">587</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Tổng chi tiêu:</span>
-                <span className="font-bold">{formatCurrencyFromUsd(12450)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">Chứng nhận:</span>
-                <span className="font-bold">8</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Footer */}
-        <div className="mt-auto mb-6 px-4">
+        <div className="mt-8 mb-6 px-4">
           <div className="border-t border-blue-400 border-opacity-30 pt-4">
             <div className="text-center">
               <p className="text-sm opacity-75">Carbon Credit Platform</p>
