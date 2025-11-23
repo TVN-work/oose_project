@@ -38,8 +38,8 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Logo Section */}
         <div className="p-6 border-b border-green-400 border-opacity-30">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm">
-              <span className="text-2xl">🚗</span>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm p-2">
+              <img src="/logo.png" alt="Carbon Credit Marketplace" className="w-full h-full object-contain" />
             </div>
             <div>
               <h2 className="font-bold text-xl">Carbon Credit</h2>

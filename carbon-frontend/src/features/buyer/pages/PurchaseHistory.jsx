@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Download, RefreshCw, Eye, CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Download, RefreshCw, Eye, CreditCard, CheckCircle, Clock, XCircle, Search, RotateCcw, Calendar, BarChart3 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { buyerService } from '../../../services/buyer/buyerService';
+import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
-import { formatCurrencyFromUsd } from '../../../utils';
+import { formatCurrency, formatCurrencyFromUsd, formatDate, usdToVnd } from '../../../utils';
 
 const PurchaseHistory = () => {
   const [filters, setFilters] = useState({
@@ -10,99 +13,107 @@ const PurchaseHistory = () => {
     priceRange: '',
   });
 
-  const transactions = [
-    {
-      id: 'TX-2024001',
-      date: '15/12/2024',
-      time: '09:30 AM',
-      seller: 'Nguyễn Văn A',
-      vehicle: 'Tesla Model 3',
-      credits: 125,
-      co2Saved: 9.2,
-      value: 2812.50,
-      pricePerCredit: 22.50,
-      status: 'success',
-      type: 'Mua tín chỉ',
-    },
-    {
-      id: 'TX-2024002',
-      date: '12/12/2024',
-      time: '14:15 PM',
-      seller: 'Trần Thị B',
-      vehicle: 'VinFast VF8',
-      credits: 85,
-      co2Saved: 6.3,
-      value: 1785.00,
-      pricePerCredit: 21.00,
-      status: 'success',
-      type: 'Đấu giá',
-    },
-    {
-      id: 'TX-2024003',
-      date: '10/12/2024',
-      time: '11:45 AM',
-      seller: 'Lê Văn C',
-      vehicle: 'BMW iX3',
-      credits: 200,
-      co2Saved: 14.8,
-      value: 4760.00,
-      pricePerCredit: 23.80,
-      status: 'success',
-      type: 'Mua tín chỉ',
-    },
-    {
-      id: 'TX-2024004',
-      date: '08/12/2024',
-      time: '16:20 PM',
-      seller: 'Phạm Thị D',
-      vehicle: 'Audi e-tron',
-      credits: 150,
-      co2Saved: 11.1,
-      value: 3630.00,
-      pricePerCredit: 24.20,
-      status: 'pending',
-      type: 'Thương lượng',
-    },
-    {
-      id: 'TX-2024005',
-      date: '05/12/2024',
-      time: '13:10 PM',
-      seller: 'Hoàng Văn E',
-      vehicle: 'Hyundai Kona EV',
-      credits: 95,
-      co2Saved: 7.0,
-      value: 0,
-      pricePerCredit: 23.50,
-      status: 'failed',
-      type: 'Mua tín chỉ',
-    },
-    {
-      id: 'TX-2024006',
-      date: '03/12/2024',
-      time: '10:25 AM',
-      seller: 'Vũ Thị F',
-      vehicle: 'Nissan Leaf',
-      credits: 75,
-      co2Saved: 5.5,
-      value: 1642.50,
-      pricePerCredit: 21.90,
-      status: 'success',
-      type: 'Mua tín chỉ',
-    },
-    {
-      id: 'TX-2024007',
-      date: '01/12/2024',
-      time: '15:30 PM',
-      seller: 'Đỗ Văn G',
-      vehicle: 'Kia EV6',
-      credits: 110,
-      co2Saved: 8.1,
-      value: 2420.00,
-      pricePerCredit: 22.00,
-      status: 'pending',
-      type: 'Đấu giá',
-    },
-  ];
+  // Build query params from filters
+  const queryParams = useMemo(() => {
+    const params = {};
+    
+    if (filters.status) {
+      params.status = filters.status;
+    }
+    
+    // Price range filter
+    if (filters.priceRange) {
+      if (filters.priceRange === 'under-1000') {
+        params.maxPrice = 1000;
+      } else if (filters.priceRange === '1000-5000') {
+        params.minPrice = 1000;
+        params.maxPrice = 5000;
+      } else if (filters.priceRange === '5000-10000') {
+        params.minPrice = 5000;
+        params.maxPrice = 10000;
+      } else if (filters.priceRange === 'over-10000') {
+        params.minPrice = 10000;
+      }
+    }
+    
+    return params;
+  }, [filters]);
+
+  // Fetch purchase history from database
+  const { data: purchaseHistoryData, isLoading, error, refetch } = useQuery({
+    queryKey: ['buyer', 'purchase-history', queryParams],
+    queryFn: () => buyerService.getPurchaseHistory(queryParams),
+    staleTime: 30000, // 30 seconds
+  });
+
+  // Transform transactions to display format
+  const transactions = useMemo(() => {
+    if (!purchaseHistoryData?.data) return [];
+    
+    return purchaseHistoryData.data.map(tx => {
+      const date = new Date(tx.created_at);
+      const USD_TO_VND_RATE = 25000;
+      const amountInVnd = (tx.amount || 0) * USD_TO_VND_RATE;
+      const pricePerCredit = tx.credit > 0 ? (tx.amount || 0) / tx.credit : 0;
+      const co2Saved = (tx.credit || 0) * 0.1; // Estimate: 1 credit ≈ 0.1 ton CO2
+      
+      // Determine transaction type
+      const listing = tx.listing;
+      const type = listing?.listing_type === 'auction' ? 'Đấu giá' : 'Mua tín chỉ';
+      
+      // Map status
+      const statusMap = {
+        'COMPLETED': 'success',
+        'completed': 'success',
+        'PENDING_PAYMENT': 'pending',
+        'pending': 'pending',
+        'PAYMENT_PROCESSING': 'pending',
+        'CANCELLED': 'failed',
+        'cancelled': 'failed',
+        'FAILED': 'failed',
+        'failed': 'failed',
+      };
+      const status = statusMap[tx.status?.toUpperCase()] || 'pending';
+      
+      return {
+        id: tx.id,
+        date: formatDate(tx.created_at),
+        time: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        seller: tx.seller?.full_name || 'Unknown',
+        vehicle: 'Electric Vehicle', // Can be enhanced with vehicle data
+        credits: tx.credit || 0,
+        co2Saved: parseFloat(co2Saved.toFixed(2)),
+        value: amountInVnd,
+        pricePerCredit: pricePerCredit,
+        status: status,
+        type: type,
+        transaction: tx,
+      };
+    });
+  }, [purchaseHistoryData]);
+
+  // Calculate summary stats (must be before early returns)
+  const summary = useMemo(() => {
+    const total = transactions.length;
+    const success = transactions.filter(t => t.status === 'success').length;
+    const pending = transactions.filter(t => t.status === 'pending').length;
+    const failed = transactions.filter(t => t.status === 'failed').length;
+    return { total, success, pending, failed };
+  }, [transactions]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-600">Không thể tải lịch sử mua hàng. Vui lòng thử lại sau.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleExport = () => {
     toast.success('Đang xuất file Excel chứa lịch sử giao dịch...');
@@ -112,6 +123,7 @@ const PurchaseHistory = () => {
   };
 
   const handleRefresh = () => {
+    refetch();
     toast.success('🔄 Đã cập nhật danh sách giao dịch mới nhất!');
   };
 
@@ -120,7 +132,8 @@ const PurchaseHistory = () => {
   };
 
   const handleApplyFilters = () => {
-    toast.success('🔍 Đã áp dụng bộ lọc. Tìm thấy 15 giao dịch phù hợp!');
+    refetch();
+    toast.success(`🔍 Đã áp dụng bộ lọc. Tìm thấy ${transactions.length} giao dịch phù hợp!`);
   };
 
   const handleQuickFilter = (type) => {
@@ -169,7 +182,7 @@ const PurchaseHistory = () => {
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CreditCard className="w-6 h-6 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">15</p>
+          <p className="text-2xl font-bold text-gray-800">{summary.total}</p>
           <p className="text-sm text-gray-600">Tổng giao dịch</p>
         </div>
 
@@ -177,7 +190,7 @@ const PurchaseHistory = () => {
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-6 h-6 text-green-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">12</p>
+          <p className="text-2xl font-bold text-gray-800">{summary.success}</p>
           <p className="text-sm text-gray-600">Thành công</p>
         </div>
 
@@ -185,7 +198,7 @@ const PurchaseHistory = () => {
           <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Clock className="w-6 h-6 text-yellow-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">2</p>
+          <p className="text-2xl font-bold text-gray-800">{summary.pending}</p>
           <p className="text-sm text-gray-600">Đang xử lý</p>
         </div>
 
@@ -193,7 +206,7 @@ const PurchaseHistory = () => {
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-6 h-6 text-red-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">1</p>
+          <p className="text-2xl font-bold text-gray-800">{summary.failed}</p>
           <p className="text-sm text-gray-600">Thất bại</p>
         </div>
       </div>
@@ -202,7 +215,7 @@ const PurchaseHistory = () => {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            <span className="mr-3">🔍</span>
+            <Search className="w-5 h-5 mr-3" />
             Lọc giao dịch
           </h3>
           <button
@@ -210,9 +223,10 @@ const PurchaseHistory = () => {
               setFilters({ timeRange: '', status: '', priceRange: '' });
               toast.success('🔄 Đã đặt lại tất cả bộ lọc về mặc định!');
             }}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
           >
-            🔄 Đặt lại bộ lọc
+            <RotateCcw className="w-4 h-4" />
+            Đặt lại bộ lọc
           </button>
         </div>
 
@@ -278,27 +292,31 @@ const PurchaseHistory = () => {
           <span className="text-sm text-gray-600 mr-2">Lọc nhanh:</span>
           <button
             onClick={() => handleQuickFilter('today')}
-            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs hover:bg-blue-200 transition-colors"
+            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs hover:bg-blue-200 transition-colors flex items-center gap-1"
           >
-            📅 Hôm nay
+            <Calendar className="w-3 h-3" />
+            Hôm nay
           </button>
           <button
             onClick={() => handleQuickFilter('week')}
-            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs hover:bg-green-200 transition-colors"
+            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs hover:bg-green-200 transition-colors flex items-center gap-1"
           >
-            📊 Tuần này
+            <BarChart3 className="w-3 h-3" />
+            Tuần này
           </button>
           <button
             onClick={() => handleQuickFilter('success')}
-            className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs hover:bg-emerald-200 transition-colors"
+            className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs hover:bg-emerald-200 transition-colors flex items-center gap-1"
           >
-            ✅ Thành công
+            <CheckCircle className="w-3 h-3" />
+            Thành công
           </button>
           <button
             onClick={() => handleQuickFilter('pending')}
-            className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs hover:bg-yellow-200 transition-colors"
+            className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs hover:bg-yellow-200 transition-colors flex items-center gap-1"
           >
-            ⏳ Đang xử lý
+            <Clock className="w-3 h-3" />
+            Đang xử lý
           </button>
         </div>
       </div>
@@ -309,7 +327,7 @@ const PurchaseHistory = () => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-gray-800 flex items-center">
-              <span className="mr-3">💳</span>
+              <CreditCard className="w-5 h-5 mr-3" />
               Lịch sử giao dịch
             </h3>
             <div className="flex items-center space-x-3">
@@ -360,7 +378,16 @@ const PurchaseHistory = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((tx) => (
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center">
+                    <div className="text-6xl mb-4">📋</div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">Chưa có giao dịch nào</h3>
+                    <p className="text-gray-600">Bạn chưa mua tín chỉ carbon nào. Hãy khám phá marketplace để bắt đầu!</p>
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -396,7 +423,7 @@ const PurchaseHistory = () => {
                     <div className={`text-sm font-bold ${
                       tx.status === 'failed' ? 'text-red-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-green-600'
                     }`}>
-                      {tx.value > 0 ? formatCurrencyFromUsd(tx.value) : '0.00'}
+                      {tx.value > 0 ? formatCurrency(tx.value) : '0 VNĐ'}
                     </div>
                     <div className="text-xs text-gray-500">
                       {tx.value > 0 ? `${formatCurrencyFromUsd(tx.pricePerCredit)}/tín chỉ` : 'Giao dịch thất bại'}
@@ -415,7 +442,7 @@ const PurchaseHistory = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -424,7 +451,7 @@ const PurchaseHistory = () => {
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Hiển thị 7 trong tổng số 15 giao dịch
+              Hiển thị {transactions.length} trong tổng số {summary.total} giao dịch
             </div>
             <div className="flex items-center space-x-2">
               <button className="px-3 py-1 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">

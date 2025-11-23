@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Share2, ShoppingCart, Check, Shield, MessageCircle, Gavel } from 'lucide-react';
+import { ArrowLeft, Save, Share2, ShoppingCart, Check, Shield, MessageCircle, Gavel, Star } from 'lucide-react';
 import { useListingDetail } from '../../../hooks/useBuyer';
 import Modal from '../../../components/common/Modal';
 import Loading from '../../../components/common/Loading';
@@ -172,7 +172,7 @@ const ListingDetail = () => {
                       )}
                       {listingData.rating && (
                         <div className="flex items-center text-yellow-600">
-                          <span className="mr-1">⭐</span>
+                          <Star className="w-4 h-4 mr-1 fill-current" />
                           <span className="font-medium">{listingData.rating}/5 ({listingData.reviews} đánh giá)</span>
                         </div>
                       )}
@@ -488,10 +488,11 @@ const ListingDetail = () => {
                   <span className="text-gray-600">Đã bán:</span>
                   <span className="font-semibold">{listingData.totalSold || 2340} tín chỉ</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-gray-600">Đánh giá:</span>
-                  <span className="font-semibold text-yellow-600">
-                    ⭐ {listingData.rating || 4.8}/5
+                  <span className="font-semibold text-yellow-600 flex items-center">
+                    <Star className="w-4 h-4 mr-1 fill-current" />
+                    {listingData.rating || 4.8}/5
                   </span>
                 </div>
                 <div className="flex justify-between">

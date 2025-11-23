@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check } from 'lucide-react';
+import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check, Info, Lock } from 'lucide-react';
+import { useAuction, usePlaceBid } from '../../../hooks/useBuyer';
 import Modal from '../../../components/common/Modal';
+import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
-import { formatCurrencyFromUsd } from '../../../utils';
+import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
 
 const AuctionPage = () => {
   const { id } = useParams();
@@ -11,65 +13,74 @@ const AuctionPage = () => {
   const location = useLocation();
   const countdownIntervalRef = useRef(null);
 
-  // Get auction data from location state or use defaults
-  const initialAuctionData = location.state || {
-    listingId: id || 'CC-002',
-    seller: 'Trần Thị B',
-    vehicle: 'VinFast VF8',
-    credits: 85,
-    startingPrice: 18.00,
-    currentPrice: 22.00,
-    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000 + 30 * 1000), // 2h 45m 30s from now
-    region: 'TP. Hồ Chí Minh',
-    co2Saved: '2.1 tấn',
-    mileage: '28,500 km',
-    rating: 4.9,
-    reviews: 89,
-    description: 'Tín chỉ carbon từ xe VinFast VF8, chuyến đi liên tỉnh từ TP.HCM đến Đà Lạt. Hành trình xanh với cảnh quan tuyệt đẹp, góp phần giảm thiểu khí thải CO2 và bảo vệ môi trường.',
-  };
+  // Fetch auction data from database
+  const { data: auctionDataFromDB, isLoading, error, refetch } = useAuction(id);
+  const placeBidMutation = usePlaceBid();
 
-  const [auctionData, setAuctionData] = useState({
-    currentPrice: initialAuctionData.currentPrice || 22.00,
-    totalCredits: initialAuctionData.credits || 85,
-    endTime: initialAuctionData.endTime ? new Date(initialAuctionData.endTime) : new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000 + 30 * 1000),
-    isEnded: false,
-    winner: null,
-    totalBids: 12,
-    participants: 8,
-  });
+  // Get current user ID to check if user is winner
+  const currentUserId = localStorage.getItem('currentUserId') || 'buyer-user-id';
 
-  const [bidHistory, setBidHistory] = useState([
-    { id: 1, bidder: 'Buyer***789', amount: 22.00, time: '16:42:15', isWinning: true },
-    { id: 2, bidder: 'Green***456', amount: 21.50, time: '16:41:32', isWinning: false },
-    { id: 3, bidder: 'Eco***123', amount: 21.00, time: '16:40:18', isWinning: false },
-    { id: 4, bidder: 'Carbon***999', amount: 20.50, time: '16:38:45', isWinning: false },
-    { id: 5, bidder: 'Clean***777', amount: 20.00, time: '16:37:22', isWinning: false },
-    { id: 6, bidder: 'Buyer***789', amount: 19.50, time: '16:35:10', isWinning: false },
-    { id: 7, bidder: 'Green***456', amount: 19.00, time: '16:33:55', isWinning: false },
-    { id: 8, bidder: 'Eco***123', amount: 18.50, time: '16:32:30', isWinning: false },
-  ]);
+  // Process auction data from database
+  const auctionData = useMemo(() => {
+    if (!auctionDataFromDB) return null;
+    
+    const endTime = new Date(auctionDataFromDB.endTime);
+    const now = new Date();
+    const isEnded = now >= endTime || auctionDataFromDB.isEnded;
+    
+    // Get current user's bids
+    const userBids = auctionDataFromDB.bids?.filter(b => b.bidderId === currentUserId) || [];
+    const highestUserBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount)) : null;
+    const userIsWinning = isEnded && highestUserBid === auctionDataFromDB.currentPrice;
+    
+    // Format bid history with winning status
+    const bidHistory = (auctionDataFromDB.bids || []).map((bid, index) => {
+      const isWinning = index === 0 && bid.amount === auctionDataFromDB.currentPrice;
+      const date = new Date(bid.createdAt);
+      return {
+        id: bid.id,
+        bidder: bid.bidder,
+        amount: bid.amount,
+        time: date.toLocaleTimeString('vi-VN', { hour12: false }),
+        isWinning: isWinning,
+      };
+    });
+    
+    return {
+      ...auctionDataFromDB,
+      endTime: endTime,
+      isEnded: isEnded,
+      userBids: userBids,
+      userIsWinning: userIsWinning,
+      bidHistory: bidHistory,
+    };
+  }, [auctionDataFromDB, currentUserId]);
 
-  const [userBids, setUserBids] = useState([]);
   const [bidAmount, setBidAmount] = useState('');
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [showEndModal, setShowEndModal] = useState(false);
-  const [userWon, setUserWon] = useState(false);
 
   // Countdown timer
   useEffect(() => {
-    const updateCountdown = () => {
-      if (auctionData.isEnded) {
-        if (countdownIntervalRef.current) {
-          clearInterval(countdownIntervalRef.current);
-        }
-        return;
+    if (!auctionData || auctionData.isEnded) {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
       }
+      if (auctionData?.isEnded && !showEndModal) {
+        setTimeout(() => setShowEndModal(true), 1000);
+      }
+      return;
+    }
 
+    const updateCountdown = () => {
       const now = new Date().getTime();
       const distance = auctionData.endTime.getTime() - now;
 
       if (distance < 0) {
-        endAuction();
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+        refetch(); // Refresh to get updated status
         return;
       }
 
@@ -78,11 +89,6 @@ const AuctionPage = () => {
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
       setCountdown({ hours, minutes, seconds });
-
-      // Add urgency effects when time is running out
-      if (distance < 5 * 60 * 1000) {
-        // Less than 5 minutes - could add pulse animation class
-      }
     };
 
     updateCountdown();
@@ -93,50 +99,10 @@ const AuctionPage = () => {
         clearInterval(countdownIntervalRef.current);
       }
     };
-  }, [auctionData.isEnded, auctionData.endTime]);
-
-  // Simulate other bidders (for demo)
-  useEffect(() => {
-    if (auctionData.isEnded) return;
-
-    const simulateBid = () => {
-      if (Math.random() < 0.3 && !auctionData.isEnded) {
-        const bidders = ['Green***456', 'Eco***123', 'Carbon***999', 'Clean***777'];
-        const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
-        const newBid = auctionData.currentPrice + 0.5 + Math.random() * 2;
-
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('vi-VN', { hour12: false });
-
-        // Mark previous bids as not winning
-        const updatedHistory = bidHistory.map((bid) => ({ ...bid, isWinning: false }));
-        const updatedUserBids = userBids.map((bid) => ({ ...bid, isWinning: false }));
-
-        const newBidEntry = {
-          id: Date.now(),
-          bidder: randomBidder,
-          amount: parseFloat(newBid.toFixed(2)),
-          time: timeString,
-          isWinning: true,
-        };
-
-        setBidHistory([newBidEntry, ...updatedHistory]);
-        setAuctionData((prev) => ({
-          ...prev,
-          currentPrice: parseFloat(newBid.toFixed(2)),
-          totalBids: prev.totalBids + 1,
-        }));
-
-        toast.info(`🔔 ${randomBidder} đã đặt giá ${formatCurrencyFromUsd(newBid)}`);
-      }
-    };
-
-    const interval = setInterval(simulateBid, 10000 + Math.random() * 20000); // Random between 10-30 seconds
-
-    return () => clearInterval(interval);
-  }, [auctionData, bidHistory, userBids]);
+  }, [auctionData, showEndModal, refetch]);
 
   const quickBid = (amount) => {
+    if (!auctionData) return;
     const newBid = auctionData.currentPrice + amount;
     setBidAmount(newBid.toFixed(2));
   };
@@ -145,8 +111,8 @@ const AuctionPage = () => {
     setBidAmount(value);
   };
 
-  const placeBid = () => {
-    if (auctionData.isEnded) {
+  const placeBid = async () => {
+    if (!auctionData || auctionData.isEnded) {
       toast.error('❌ Đấu giá đã kết thúc!');
       return;
     }
@@ -154,63 +120,46 @@ const AuctionPage = () => {
     const bidValue = parseFloat(bidAmount);
     const minBid = auctionData.currentPrice + 0.5;
 
-    if (!bidValue || bidValue < minBid) {
-      toast.error(`❌ Giá đặt phải ít nhất ${formatCurrencyFromUsd(minBid)}`);
+    if (!bidValue || bidValue <= auctionData.currentPrice) {
+      toast.error(`❌ Giá đặt phải cao hơn giá hiện tại (${formatCurrencyFromUsd(auctionData.currentPrice)})`);
       return;
     }
 
-    // Update auction data
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('vi-VN', { hour12: false });
-
-    // Mark previous bids as not winning
-    const updatedHistory = bidHistory.map((bid) => ({ ...bid, isWinning: false }));
-    const updatedUserBids = userBids.map((bid) => ({ ...bid, isWinning: false }));
-
-    // Add new bid
-    const newBidEntry = {
-      id: Date.now(),
-      bidder: 'Bạn',
-      amount: bidValue,
-      time: timeString,
-      isWinning: true,
-    };
-
-    const newUserBid = {
-      id: Date.now(),
-      amount: bidValue,
-      time: timeString,
-      isWinning: true,
-    };
-
-    setBidHistory([newBidEntry, ...updatedHistory]);
-    setUserBids([newUserBid, ...updatedUserBids]);
-    setAuctionData((prev) => ({
-      ...prev,
-      currentPrice: bidValue,
-      totalBids: prev.totalBids + 1,
-    }));
-
-    setBidAmount('');
-    toast.success(`🎉 Đã đặt giá thành công ${formatCurrencyFromUsd(bidValue)}!`);
+    try {
+      await placeBidMutation.mutateAsync({
+        auctionId: id,
+        bidAmount: bidValue,
+      });
+      setBidAmount('');
+      refetch(); // Refresh auction data
+    } catch (error) {
+      // Error is handled by mutation
+    }
   };
 
-  const endAuction = () => {
-    setAuctionData((prev) => ({ ...prev, isEnded: true }));
-    const userIsWinner = userBids.some((bid) => bid.isWinning);
-    setUserWon(userIsWinner);
-    setTimeout(() => {
-      setShowEndModal(true);
-    }, 1000);
-  };
+  if (isLoading) {
+    return <Loading />;
+  }
 
-  const goBack = () => {
-    navigate('/buyer/marketplace');
-  };
+  if (error || !auctionData) {
+    return (
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-600">Không thể tải thông tin đấu giá. Vui lòng thử lại sau.</p>
+          <button
+            onClick={() => navigate('/buyer/marketplace')}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Quay về Marketplace
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const totalValue = auctionData.currentPrice * auctionData.totalCredits;
+  const totalValue = auctionData.currentPrice * auctionData.quantity;
   const minBid = auctionData.currentPrice + 0.5;
-  const totalIfWin = parseFloat(bidAmount || auctionData.currentPrice) * auctionData.totalCredits;
+  const totalIfWin = parseFloat(bidAmount || auctionData.currentPrice) * auctionData.quantity;
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -220,7 +169,7 @@ const AuctionPage = () => {
           <div>
             <div className="flex items-center mb-2">
               <button
-                onClick={goBack}
+                onClick={() => navigate('/buyer/marketplace')}
                 className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -255,24 +204,18 @@ const AuctionPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mr-4">
-                      {initialAuctionData.seller?.charAt(0) || 'T'}
+                      {auctionData.seller?.full_name?.charAt(0) || 'T'}
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800">{initialAuctionData.seller || 'Trần Thị B'}</h2>
+                      <h2 className="text-2xl font-bold text-gray-800">{auctionData.seller?.full_name || 'Unknown'}</h2>
                       <div className="flex items-center mt-1 space-x-4">
                         <div className="flex items-center text-green-600">
                           <Check className="mr-1 w-4 h-4" />
                           <span className="font-medium">Đã xác minh</span>
                         </div>
-                        <div className="flex items-center text-yellow-600">
-                          <span className="mr-1">⭐</span>
-                          <span className="font-medium">
-                            {initialAuctionData.rating || 4.9}/5 ({initialAuctionData.reviews || 89} đánh giá)
-                          </span>
-                        </div>
                         <div className="flex items-center text-gray-600">
                           <span className="mr-1">📍</span>
-                          <span className="font-medium">{initialAuctionData.region || 'TP. Hồ Chí Minh'}</span>
+                          <span className="font-medium">Hà Nội</span>
                         </div>
                       </div>
                     </div>
@@ -293,7 +236,7 @@ const AuctionPage = () => {
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Số lượng tín chỉ</span>
-                        <span className="text-3xl font-bold text-blue-600">{auctionData.totalCredits}</span>
+                        <span className="text-3xl font-bold text-blue-600">{auctionData.quantity}</span>
                       </div>
                     </div>
 
@@ -301,7 +244,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Giá khởi điểm</span>
                         <span className="text-2xl font-bold text-green-600">
-                          {formatCurrencyFromUsd(initialAuctionData.startingPrice || 18.0)}
+                          {formatCurrencyFromUsd(auctionData.startingPrice)}
                         </span>
                       </div>
                     </div>
@@ -330,32 +273,34 @@ const AuctionPage = () => {
                 </div>
 
                 {/* Countdown Timer */}
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-amber-300 p-6 rounded-xl mb-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center">
-                    <Clock className="mr-2 w-5 h-5" />
-                    Thời gian còn lại
-                  </h3>
-                  <div className="flex justify-center space-x-4">
-                    <div className="text-center">
-                      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
-                        {countdown.hours.toString().padStart(2, '0')}
+                {!auctionData.isEnded && (
+                  <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-amber-300 p-6 rounded-xl mb-6">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center">
+                      <Clock className="mr-2 w-5 h-5" />
+                      Thời gian còn lại
+                    </h3>
+                    <div className="flex justify-center space-x-4">
+                      <div className="text-center">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
+                          {countdown.hours.toString().padStart(2, '0')}
+                        </div>
+                        <div className="text-sm font-medium text-gray-700 mt-2">Giờ</div>
                       </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">Giờ</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
-                        {countdown.minutes.toString().padStart(2, '0')}
+                      <div className="text-center">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
+                          {countdown.minutes.toString().padStart(2, '0')}
+                        </div>
+                        <div className="text-sm font-medium text-gray-700 mt-2">Phút</div>
                       </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">Phút</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
-                        {countdown.seconds.toString().padStart(2, '0')}
+                      <div className="text-center">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg min-w-[60px] h-[60px] flex items-center justify-center font-bold text-2xl shadow-lg">
+                          {countdown.seconds.toString().padStart(2, '0')}
+                        </div>
+                        <div className="text-sm font-medium text-gray-700 mt-2">Giây</div>
                       </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">Giây</div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Description */}
                 <div className="bg-gray-50 rounded-xl p-6">
@@ -364,17 +309,16 @@ const AuctionPage = () => {
                     Mô tả tín chỉ
                   </h3>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    {initialAuctionData.description ||
-                      'Tín chỉ carbon từ xe VinFast VF8, chuyến đi liên tỉnh từ TP.HCM đến Đà Lạt. Hành trình xanh với cảnh quan tuyệt đẹp, góp phần giảm thiểu khí thải CO2 và bảo vệ môi trường.'}
+                    Tín chỉ carbon được tạo ra từ việc sử dụng xe điện cho các chuyến đi. Xe được bảo dưỡng định kỳ và đảm bảo hiệu suất tối ưu, góp phần giảm thiểu lượng khí thải CO2 so với xe xăng truyền thống.
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-white p-3 rounded-lg">
-                      <div className="text-sm text-gray-600">🚗 Xe: {initialAuctionData.vehicle || 'VinFast VF8'}</div>
-                      <div className="text-sm text-gray-600">📏 Quãng đường: {initialAuctionData.mileage || '28,500 km'}</div>
+                      <div className="text-sm text-gray-600">🚗 Xe: {auctionData.vehicle?.license_plate || 'Electric Vehicle'}</div>
+                      <div className="text-sm text-gray-600">🌱 Giảm: {(auctionData.quantity * 0.1).toFixed(1)} tấn CO2</div>
                     </div>
                     <div className="bg-white p-3 rounded-lg">
-                      <div className="text-sm text-gray-600">🌱 Giảm: {initialAuctionData.co2Saved || '2.1 tấn'} CO2</div>
                       <div className="text-sm text-gray-600">🏆 Chuẩn: VCS Verified</div>
+                      <div className="text-sm text-gray-600">✅ Đã xác minh CVA</div>
                     </div>
                   </div>
                 </div>
@@ -391,38 +335,44 @@ const AuctionPage = () => {
               </div>
               <div className="p-6">
                 <div className="space-y-3">
-                  {bidHistory.map((bid, index) => (
-                    <div
-                      key={bid.id}
-                      className={`p-4 rounded-lg transition-all border-l-4 ${
-                        bid.isWinning
-                          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-green-500'
-                          : 'bg-gray-50 border-l-transparent hover:border-l-blue-500 hover:bg-gray-100'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                            {index + 1}
+                  {auctionData.bidHistory && auctionData.bidHistory.length > 0 ? (
+                    auctionData.bidHistory.map((bid, index) => (
+                      <div
+                        key={bid.id}
+                        className={`p-4 rounded-lg transition-all border-l-4 ${
+                          bid.isWinning
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-green-500'
+                            : 'bg-gray-50 border-l-transparent hover:border-l-blue-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-800">{bid.bidder}</div>
+                              <div className="text-sm text-gray-600">{bid.time}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-semibold text-gray-800">{bid.bidder}</div>
-                            <div className="text-sm text-gray-600">{bid.time}</div>
+                          <div className="text-right">
+                            <div
+                              className={`text-xl font-bold ${bid.isWinning ? 'text-green-600' : 'text-gray-800'}`}
+                            >
+                              {formatCurrencyFromUsd(bid.amount)}
+                            </div>
+                            {bid.isWinning && (
+                              <div className="text-sm text-green-600 font-medium">🏆 Đang dẫn đầu</div>
+                            )}
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div
-                            className={`text-xl font-bold ${bid.isWinning ? 'text-green-600' : 'text-gray-800'}`}
-                          >
-                            {formatCurrencyFromUsd(bid.amount)}
-                          </div>
-                          {bid.isWinning && (
-                            <div className="text-sm text-green-600 font-medium">🏆 Đang dẫn đầu</div>
-                          )}
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-sm">Chưa có lượt đặt giá nào</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -448,23 +398,23 @@ const AuctionPage = () => {
                     <div className="text-sm text-gray-600 mb-1">Giá hiện tại cao nhất</div>
                     <div className="text-3xl font-bold text-blue-600">{formatCurrencyFromUsd(auctionData.currentPrice)}</div>
                     <div className="text-sm text-gray-600 mt-1">
-                      bởi {bidHistory.find((b) => b.isWinning)?.bidder || 'Buyer***789'}
+                      bởi {auctionData.bidHistory?.find((b) => b.isWinning)?.bidder || 'Chưa có'}
                     </div>
                   </div>
                 </div>
 
                 {/* Bid Input */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (VNĐ)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (USD)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">₫</span>
+                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">$</span>
                     <input
                       type="number"
                       value={bidAmount}
                       onChange={(e) => updateBidCalculation(e.target.value)}
                       step="0.50"
                       min={minBid}
-                      disabled={auctionData.isEnded}
+                      disabled={auctionData.isEnded || placeBidMutation.isPending}
                       placeholder={minBid.toFixed(2)}
                       className="w-full pl-8 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
@@ -478,7 +428,7 @@ const AuctionPage = () => {
                     <button
                       key={amount}
                       onClick={() => quickBid(amount)}
-                      disabled={auctionData.isEnded}
+                      disabled={auctionData.isEnded || placeBidMutation.isPending}
                       className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       +{formatCurrencyFromUsd(amount)}
@@ -497,7 +447,7 @@ const AuctionPage = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Số lượng:</span>
-                      <span className="font-semibold text-gray-800">{auctionData.totalCredits} tín chỉ</span>
+                      <span className="font-semibold text-gray-800">{auctionData.quantity} tín chỉ</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2">
                       <div className="flex justify-between items-center">
@@ -513,21 +463,36 @@ const AuctionPage = () => {
                 {/* Bid Button */}
                 <button
                   onClick={placeBid}
-                  disabled={auctionData.isEnded}
+                  disabled={auctionData.isEnded || placeBidMutation.isPending || !bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice}
                   className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 mb-4 ${
-                    auctionData.isEnded
+                    auctionData.isEnded || placeBidMutation.isPending || !bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg text-white'
                   }`}
                 >
-                  {auctionData.isEnded ? '⏰ Đấu giá đã kết thúc' : '🔨 Đặt giá'}
+                  {placeBidMutation.isPending ? (
+                    '⏳ Đang xử lý...'
+                  ) : auctionData.isEnded ? (
+                    '⏰ Đấu giá đã kết thúc'
+                  ) : (
+                    '🔨 Đặt giá'
+                  )}
                 </button>
 
                 {/* Info */}
-                <div className="text-center text-sm text-gray-600">
-                  <p className="mb-1">💡 Bạn chỉ thanh toán khi thắng đấu giá</p>
-                  <p className="mb-1">🔒 Giao dịch được bảo mật 100%</p>
-                  <p>⚡ Kết quả sẽ có ngay khi kết thúc</p>
+                <div className="text-center text-sm text-gray-600 space-y-1">
+                  <p className="flex items-center justify-center gap-1">
+                    <Info className="w-4 h-4" />
+                    Bạn chỉ thanh toán khi thắng đấu giá
+                  </p>
+                  <p className="flex items-center justify-center gap-1">
+                    <Lock className="w-4 h-4" />
+                    Giao dịch được bảo mật 100%
+                  </p>
+                  <p className="flex items-center justify-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Kết quả sẽ có ngay khi kết thúc
+                  </p>
                 </div>
               </div>
             </div>
@@ -542,11 +507,11 @@ const AuctionPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Số lượt đặt giá:</span>
-                    <span className="font-semibold">{auctionData.totalBids}</span>
+                    <span className="font-semibold">{auctionData.totalBids || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Người tham gia:</span>
-                    <span className="font-semibold">{auctionData.participants} người</span>
+                    <span className="font-semibold">{auctionData.participants || 0} người</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tăng giá trung bình:</span>
@@ -555,12 +520,12 @@ const AuctionPage = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Thời gian bắt đầu:</span>
                     <span className="font-semibold">
-                      {new Date(auctionData.endTime.getTime() - 2 * 60 * 60 * 1000 - 45 * 60 * 1000 - 30 * 1000).toLocaleString('vi-VN', {
+                      {auctionData.endTime ? new Date(new Date(auctionData.endTime).getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleString('vi-VN', {
                         day: '2-digit',
                         month: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit',
-                      })}
+                      }) : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -575,20 +540,24 @@ const AuctionPage = () => {
                   Giá của bạn
                 </h3>
                 <div className="space-y-2">
-                  {userBids.length === 0 ? (
-                    <div className="text-sm text-gray-500 text-center py-4">Bạn chưa đặt giá nào</div>
+                  {auctionData.userBids && auctionData.userBids.length > 0 ? (
+                    auctionData.userBids.map((bid) => {
+                      const date = new Date(bid.createdAt);
+                      const isWinning = bid.amount === auctionData.currentPrice && auctionData.isEnded;
+                      return (
+                        <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <div className="font-semibold text-gray-800">{formatCurrencyFromUsd(bid.amount)}</div>
+                            <div className="text-sm text-gray-600">{date.toLocaleTimeString('vi-VN', { hour12: false })}</div>
+                          </div>
+                          <div className={`text-sm font-medium ${isWinning ? 'text-green-600' : 'text-gray-500'}`}>
+                            {isWinning ? '🏆 Đang dẫn đầu' : '📉 Bị vượt qua'}
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
-                    userBids.map((bid) => (
-                      <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <div className="font-semibold text-gray-800">{formatCurrencyFromUsd(bid.amount)}</div>
-                          <div className="text-sm text-gray-600">{bid.time}</div>
-                        </div>
-                        <div className={`text-sm font-medium ${bid.isWinning ? 'text-green-600' : 'text-gray-500'}`}>
-                          {bid.isWinning ? '🏆 Đang dẫn đầu' : '📉 Bị vượt qua'}
-                        </div>
-                      </div>
-                    ))
+                    <div className="text-sm text-gray-500 text-center py-4">Bạn chưa đặt giá nào</div>
                   )}
                 </div>
               </div>
@@ -598,36 +567,40 @@ const AuctionPage = () => {
       </div>
 
       {/* Auction End Modal */}
-      <Modal isOpen={showEndModal} onClose={() => setShowEndModal(false)} title={userWon ? 'Chúc mừng!' : 'Đấu giá đã kết thúc'}>
+      <Modal 
+        isOpen={showEndModal} 
+        onClose={() => setShowEndModal(false)} 
+        title={auctionData?.userIsWinning ? 'Chúc mừng!' : 'Đấu giá đã kết thúc'}
+      >
         <div className="text-center">
           <div
             className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              userWon ? 'bg-green-100' : 'bg-gray-100'
+              auctionData?.userIsWinning ? 'bg-green-100' : 'bg-gray-100'
             }`}
           >
-            <span className="text-4xl">{userWon ? '🎉' : '😔'}</span>
+            <span className="text-4xl">{auctionData?.userIsWinning ? '🎉' : '😔'}</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-800 mb-2">
-            {userWon ? 'Chúc mừng! Bạn đã thắng cuộc!' : 'Đấu giá đã kết thúc'}
+            {auctionData?.userIsWinning ? 'Chúc mừng! Bạn đã thắng cuộc!' : 'Đấu giá đã kết thúc'}
           </h3>
           <p className="text-gray-600 mb-6">
-            {userWon
+            {auctionData?.userIsWinning
               ? 'Bạn đã thắng đấu giá tín chỉ carbon này!'
               : 'Rất tiếc, bạn không thắng cuộc đấu giá này.'}
           </p>
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="space-y-2 text-left">
               <div className="flex justify-between">
-                <span className="text-gray-600">{userWon ? 'Giá thắng:' : 'Giá thắng cuộc:'}</span>
-                <span className={`font-bold ${userWon ? 'text-green-600' : 'text-gray-800'}`}>
-                  {formatCurrencyFromUsd(auctionData.currentPrice)}
+                <span className="text-gray-600">{auctionData?.userIsWinning ? 'Giá thắng:' : 'Giá thắng cuộc:'}</span>
+                <span className={`font-bold ${auctionData?.userIsWinning ? 'text-green-600' : 'text-gray-800'}`}>
+                  {formatCurrencyFromUsd(auctionData?.currentPrice || 0)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Số lượng:</span>
-                <span className="font-semibold">{auctionData.totalCredits} tín chỉ</span>
+                <span className="font-semibold">{auctionData?.quantity || 0} tín chỉ</span>
               </div>
-              {userWon && (
+              {auctionData?.userIsWinning && (
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-lg font-bold">Tổng thanh toán:</span>
                   <span className="text-lg font-bold text-green-600">
@@ -635,27 +608,25 @@ const AuctionPage = () => {
                   </span>
                 </div>
               )}
-              {!userWon && (
+              {!auctionData?.userIsWinning && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Người thắng:</span>
-                  <span className="font-semibold">{bidHistory.find((b) => b.isWinning)?.bidder || 'Buyer***789'}</span>
+                  <span className="font-semibold">{auctionData?.bidHistory?.find((b) => b.isWinning)?.bidder || 'Unknown'}</span>
                 </div>
               )}
             </div>
           </div>
           <div className="space-y-3">
-            {userWon && (
+            {auctionData?.userIsWinning && (
               <button
                 onClick={() => {
                   setShowEndModal(false);
                   navigate('/buyer/checkout', {
                     state: {
-                      listingId: initialAuctionData.listingId,
-                      seller: initialAuctionData.seller,
-                      vehicle: initialAuctionData.vehicle,
-                      mileage: initialAuctionData.mileage,
-                      co2Saved: initialAuctionData.co2Saved,
-                      quantity: auctionData.totalCredits,
+                      listingId: id,
+                      seller: auctionData.seller?.full_name,
+                      vehicle: auctionData.vehicle?.license_plate || 'Electric Vehicle',
+                      quantity: auctionData.quantity,
                       pricePerCredit: auctionData.currentPrice,
                       transactionFee: 15.00,
                     },
@@ -673,7 +644,7 @@ const AuctionPage = () => {
               }}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold transition-colors"
             >
-              {userWon ? 'Xem chứng nhận' : 'Quay về Marketplace'}
+              {auctionData?.userIsWinning ? 'Xem chứng nhận' : 'Quay về Marketplace'}
             </button>
           </div>
         </div>
@@ -683,4 +654,3 @@ const AuctionPage = () => {
 };
 
 export default AuctionPage;
-

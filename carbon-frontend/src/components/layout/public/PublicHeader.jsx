@@ -26,9 +26,7 @@ const PublicHeader = () => {
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
                 <div className="flex-shrink-0 flex items-center">
-                  <div className="w-10 h-10 gradient-green rounded-lg flex items-center justify-center mr-3">
-                    <span className="text-white font-bold text-xl">🌱</span>
-                  </div>
+                  <img src="/logo.png" alt="Carbon Credit Marketplace" className="w-10 h-10 mr-3" />
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">Carbon Credit</h1>
                     <p className="text-xs text-gray-600">Marketplace</p>
@@ -94,9 +92,7 @@ const PublicHeader = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center">
-                <div className="w-8 h-8 gradient-green rounded-lg flex items-center justify-center mr-2">
-                  <span className="text-white font-bold">🌱</span>
-                </div>
+                <img src="/logo.png" alt="Carbon Credit Marketplace" className="w-8 h-8 mr-2" />
                 <span className="font-bold text-gray-900">Carbon Credit</span>
               </div>
               <button

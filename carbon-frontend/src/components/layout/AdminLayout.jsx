@@ -132,8 +132,8 @@ const AdminLayout = () => {
         {/* Logo Section */}
         <div className="p-6 border-b border-gray-600">
           <div className="flex items-center">
-            <div className="w-14 h-14 bg-white bg-opacity-15 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm">
-              <span className="text-3xl">⚡</span>
+            <div className="w-14 h-14 bg-white bg-opacity-15 rounded-xl flex items-center justify-center mr-4 backdrop-filter backdrop-blur-sm p-2">
+              <img src="/logo.png" alt="Carbon Credit Marketplace" className="w-full h-full object-contain" />
             </div>
             <div>
               <h2 className="font-bold text-xl">Admin Dashboard</h2>

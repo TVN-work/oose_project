@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, Shield, Check, CreditCard, Building2, Wallet } from 'lucide-react';
-import { usePurchase } from '../../../hooks/useBuyer';
+import { ArrowLeft, Shield, Check, CreditCard, Building2, Wallet, Info } from 'lucide-react';
+import { usePurchase, useProcessPayment } from '../../../hooks/useBuyer';
+import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../../../components/common/Modal';
 import toast from 'react-hot-toast';
-import { formatCurrencyFromUsd } from '../../../utils';
+import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const purchaseMutation = usePurchase();
+  const paymentMutation = useProcessPayment();
+  const queryClient = useQueryClient();
 
   // Get order data from navigation state or use defaults
   const orderData = location.state || {
@@ -28,6 +31,8 @@ const Checkout = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [purchasedCredits, setPurchasedCredits] = useState(null);
+  const [transactionId, setTransactionId] = useState(null);
   const [cardData, setCardData] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -109,24 +114,65 @@ const Checkout = () => {
     }
 
     setIsProcessing(true);
-    toast.loading('⏳ Đang xử lý thanh toán...', { id: 'payment-processing' });
+    toast.loading('⏳ Đang tạo đơn hàng...', { id: 'payment-processing' });
 
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      // Call purchase API
-      await purchaseMutation.mutateAsync({
+      // Step 1: Create purchase transaction (API Gateway → Transaction Service)
+      const purchaseResult = await purchaseMutation.mutateAsync({
         creditId: orderData.listingId,
-        amount: total,
+        amount: total, // Amount in USD
         quantity: quantity,
       });
 
+      const txId = purchaseResult.transactionId || purchaseResult.transaction?.id;
+      if (!txId) {
+        throw new Error('Không nhận được transaction ID');
+      }
+
+      setTransactionId(txId);
       toast.dismiss('payment-processing');
-      setShowSuccessModal(true);
+      toast.loading('⏳ Đang xử lý thanh toán...', { id: 'payment-processing' });
+
+      // Step 2: Process payment (API Gateway → Payment Service)
+      const paymentData = {
+        paymentMethod: selectedPaymentMethod,
+        wallet: selectedWallet,
+        cardData: selectedPaymentMethod === 'credit_card' ? cardData : null,
+      };
+
+      const paymentResult = await paymentMutation.mutateAsync({
+        transactionId: txId,
+        paymentData: paymentData,
+      });
+
+      toast.dismiss('payment-processing');
+
+      // Step 3: If payment successful, credits are added to wallet (API Gateway → Carbon-Wallet Service)
+      // This is handled by backend automatically
+      if (paymentResult.success) {
+        // Invalidate queries to refresh wallet and purchase history
+        queryClient.invalidateQueries({ queryKey: ['buyer', 'purchase-history'] });
+        queryClient.invalidateQueries({ queryKey: ['buyer', 'certificates'] });
+        queryClient.invalidateQueries({ queryKey: ['buyer', 'dashboard'] });
+        
+        // Dispatch event to update wallet (if wallet component is listening)
+        window.dispatchEvent(new CustomEvent('credits-purchased', {
+          detail: {
+            transactionId: txId,
+            credits: quantity,
+            amount: total,
+          }
+        }));
+
+        setPurchasedCredits(quantity);
+        setShowSuccessModal(true);
+        toast.success(`✅ Thanh toán thành công! ${quantity} tín chỉ đã được thêm vào ví của bạn.`);
+      } else {
+        throw new Error('Thanh toán thất bại');
+      }
     } catch (error) {
       toast.dismiss('payment-processing');
-      toast.error('❌ Thanh toán thất bại. Vui lòng thử lại!');
+      toast.error(`❌ ${error.message || 'Thanh toán thất bại. Vui lòng thử lại!'}`);
       console.error('Payment error:', error);
     } finally {
       setIsProcessing(false);
@@ -419,8 +465,9 @@ const Checkout = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="text-sm text-gray-600">
-                            💡 Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xác nhận.
+                          <div className="flex items-start text-sm text-gray-600">
+                            <Info className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xác nhận.</span>
                           </div>
                         </div>
                       )}
@@ -554,7 +601,7 @@ const Checkout = () => {
           </div>
           <h3 className="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công!</h3>
           <p className="text-gray-600 mb-6">
-            Bạn đã sở hữu {quantity} tín chỉ carbon từ {orderData.seller || 'Trần Thị B'}
+            Bạn đã sở hữu {purchasedCredits || quantity} tín chỉ carbon từ {orderData.seller || 'Trần Thị B'}
           </p>
 
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -562,22 +609,32 @@ const Checkout = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Mã giao dịch:</span>
                 <span className="font-semibold text-green-600">
-                  #{purchaseMutation.data?.transactionId || 'CC001234'}
+                  #{transactionId || purchaseMutation.data?.transactionId || 'CC001234'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Số lượng:</span>
-                <span className="font-semibold">{quantity} tín chỉ</span>
+                <span className="font-semibold">{purchasedCredits || quantity} tín chỉ</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tổng thanh toán:</span>
                 <span className="font-semibold text-green-600">
-                  ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrencyFromUsd(total)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Thời gian:</span>
                 <span className="font-semibold">{new Date().toLocaleString('vi-VN')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center text-blue-700">
+              <span className="text-2xl mr-2">✅</span>
+              <div className="text-sm">
+                <div className="font-semibold">Tín chỉ đã được thêm vào ví của bạn</div>
+                <div className="text-xs mt-1">Bạn có thể xem số dư tín chỉ trong Dashboard hoặc Ví Carbon</div>
               </div>
             </div>
           </div>

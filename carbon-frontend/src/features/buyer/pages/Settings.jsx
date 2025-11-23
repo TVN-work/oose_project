@@ -1,480 +1,513 @@
-import { useState } from 'react';
-import { formatCurrencyFromUsd } from '../../../utils';
-import { Edit, Wallet, Lock, User, Bell, Download, Pause, Trash2, CreditCard, RefreshCw, FileText, Building2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from 'react';
+import { User, Lock, Bell, Key, Info, Loader2, Eye, EyeOff, Mail, Phone, Calendar, Save } from 'lucide-react';
+import Alert from '../../../components/common/Alert';
+import { useAlert } from '../../../hooks/useAlert';
+import { authService } from '../../../services/auth/authService';
+import { useAuth } from '../../../context/AuthContext';
 
 const Settings = () => {
-  const [privacySettings, setPrivacySettings] = useState({
-    publicProfile: true,
-    allowContact: true,
-    shareAnalytics: false,
+  const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
+  const { user, setUser } = useAuth();
+  
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  
+  // Password visibility states
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Profile form data
+  const [profileData, setProfileData] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    dob: '',
   });
-
-  const [notificationSettings, setNotificationSettings] = useState({
+  
+  const [notifications, setNotifications] = useState({
     transaction: true,
+    purchase: true,
     auction: true,
-    emailMarketing: false,
-    sms: true,
+    certificate: true,
+    weeklyReport: false,
+    monthlyReport: false,
   });
+  
+  // Load user data into form
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        fullName: user.full_name || user.name || '',
+        email: user.email || '',
+        phoneNumber: user.phone_number || user.phone || '',
+        dob: user.dob || '',
+      });
+    }
+  }, [user]);
+  
+  // Password validation function
+  const validatePassword = (password) => {
+    const errors = [];
+    
+    if (password.length < 8) {
+      errors.push('Mật khẩu phải có ít nhất 8 ký tự');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Mật khẩu phải có ít nhất 1 chữ hoa');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Mật khẩu phải có ít nhất 1 chữ thường');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('Mật khẩu phải có ít nhất 1 số');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...)');
+    }
+    
+    return errors;
+  };
 
-  const handleToggle = (category, key) => {
-    if (category === 'privacy') {
-      setPrivacySettings({ ...privacySettings, [key]: !privacySettings[key] });
-    } else {
-      setNotificationSettings({ ...notificationSettings, [key]: !notificationSettings[key] });
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!profileData.fullName || profileData.fullName.trim() === '') {
+      showAlert('Vui lòng nhập họ và tên', 'error');
+      return;
+    }
+    
+    if (!profileData.email || profileData.email.trim() === '') {
+      showAlert('Vui lòng nhập email', 'error');
+      return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(profileData.email)) {
+      showAlert('Email không hợp lệ', 'error');
+      return;
+    }
+    
+    setIsUpdatingProfile(true);
+    try {
+      const response = await authService.updateProfile({
+        fullName: profileData.fullName.trim(),
+        email: profileData.email.trim(),
+        phoneNumber: profileData.phoneNumber.trim() || null,
+        dob: profileData.dob || null,
+      });
+      
+      // Update user in context
+      if (response.user) {
+        setUser(response.user);
+      }
+      
+      showAlert('Đã cập nhật thông tin cá nhân thành công!', 'success');
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Có lỗi xảy ra khi cập nhật thông tin';
+      
+      // Check for specific errors
+      const errorLower = errorMessage.toLowerCase();
+      if (errorLower.includes('email') && errorLower.includes('exist')) {
+        showAlert('Email này đã được sử dụng. Vui lòng chọn email khác!', 'error');
+      } else {
+        showAlert(errorMessage, 'error');
+      }
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
-  const handleAction = (action) => {
-    switch (action) {
-      case 'editProfile':
-        toast.success('Đang mở form chỉnh sửa thông tin cá nhân...');
-        break;
-      case 'manageWallet':
-        toast.success('Đang chuyển đến trang quản lý ví điện tử...');
-        break;
-      case 'addFunds':
-        toast.success('Đang mở form nạp tiền vào ví. Chọn phương thức thanh toán...');
-        break;
-      case 'withdrawFunds':
-        toast.success('Đang mở form rút tiền. Vui lòng xác minh danh tính...');
-        break;
-      case 'viewWalletHistory':
-        toast.success('Đang tải lịch sử giao dịch ví điện tử...');
-        break;
-      case 'setupAutoReload':
-        toast.success('Đang thiết lập tự động nạp tiền khi số dư thấp...');
-        break;
-      case 'changePassword':
-        toast.success('Đang mở form đổi mật khẩu. Vui lòng nhập mật khẩu hiện tại...');
-        break;
-      case 'manage2FA':
-        toast.success('Đang mở cài đặt xác thực 2 bước. Quét mã QR bằng app...');
-        break;
-      case 'manageSecurityQuestions':
-        toast.success('Đang cập nhật câu hỏi bảo mật. Chọn 3 câu hỏi mới...');
-        break;
-      case 'verifyIncome':
-        toast.success('Đang mở form xác minh thu nhập. Tải lên bảng lương hoặc hợp đồng...');
-        break;
-      case 'manageBankAccount':
-        toast.success('Đang quản lý tài khoản ngân hàng liên kết. Thêm/xóa tài khoản...');
-        break;
-      case 'exportAccountData':
-        toast.success('Đang chuẩn bị file dữ liệu tài khoản. Sẽ gửi qua email...');
-        setTimeout(() => {
-          toast.success('✅ Đã gửi file dữ liệu tài khoản đến email của bạn!');
-        }, 3000);
-        break;
-      case 'deactivateAccount':
-        if (window.confirm('⚠️ Bạn có chắc muốn tạm khóa tài khoản? Bạn sẽ không thể đăng nhập cho đến khi kích hoạt lại.')) {
-          toast.success('⏸️ Đang tạm khóa tài khoản. Bạn có thể kích hoạt lại bất cứ lúc nào...');
-        }
-        break;
-      case 'deleteAccount':
-        if (window.confirm('🚨 CẢNH BÁO: Việc xóa tài khoản không thể hoàn tác!\n\nTất cả dữ liệu, giao dịch và chứng nhận sẽ bị xóa vĩnh viễn.\n\nBạn có chắc chắn muốn tiếp tục?')) {
-          if (window.confirm('🔐 Để xác nhận, vui lòng nhập mật khẩu và mã xác thực 2FA.\n\nBạn có muốn tiếp tục quy trình xóa tài khoản?')) {
-            toast.error('🗑️ Đang khởi tạo quy trình xóa tài khoản. Kiểm tra email để xác nhận cuối cùng...');
-          }
-        }
-        break;
-      default:
-        break;
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const currentPassword = formData.get('currentPassword')?.trim() || '';
+    const newPassword = formData.get('newPassword')?.trim() || '';
+    const confirmPassword = formData.get('confirmPassword')?.trim() || '';
+    
+    // Validation: Mật khẩu hiện tại
+    if (!currentPassword) {
+      showAlert('Vui lòng nhập mật khẩu hiện tại', 'error');
+      return;
     }
+    
+    // Validation: Mật khẩu mới
+    if (!newPassword) {
+      showAlert('Vui lòng nhập mật khẩu mới', 'error');
+      return;
+    }
+    
+    // Validation: Mật khẩu mới không được trùng với mật khẩu hiện tại
+    if (currentPassword === newPassword) {
+      showAlert('Mật khẩu mới không được trùng với mật khẩu hiện tại', 'error');
+      return;
+    }
+    
+    // Validation: Điều kiện mật khẩu mới
+    const passwordErrors = validatePassword(newPassword);
+    if (passwordErrors.length > 0) {
+      showAlert(passwordErrors[0], 'error');
+      return;
+    }
+    
+    // Validation: Xác nhận mật khẩu
+    if (!confirmPassword) {
+      showAlert('Vui lòng xác nhận mật khẩu mới', 'error');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      showAlert('Mật khẩu xác nhận không khớp với mật khẩu mới', 'error');
+      return;
+    }
+    
+    // Call API to change password
+    setIsChangingPassword(true);
+    try {
+      await authService.changePassword(currentPassword, newPassword, confirmPassword);
+      showAlert('Đã đổi mật khẩu thành công!', 'success');
+      e.target.reset();
+    } catch (error) {
+      // Handle error from backend
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Có lỗi xảy ra khi đổi mật khẩu';
+      
+      // Check if it's a wrong current password error
+      const errorLower = errorMessage.toLowerCase();
+      if (errorLower.includes('invalid old password') || 
+          errorLower.includes('mật khẩu hiện tại') || 
+          errorLower.includes('current password') ||
+          errorLower.includes('old password') ||
+          errorLower.includes('sai') ||
+          errorLower.includes('incorrect') ||
+          errorLower.includes('invalid') ||
+          error.response?.status === 401) {
+        showAlert('Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại!', 'error');
+      } else if (errorLower.includes('password') && errorLower.includes('match')) {
+        showAlert('Mật khẩu mới và xác nhận không khớp', 'error');
+      } else {
+        showAlert(errorMessage, 'error');
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleSaveNotifications = () => {
+    showAlert('Đã lưu cài đặt thông báo!', 'success');
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Account Information Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            <User className="mr-3 w-6 h-6" />
-            Thông tin tài khoản
-          </h3>
-          <button
-            onClick={() => handleAction('editProfile')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            Chỉnh sửa
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Profile Picture & Basic Info */}
-          <div className="text-center md:text-left">
-            <div className="flex flex-col md:flex-row items-center md:items-start">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 md:mb-0 md:mr-6">
-                <span className="text-white font-bold text-2xl">CB</span>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-xl font-bold text-gray-800 mb-2">Carbon Buyer</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center md:justify-start">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    <span className="text-sm text-gray-600">Tài khoản đã xác minh</span>
-                  </div>
-                  <div className="flex items-center justify-center md:justify-start">
-                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">
-                      ⭐ Gold Member
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">Thành viên từ: 15/01/2024</div>
-                </div>
-              </div>
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Alert Messages (Toast style) */}
+      {alertMessage && (
+        <Alert 
+          key={`alert-${alertMessage}`}
+          variant={alertType} 
+          dismissible 
+          position="toast"
+          onDismiss={hideAlert}
+        >
+          {alertMessage}
+        </Alert>
+      )}
+      
+      {/* Profile Settings */}
+      <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-8 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <User className="mr-3" />
+          Thông tin cá nhân
+        </h3>
+        <form onSubmit={handleUpdateProfile} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Họ và tên <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="fullName"
+                value={profileData.fullName}
+                onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Nhập họ và tên"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={profileData.email}
+                onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="your.email@example.com"
+                required
+              />
             </div>
           </div>
-
-          {/* Account Details */}
-          <div className="space-y-4">
+          
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                <span className="text-gray-800">Nguyễn Văn Carbon Buyer</span>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={profileData.phoneNumber}
+                onChange={(e) => setProfileData({...profileData, phoneNumber: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="0123 456 789"
+              />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                <span className="text-gray-800">carbonbuyer@email.com</span>
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                  ✅ Đã xác minh
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                <span className="text-gray-800">+84 901 234 567</span>
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                  ✅ Đã xác minh
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                <span className="text-gray-800">123 Đường ABC, Quận 1, TP.HCM</span>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Ngày sinh
+              </label>
+              <input
+                type="date"
+                name="dob"
+                value={profileData.dob}
+                onChange={(e) => setProfileData({...profileData, dob: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                max={new Date().toISOString().split('T')[0]}
+              />
             </div>
           </div>
-        </div>
+          
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              disabled={isUpdatingProfile}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUpdatingProfile ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang cập nhật...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Lưu thay đổi
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
 
-      {/* Wallet Information Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            <CreditCard className="mr-3 w-6 h-6" />
-            Thông tin ví điện tử
-          </h3>
-          <button
-            onClick={() => handleAction('manageWallet')}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <Wallet className="w-4 h-4 mr-2" />
-            Quản lý ví
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Wallet Balance */}
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold">Số dư hiện tại</h4>
-              <span className="text-2xl">💰</span>
+      {/* Change Password */}
+      <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-8 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <Lock className="mr-3" />
+          Đổi mật khẩu
+        </h3>
+        <form onSubmit={handleChangePassword} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mật khẩu hiện tại <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? 'text' : 'password'}
+                name="currentPassword"
+                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                placeholder="Nhập mật khẩu hiện tại"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                title={showCurrentPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
-            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(15750)}</div>
-            <div className="text-sm opacity-90">Có thể sử dụng ngay</div>
           </div>
-
-          {/* Pending Transactions */}
-          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold">Đang xử lý</h4>
-              <span className="text-2xl">⏳</span>
-            </div>
-            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(2420)}</div>
-            <div className="text-sm opacity-90">2 giao dịch chờ</div>
-          </div>
-
-          {/* Total Spent */}
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold">Tổng chi tiêu</h4>
-              <span className="text-2xl">📊</span>
-            </div>
-            <div className="text-3xl font-bold mb-2">{formatCurrencyFromUsd(12450)}</div>
-            <div className="text-sm opacity-90">Từ đầu năm</div>
-          </div>
-        </div>
-
-        {/* Wallet Actions */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={() => handleAction('addFunds')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            Nạp tiền
-          </button>
-          <button
-            onClick={() => handleAction('withdrawFunds')}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <Building2 className="w-4 h-4 mr-2" />
-            Rút tiền
-          </button>
-          <button
-            onClick={() => handleAction('viewWalletHistory')}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Lịch sử ví
-          </button>
-          <button
-            onClick={() => handleAction('setupAutoReload')}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Tự động nạp
-          </button>
-        </div>
-      </div>
-
-      {/* Security Settings Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            <Lock className="mr-3 w-6 h-6" />
-            Cài đặt bảo mật
-          </h3>
-          <div className="flex items-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-            <span className="text-sm text-green-600 font-medium">Bảo mật cao</span>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Password & Authentication */}
-          <div className="space-y-6">
-            <h4 className="font-semibold text-gray-800 flex items-center">
-              <Lock className="mr-2 w-5 h-5" />
-              Mật khẩu & Xác thực
-            </h4>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Mật khẩu đăng nhập</div>
-                  <div className="text-sm text-gray-600">Cập nhật lần cuối: 15/11/2024</div>
-                </div>
+          
+          <div className="grid md:grid-cols-2 gap-6 items-start">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2 h-6">
+                Mật khẩu mới <span className="text-red-500">*</span>
                 <button
-                  onClick={() => handleAction('changePassword')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  type="button"
+                  onClick={() => setShowPasswordRequirements(!showPasswordRequirements)}
+                  className="text-blue-600 hover:text-blue-800 transition-colors focus:outline-none focus:ring-0"
+                  title="Xem yêu cầu mật khẩu"
                 >
+                  <Info className="w-4 h-4" />
+                </button>
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  name="newPassword"
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                  placeholder="Nhập mật khẩu mới"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                  title={showNewPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {showPasswordRequirements && (
+                <div className="mt-2">
+                  <Alert variant="info" className="py-2.5">
+                    <div className="text-xs space-y-1">
+                      <p className="font-semibold mb-1">Yêu cầu mật khẩu:</p>
+                      <ul className="list-disc list-inside space-y-0.5 text-gray-700">
+                        <li>Tối thiểu 8 ký tự</li>
+                        <li>Có ít nhất 1 chữ hoa (A-Z)</li>
+                        <li>Có ít nhất 1 chữ thường (a-z)</li>
+                        <li>Có ít nhất 1 số (0-9)</li>
+                        <li>Có ít nhất 1 ký tự đặc biệt (!@#$%^&*...)</li>
+                      </ul>
+                    </div>
+                  </Alert>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 h-6">
+                Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                  placeholder="Nhập lại mật khẩu mới"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors p-0 bg-transparent border-0 focus:outline-none focus:ring-0"
+                  title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              disabled={isChangingPassword}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isChangingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <Key className="w-4 h-4 mr-2" />
                   Đổi mật khẩu
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Xác thực 2 bước (2FA)</div>
-                  <div className="text-sm text-green-600">✅ Đã kích hoạt</div>
-                </div>
-                <button
-                  onClick={() => handleAction('manage2FA')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                >
-                  Quản lý 2FA
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Câu hỏi bảo mật</div>
-                  <div className="text-sm text-green-600">✅ Đã thiết lập</div>
-                </div>
-                <button
-                  onClick={() => handleAction('manageSecurityQuestions')}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                >
-                  Cập nhật
-                </button>
-              </div>
-            </div>
+                </>
+              )}
+            </button>
           </div>
+        </form>
+      </div>
 
-          {/* Identity Verification */}
-          <div className="space-y-6">
-            <h4 className="font-semibold text-gray-800 flex items-center">
-              <User className="mr-2 w-5 h-5" />
-              Xác minh danh tính
-            </h4>
-
+      {/* Notification Settings */}
+      <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-8 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <Bell className="mr-3" />
+          Tùy chọn thông báo
+        </h3>
+        <div className="space-y-6">
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-4">Thông báo giao dịch</h4>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">CCCD/CMND</div>
-                  <div className="text-sm text-green-600">✅ Đã xác minh</div>
-                </div>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
-                  Hoàn thành
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Xác minh khuôn mặt</div>
-                  <div className="text-sm text-green-600">✅ Đã xác minh</div>
-                </div>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
-                  Hoàn thành
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Xác minh thu nhập</div>
-                  <div className="text-sm text-yellow-600">⏳ Tùy chọn</div>
-                </div>
-                <button
-                  onClick={() => handleAction('verifyIncome')}
-                  className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
-                >
-                  Xác minh
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div>
-                  <div className="font-medium text-gray-800">Xác minh ngân hàng</div>
-                  <div className="text-sm text-blue-600">✅ Đã liên kết</div>
-                </div>
-                <button
-                  onClick={() => handleAction('manageBankAccount')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  Quản lý
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Privacy & Notifications Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-          <Bell className="mr-3 w-6 h-6" />
-          Quyền riêng tư & Thông báo
-        </h3>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Privacy Settings */}
-          <div className="space-y-4">
-            <h4 className="font-semibold text-gray-800">Cài đặt quyền riêng tư</h4>
-
-            <div className="space-y-3">
               {[
-                { key: 'publicProfile', label: 'Hiển thị hồ sơ công khai' },
-                { key: 'allowContact', label: 'Cho phép liên hệ từ người bán' },
-                { key: 'shareAnalytics', label: 'Chia sẻ dữ liệu phân tích' },
-              ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-700">{item.label}</span>
+                { key: 'transaction', label: 'Giao dịch thành công', desc: 'Nhận thông báo khi mua tín chỉ thành công' },
+                { key: 'purchase', label: 'Mua tín chỉ', desc: 'Thông báo về trạng thái mua tín chỉ' },
+                { key: 'auction', label: 'Đấu giá', desc: 'Thông báo về đấu giá và kết quả' },
+                { key: 'certificate', label: 'Chứng nhận', desc: 'Thông báo khi nhận chứng nhận mới' },
+              ].map((notif) => (
+                <div key={notif.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-gray-800">{notif.label}</p>
+                    <p className="text-sm text-gray-600">{notif.desc}</p>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={notifications[notif.key]}
+                      onChange={(e) =>
+                        setNotifications({ ...notifications, [notif.key]: e.target.checked })
+                      }
                       className="sr-only peer"
-                      checked={privacySettings[item.key]}
-                      onChange={() => handleToggle('privacy', item.key)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Notification Settings */}
-          <div className="space-y-4">
-            <h4 className="font-semibold text-gray-800">Cài đặt thông báo</h4>
-
-            <div className="space-y-3">
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-4">Báo cáo</h4>
+            <div className="space-y-4">
               {[
-                { key: 'transaction', label: 'Thông báo giao dịch' },
-                { key: 'auction', label: 'Thông báo đấu giá' },
-                { key: 'emailMarketing', label: 'Email marketing' },
-                { key: 'sms', label: 'Thông báo SMS' },
-              ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-700">{item.label}</span>
+                { key: 'weeklyReport', label: 'Báo cáo tuần', desc: 'Nhận báo cáo tổng hợp hàng tuần' },
+                { key: 'monthlyReport', label: 'Báo cáo tháng', desc: 'Nhận báo cáo tổng hợp hàng tháng' },
+              ].map((notif) => (
+                <div key={notif.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-gray-800">{notif.label}</p>
+                    <p className="text-sm text-gray-600">{notif.desc}</p>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={notifications[notif.key]}
+                      onChange={(e) =>
+                        setNotifications({ ...notifications, [notif.key]: e.target.checked })
+                      }
                       className="sr-only peer"
-                      checked={notificationSettings[item.key]}
-                      onChange={() => handleToggle('notification', item.key)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Account Actions Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-          <Lock className="mr-3 w-6 h-6" />
-          Hành động tài khoản
-        </h3>
-
-        <div className="grid md:grid-cols-3 gap-4">
-          <button
-            onClick={() => handleAction('exportAccountData')}
-            className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors text-center"
-          >
-            <Download className="w-8 h-8 mx-auto mb-2" />
-            <div className="font-medium">Xuất dữ liệu</div>
-            <div className="text-sm opacity-90">Tải về thông tin tài khoản</div>
-          </button>
-
-          <button
-            onClick={() => handleAction('deactivateAccount')}
-            className="bg-yellow-600 text-white p-4 rounded-lg hover:bg-yellow-700 transition-colors text-center"
-          >
-            <Pause className="w-8 h-8 mx-auto mb-2" />
-            <div className="font-medium">Tạm khóa tài khoản</div>
-            <div className="text-sm opacity-90">Tạm thời vô hiệu hóa</div>
-          </button>
-
-          <button
-            onClick={() => handleAction('deleteAccount')}
-            className="bg-red-600 text-white p-4 rounded-lg hover:bg-red-700 transition-colors text-center"
-          >
-            <Trash2 className="w-8 h-8 mx-auto mb-2" />
-            <div className="font-medium">Xóa tài khoản</div>
-            <div className="text-sm opacity-90">Xóa vĩnh viễn tài khoản</div>
-          </button>
-        </div>
-
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-start">
-            <span className="text-yellow-600 mr-3 text-xl">⚠️</span>
-            <div>
-              <div className="font-medium text-yellow-800">Lưu ý quan trọng</div>
-              <div className="text-sm text-yellow-700 mt-1">
-                Việc xóa tài khoản sẽ không thể hoàn tác. Vui lòng đảm bảo bạn đã hoàn thành tất cả giao dịch và rút hết số dư trong ví trước khi thực hiện.
-              </div>
-            </div>
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={handleSaveNotifications}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Lưu cài đặt thông báo
+            </button>
           </div>
         </div>
       </div>
@@ -483,4 +516,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

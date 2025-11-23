@@ -37,11 +37,11 @@ export const buyerService = {
   // Market Service - Auction (Use Case 11: Join Auction)
   getAuction: async (auctionId) => {
     // Returns market_listing with listing_type='auction' and related bids
-    if (shouldUseMock()) return { id: auctionId, status: 'active', currentBid: 5000 };
+    if (shouldUseMock()) return mockBuyerService?.getAuction?.(auctionId) || { id: auctionId, status: 'active', currentBid: 5000 };
     try {
       return await apiClient.get(API_ENDPOINTS.MARKET.AUCTION.replace(':id', auctionId));
     } catch (error) {
-      if (import.meta.env.DEV) return { id: auctionId, status: 'active', currentBid: 5000 };
+      if (import.meta.env.DEV) return mockBuyerService?.getAuction?.(auctionId) || { id: auctionId, status: 'active', currentBid: 5000 };
       throw error;
     }
   },
@@ -70,13 +70,13 @@ export const buyerService = {
 
   placeBid: async (listingId, bidAmount) => {
     // Creates bid record in bid table
-    if (shouldUseMock()) return { success: true, bidId: 'bid-123' };
+    if (shouldUseMock()) return mockBuyerService?.placeBid?.(listingId, bidAmount) || { success: true, bidId: 'bid-123' };
     try {
       return await apiClient.post(API_ENDPOINTS.MARKET.PLACE_BID.replace(':id', listingId), {
         amount: bidAmount,
       });
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true, bidId: 'bid-123' };
+      if (import.meta.env.DEV) return mockBuyerService?.placeBid?.(listingId, bidAmount) || { success: true, bidId: 'bid-123' };
       throw error;
     }
   },
@@ -110,11 +110,11 @@ export const buyerService = {
   // Transaction Service - Payment (Use Case 12: Online Payment)
   processPayment: async (transactionId, paymentData) => {
     // Use Case 12: Online Payment (include from Direct Purchase or Auction win)
-    if (shouldUseMock()) return { success: true, paymentId: 'pay-123' };
+    if (shouldUseMock()) return mockBuyerService?.processPayment?.(transactionId, paymentData) || { success: true, paymentId: 'pay-123' };
     try {
       return await apiClient.post(API_ENDPOINTS.TRANSACTION.PAYMENT.replace(':id', transactionId), paymentData);
     } catch (error) {
-      if (import.meta.env.DEV) return { success: true, paymentId: 'pay-123' };
+      if (import.meta.env.DEV) return mockBuyerService?.processPayment?.(transactionId, paymentData) || { success: true, paymentId: 'pay-123' };
       throw error;
     }
   },
