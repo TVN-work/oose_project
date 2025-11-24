@@ -1,6 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import {
+  HelpCircle,
+  Search,
+  X,
+  Car,
+  Leaf,
+  Building2,
+  Shield,
+  CheckCircle,
+  Globe,
+  Users,
+  Award,
+  Calculator,
+  Ticket,
+  Coins,
+  Wallet,
+  ShoppingCart,
+  FileCheck,
+  ChevronDown,
+  ChevronUp,
+  Phone,
+  LogIn,
+  Sparkles,
+  FileText,
+  Clock,
+  ShieldCheck,
+  TrendingUp,
+  BarChart3,
+  Store,
+  Gavel,
+  FileSignature,
+  AlertCircle,
+  Info,
+  MessageSquare
+} from 'lucide-react';
 import './FAQs.css';
 
 const FAQs = () => {
@@ -15,14 +49,14 @@ const FAQs = () => {
       id: 'overview',
       title: 'Tổng quan về nền tảng',
       description: 'Hiểu về Carbon Credit Marketplace và cách thức hoạt động',
-      icon: '🌍',
+      icon: Globe,
       gradient: 'category-overview',
       faqs: [
         {
           id: 'overview-1',
           question: 'Carbon Credit Marketplace là gì?',
           answer: `Carbon Credit Marketplace for EV Owners là nền tảng giao dịch tín chỉ carbon đầu tiên tại Việt Nam được thiết kế đặc biệt cho chủ sở hữu xe điện. Nền tảng giúp chủ xe điện kiếm thu nhập từ việc giảm phát thải CO₂ bằng cách bán tín chỉ carbon cho các doanh nghiệp và tổ chức có nhu cầu bù trừ khí thải.`,
-          icon: '🌱',
+          icon: Leaf,
           benefits: [
             'Thu nhập thụ động từ việc sử dụng xe điện',
             'Góp phần bảo vệ môi trường và giảm ô nhiễm',
@@ -34,19 +68,19 @@ const FAQs = () => {
           id: 'overview-2',
           question: 'Ai có thể tham gia nền tảng này?',
           answer: `Nền tảng được thiết kế cho 4 nhóm đối tượng chính, mỗi nhóm có vai trò và quyền lợi riêng biệt:`,
-          icon: '👥',
+          icon: Users,
           roles: [
-            { name: 'EV Owner (Chủ xe điện)', icon: '🚗', desc: 'Cá nhân hoặc tổ chức sở hữu xe điện hợp pháp tại Việt Nam', color: 'green' },
-            { name: 'Buyer (Người mua tín chỉ)', icon: '🏢', desc: 'Doanh nghiệp, tổ chức muốn bù trừ khí thải CO₂', color: 'blue' },
-            { name: 'CVA (Tổ chức xác minh)', icon: '✅', desc: 'Tổ chức kiểm toán carbon được cấp phép', color: 'purple' },
-            { name: 'Admin (Quản trị viên)', icon: '⚙️', desc: 'Đội ngũ vận hành và quản lý nền tảng', color: 'gray' },
+            { name: 'EV Owner (Chủ xe điện)', icon: Car, desc: 'Cá nhân hoặc tổ chức sở hữu xe điện hợp pháp tại Việt Nam', color: 'green' },
+            { name: 'Buyer (Người mua tín chỉ)', icon: Building2, desc: 'Doanh nghiệp, tổ chức muốn bù trừ khí thải CO₂', color: 'blue' },
+            { name: 'CVA (Tổ chức xác minh)', icon: CheckCircle, desc: 'Tổ chức kiểm toán carbon được cấp phép', color: 'purple' },
+            { name: 'Admin (Quản trị viên)', icon: Shield, desc: 'Đội ngũ vận hành và quản lý nền tảng', color: 'gray' },
           ],
         },
         {
           id: 'overview-3',
           question: 'Tín chỉ carbon là gì?',
           answer: `Tín chỉ carbon (Carbon Credit) là đơn vị đo lường được chuẩn hóa quốc tế, trong đó 1 tín chỉ = 1 tấn CO₂ được cắt giảm hoặc loại bỏ khỏi khí quyển.`,
-          icon: '🏷️',
+          icon: Award,
           calculation: [
             'Bước 1: Tính lượng CO₂ tiết kiệm = (Quãng đường × Mức phát thải xe xăng) - (Quãng đường × Mức phát thải điện)',
             'Bước 2: CVA xác minh dữ liệu và tính toán chính xác',
@@ -60,14 +94,14 @@ const FAQs = () => {
       id: 'ev-owner',
       title: 'Dành cho Chủ sở hữu xe điện (EV Owner)',
       description: 'Hướng dẫn chi tiết cho chủ xe điện tham gia nền tảng',
-      icon: '🚗',
+      icon: Car,
       gradient: 'category-ev-owner',
       faqs: [
         {
           id: 'ev-owner-1',
           question: 'Làm thế nào để tính lượng CO₂ giảm phát thải của xe điện?',
           answer: `Hệ thống tự động tính toán lượng CO₂ tiết kiệm dựa trên dữ liệu thực tế của xe điện và so sánh với xe xăng cùng loại. Quy trình tính toán được thực hiện theo tiêu chuẩn quốc tế ISO 14064.`,
-          icon: '📊',
+          icon: Calculator,
           formula: {
             title: 'Công thức tính toán:',
             items: [
@@ -87,7 +121,7 @@ const FAQs = () => {
           id: 'ev-owner-2',
           question: 'Làm sao để nhận được tín chỉ carbon?',
           answer: `Quy trình nhận tín chỉ carbon được thực hiện qua 5 bước đơn giản và minh bạch:`,
-          icon: '🎫',
+          icon: Ticket,
           steps: [
             { step: 1, title: 'Đăng ký tài khoản EV Owner', desc: 'Cung cấp thông tin cá nhân và giấy tờ xe điện' },
             { step: 2, title: 'Kết nối dữ liệu xe điện', desc: 'Đồng bộ dữ liệu từ ứng dụng xe hoặc nhập thủ công' },
@@ -100,18 +134,18 @@ const FAQs = () => {
           id: 'ev-owner-3',
           question: 'Tôi có thể bán tín chỉ bằng cách nào?',
           answer: `Nền tảng cung cấp 3 phương thức bán tín chỉ carbon linh hoạt để tối ưu hóa lợi nhuận:`,
-          icon: '💰',
+          icon: Coins,
           methods: [
-            { name: 'Bán trực tiếp', icon: '🏪', items: ['Đặt giá cố định', 'Bán ngay lập tức', 'Phù hợp số lượng nhỏ', 'Phí: 2.5%'], color: 'green' },
-            { name: 'Đấu giá', icon: '🔨', items: ['Giá khởi điểm thấp', 'Tối ưu hóa giá bán', 'Thời gian 7-14 ngày', 'Phí: 3.0%'], color: 'blue' },
-            { name: 'Hợp đồng dài hạn', icon: '📋', items: ['Cam kết 6-12 tháng', 'Giá ổn định', 'Ưu tiên doanh nghiệp', 'Phí: 2.0%'], color: 'purple' },
+            { name: 'Bán trực tiếp', icon: Store, items: ['Đặt giá cố định', 'Bán ngay lập tức', 'Phù hợp số lượng nhỏ', 'Phí: 2.5%'], color: 'green' },
+            { name: 'Đấu giá', icon: Gavel, items: ['Giá khởi điểm thấp', 'Tối ưu hóa giá bán', 'Thời gian 7-14 ngày', 'Phí: 3.0%'], color: 'blue' },
+            { name: 'Hợp đồng dài hạn', icon: FileSignature, items: ['Cam kết 6-12 tháng', 'Giá ổn định', 'Ưu tiên doanh nghiệp', 'Phí: 2.0%'], color: 'purple' },
           ],
         },
         {
           id: 'ev-owner-4',
           question: 'Có thể rút tiền về tài khoản ngân hàng không?',
           answer: `Có, bạn có thể rút tiền về tài khoản ngân hàng sau khi hoàn tất giao dịch và xác minh danh tính. Quy trình rút tiền được thiết kế đơn giản và bảo mật cao.`,
-          icon: '🏦',
+          icon: Wallet,
           conditions: [
             'Tài khoản đã xác minh đầy đủ (KYC)',
             'Số dư tối thiểu: 500,000 VNĐ',
@@ -131,14 +165,14 @@ const FAQs = () => {
       id: 'buyer',
       title: 'Dành cho Người mua tín chỉ (Buyer)',
       description: 'Hướng dẫn mua tín chỉ carbon cho doanh nghiệp và tổ chức',
-      icon: '🏢',
+      icon: Building2,
       gradient: 'category-buyer',
       faqs: [
         {
           id: 'buyer-1',
           question: 'Làm thế nào để mua tín chỉ carbon?',
           answer: `Quy trình mua tín chỉ carbon trên nền tảng rất đơn giản và minh bạch:`,
-          icon: '🛒',
+          icon: ShoppingCart,
           steps: [
             { step: 1, title: 'Đăng ký tài khoản Buyer', desc: 'Cung cấp thông tin doanh nghiệp và xác minh' },
             { step: 2, title: 'Tìm kiếm tín chỉ phù hợp', desc: 'Lọc theo số lượng, giá, khu vực, chứng nhận' },
@@ -151,7 +185,7 @@ const FAQs = () => {
           id: 'buyer-2',
           question: 'Tín chỉ carbon có được xác minh không?',
           answer: `Tất cả tín chỉ carbon trên nền tảng đều được xác minh bởi các tổ chức CVA (Carbon Verification & Audit) uy tín và được công nhận quốc tế.`,
-          icon: '✅',
+          icon: FileCheck,
           verification: [
             'Xác minh bởi CVA được cấp phép',
             'Tuân thủ tiêu chuẩn ISO 14064',
@@ -165,14 +199,14 @@ const FAQs = () => {
       id: 'cva',
       title: 'Dành cho Tổ chức xác minh (CVA)',
       description: 'Thông tin cho tổ chức kiểm toán và xác minh carbon',
-      icon: '✅',
+      icon: ShieldCheck,
       gradient: 'category-cva',
       faqs: [
         {
           id: 'cva-1',
           question: 'Làm thế nào để trở thành CVA trên nền tảng?',
           answer: `Các tổ chức kiểm toán carbon có thể đăng ký trở thành CVA trên nền tảng sau khi đáp ứng các yêu cầu về chứng nhận và năng lực.`,
-          icon: '🏛️',
+          icon: Building2,
           requirements: [
             'Giấy phép kinh doanh/Chứng nhận tổ chức',
             'Chứng chỉ ISO 14064 hoặc tương đương',
@@ -186,14 +220,14 @@ const FAQs = () => {
       id: 'security',
       title: 'Bảo mật & Quyền riêng tư',
       description: 'Thông tin về bảo mật và quyền riêng tư trên nền tảng',
-      icon: '🔒',
+      icon: Shield,
       gradient: 'category-security',
       faqs: [
         {
           id: 'security-1',
           question: 'Thông tin cá nhân có được bảo mật không?',
           answer: `Chúng tôi cam kết bảo vệ thông tin cá nhân của người dùng theo tiêu chuẩn quốc tế về bảo mật dữ liệu.`,
-          icon: '🛡️',
+          icon: ShieldCheck,
           security: [
             'Mã hóa SSL/TLS 256-bit',
             'Tuân thủ GDPR và Luật An ninh mạng Việt Nam',
@@ -241,17 +275,7 @@ const FAQs = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Welcome message on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      toast.success('❓ Chào mừng đến với Câu hỏi thường gặp!', {
-        duration: 4000,
-        icon: '🌱',
-      });
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Removed welcome toast message
 
   const toggleFAQ = (faqId) => {
     setOpenFAQ(openFAQ === faqId ? null : faqId);
@@ -265,17 +289,23 @@ const FAQs = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Filter FAQs based on search query
-  const filteredCategories = faqCategories.map(category => ({
-    ...category,
-    faqs: category.faqs.filter(faq => {
-      const searchLower = searchQuery.toLowerCase();
-      return (
-        faq.question.toLowerCase().includes(searchLower) ||
-        faq.answer.toLowerCase().includes(searchLower)
-      );
-    }),
-  })).filter(category => category.faqs.length > 0);
+  // Filter FAQs based on search query with useMemo for performance
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return faqCategories;
+    }
+    const searchLower = searchQuery.toLowerCase();
+    return faqCategories
+      .map(category => ({
+        ...category,
+        faqs: (category.faqs || []).filter(faq => {
+          const question = faq.question?.toLowerCase() || '';
+          const answer = faq.answer?.toLowerCase() || '';
+          return question.includes(searchLower) || answer.includes(searchLower);
+        }),
+      }))
+      .filter(category => category.faqs && category.faqs.length > 0);
+  }, [searchQuery]);
 
   const highlightText = (text) => {
     if (!searchQuery) return text;
@@ -288,10 +318,10 @@ const FAQs = () => {
   return (
     <div className="bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-50 to-green-100 py-16">
+      <section className="hero-bg-faq py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center bg-white rounded-full px-6 py-3 mb-6 shadow-sm animate-on-scroll">
-            <span className="text-2xl mr-3">❓</span>
+          <div className="inline-flex items-center bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 mb-6 shadow-lg animate-on-scroll">
+            <HelpCircle className="w-5 h-5 mr-3 text-green-primary" />
             <span className="text-green-primary font-semibold">Câu hỏi thường gặp</span>
           </div>
           
@@ -307,23 +337,23 @@ const FAQs = () => {
           
           {/* Quick Stats */}
           <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto animate-on-scroll">
-            <div className="stats-card">
-              <div className="text-3xl mb-2">🚗</div>
+            <div className="stats-card-faq">
+              <Car className="w-8 h-8 mx-auto mb-3 text-green-primary" />
               <div className="text-2xl font-bold text-green-primary">1,250+</div>
               <div className="text-sm text-gray-600">Xe điện đã đăng ký</div>
             </div>
-            <div className="stats-card">
-              <div className="text-3xl mb-2">🌱</div>
+            <div className="stats-card-faq">
+              <Leaf className="w-8 h-8 mx-auto mb-3 text-blue-600" />
               <div className="text-2xl font-bold text-blue-600">15,680</div>
               <div className="text-sm text-gray-600">Tín chỉ carbon đã bán</div>
             </div>
-            <div className="stats-card">
-              <div className="text-3xl mb-2">🏢</div>
+            <div className="stats-card-faq">
+              <Building2 className="w-8 h-8 mx-auto mb-3 text-orange-600" />
               <div className="text-2xl font-bold text-orange-600">89</div>
               <div className="text-sm text-gray-600">Doanh nghiệp mua tín chỉ</div>
             </div>
-            <div className="stats-card">
-              <div className="text-3xl mb-2">✅</div>
+            <div className="stats-card-faq">
+              <ShieldCheck className="w-8 h-8 mx-auto mb-3 text-purple-600" />
               <div className="text-2xl font-bold text-purple-600">12</div>
               <div className="text-sm text-gray-600">Tổ chức CVA hợp tác</div>
             </div>
@@ -332,41 +362,53 @@ const FAQs = () => {
       </section>
 
       {/* Search Section */}
-      <section className="py-8 bg-white">
+      <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="search-container">
-            <div className="search-icon">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
+          <div className="search-container-faq">
+            <Search className="search-icon-faq" />
             <input 
               type="text" 
-              className="search-input" 
+              className="search-input-faq" 
               placeholder="Tìm kiếm câu hỏi... (ví dụ: tín chỉ carbon, xe điện, CVA)"
               value={searchQuery}
               onChange={handleSearch}
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="search-clear-btn"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
+          {searchQuery && (
+            <p className="text-sm text-gray-600 mt-3 text-center">
+              Tìm thấy {filteredCategories.reduce((sum, cat) => sum + cat.faqs.length, 0)} kết quả
+            </p>
+          )}
         </div>
       </section>
 
       {/* FAQ Content */}
-      <section className="py-16">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {filteredCategories.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
+              <Search className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy kết quả</h3>
               <p className="text-gray-600">Vui lòng thử lại với từ khóa khác</p>
             </div>
           ) : (
-            filteredCategories.map((category, categoryIndex) => (
-              <div key={category.id} className="faq-category animate-on-scroll" style={{ animationDelay: `${categoryIndex * 0.1}s` }}>
-                <div className="faq-category-header">
+            filteredCategories.map((category, categoryIndex) => {
+              const CategoryIcon = category.icon;
+              return (
+              <div key={category.id} className="faq-category-new animate-on-scroll" style={{ animationDelay: `${categoryIndex * 0.1}s` }}>
+                <div className="faq-category-header-new">
                   <div className="flex items-center">
-                    <div className={`faq-icon ${category.gradient} text-white`}>
-                      <span>{category.icon}</span>
+                    <div className={`faq-category-icon ${category.gradient}`}>
+                      <CategoryIcon className="w-6 h-6" />
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-green-dark">
@@ -378,30 +420,34 @@ const FAQs = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  {category.faqs.map((faq) => (
-                    <div key={faq.id} className="faq-item">
+                  {category.faqs.map((faq) => {
+                    const FAQIcon = faq.icon;
+                    return (
+                    <div key={faq.id} className="faq-item-new">
                       <div 
-                        className={`faq-question ${openFAQ === faq.id ? 'active' : ''}`}
+                        className={`faq-question-new ${openFAQ === faq.id ? 'active' : ''}`}
                         onClick={() => toggleFAQ(faq.id)}
                       >
                         <div className="flex items-center flex-1">
-                          <div className="faq-icon bg-blue-100 text-blue-600">
-                            <span>{faq.icon}</span>
+                          <div className="faq-item-icon">
+                            <FAQIcon className="w-5 h-5" />
                           </div>
                           <span className="font-semibold text-gray-900">{highlightText(faq.question)}</span>
                         </div>
-                        <div className={`toggle-icon ${openFAQ === faq.id ? 'active' : ''}`}>
-                          {openFAQ === faq.id ? '×' : '+'}
-                        </div>
+                        {openFAQ === faq.id ? (
+                          <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        )}
                       </div>
-                      <div className={`faq-answer ${openFAQ === faq.id ? 'active' : ''}`}>
+                      <div className={`faq-answer-new ${openFAQ === faq.id ? 'active' : ''}`}>
                         <p className="text-gray-700 leading-relaxed mb-4">{highlightText(faq.answer)}</p>
                         
                         {/* Render additional content based on FAQ type */}
                         {faq.benefits && (
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <h4 className="font-semibold text-blue-900 mb-2">Lợi ích chính:</h4>
-                            <ul className="text-blue-800 space-y-1">
+                          <div className="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
+                            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Lợi ích chính:</h4>
+                            <ul className="text-blue-800 space-y-1 text-sm">
                               {faq.benefits.map((benefit, idx) => (
                                 <li key={idx}>• {benefit}</li>
                               ))}
@@ -410,32 +456,35 @@ const FAQs = () => {
                         )}
 
                         {faq.roles && (
-                          <div className="grid md:grid-cols-2 gap-4">
-                            {faq.roles.map((role, idx) => (
-                              <div key={idx} className={`bg-${role.color}-50 rounded-lg p-4`}>
-                                <h4 className={`font-semibold text-${role.color}-900 mb-2 flex items-center`}>
-                                  <span className="mr-2">{role.icon}</span>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            {faq.roles.map((role, idx) => {
+                              const RoleIcon = role.icon;
+                              return (
+                              <div key={idx} className={`bg-${role.color}-50 rounded-lg p-3.5 border border-${role.color}-200`}>
+                                <h4 className={`font-semibold text-${role.color}-900 mb-1.5 flex items-center text-sm`}>
+                                  <RoleIcon className="w-4 h-4 mr-2" />
                                   {role.name}
                                 </h4>
-                                <p className={`text-${role.color}-800 text-sm`}>{role.desc}</p>
+                                <p className={`text-${role.color}-800 text-xs leading-relaxed`}>{role.desc}</p>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
 
                         {faq.calculation && (
                           <>
-                            <div className="bg-orange-50 rounded-lg p-4 mb-4">
-                              <h4 className="font-semibold text-orange-900 mb-2">Cách tính tín chỉ từ xe điện:</h4>
-                              <div className="text-orange-800 space-y-2">
+                            <div className="bg-orange-50 rounded-lg p-3.5 mb-3 border border-orange-200">
+                              <h4 className="font-semibold text-orange-900 mb-2 text-sm">Cách tính tín chỉ từ xe điện:</h4>
+                              <div className="text-orange-800 space-y-1.5 text-sm">
                                 {faq.calculation.map((step, idx) => (
                                   <p key={idx}><strong>Bước {idx + 1}:</strong> {step}</p>
                                 ))}
                               </div>
                             </div>
                             {faq.example && (
-                              <div className="bg-green-50 rounded-lg p-4">
-                                <p className="text-green-800">
+                              <div className="bg-green-50 rounded-lg p-3.5 border border-green-200">
+                                <p className="text-green-800 text-sm">
                                   <strong>Ví dụ:</strong> {faq.example}
                                 </p>
                               </div>
@@ -445,18 +494,18 @@ const FAQs = () => {
 
                         {faq.formula && (
                           <>
-                            <div className="bg-green-50 rounded-lg p-4 mb-4">
-                              <h4 className="font-semibold text-green-900 mb-3">{faq.formula.title}</h4>
-                              <div className="space-y-2 text-green-800">
+                            <div className="bg-green-50 rounded-lg p-3.5 mb-3 border border-green-200">
+                              <h4 className="font-semibold text-green-900 mb-2 text-sm">{faq.formula.title}</h4>
+                              <div className="space-y-1.5 text-green-800 text-sm">
                                 {faq.formula.items.map((item, idx) => (
                                   <p key={idx}>{item}</p>
                                 ))}
                               </div>
                             </div>
                             {faq.dataNeeded && (
-                              <div className="bg-blue-50 rounded-lg p-4">
-                                <h4 className="font-semibold text-blue-900 mb-2">Dữ liệu cần thiết:</h4>
-                                <ul className="text-blue-800 space-y-1">
+                              <div className="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
+                                <h4 className="font-semibold text-blue-900 mb-2 text-sm">Dữ liệu cần thiết:</h4>
+                                <ul className="text-blue-800 space-y-1 text-sm">
                                   {faq.dataNeeded.map((data, idx) => (
                                     <li key={idx}>• {data}</li>
                                   ))}
@@ -467,15 +516,15 @@ const FAQs = () => {
                         )}
 
                         {faq.steps && (
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {faq.steps.map((step) => (
-                              <div key={step.step} className="flex items-start space-x-4">
-                                <div className="w-8 h-8 bg-green-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
+                              <div key={step.step} className="flex items-start space-x-3">
+                                <div className="w-7 h-7 bg-green-primary text-white rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
                                   {step.step}
                                 </div>
-                                <div>
-                                  <h4 className="font-semibold text-gray-900">{step.title}</h4>
-                                  <p className="text-gray-600 text-sm">{step.desc}</p>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{step.title}</h4>
+                                  <p className="text-gray-600 text-xs leading-relaxed">{step.desc}</p>
                                 </div>
                               </div>
                             ))}
@@ -483,37 +532,40 @@ const FAQs = () => {
                         )}
 
                         {faq.methods && (
-                          <div className="grid md:grid-cols-3 gap-4">
-                            {faq.methods.map((method, idx) => (
-                              <div key={idx} className={`bg-${method.color}-50 border border-${method.color}-200 rounded-lg p-4`}>
-                                <h4 className={`font-semibold text-${method.color}-900 mb-2 flex items-center`}>
-                                  <span className="mr-2">{method.icon}</span>
+                          <div className="grid md:grid-cols-3 gap-3">
+                            {faq.methods.map((method, idx) => {
+                              const MethodIcon = method.icon;
+                              return (
+                              <div key={idx} className={`bg-${method.color}-50 border border-${method.color}-200 rounded-lg p-3.5`}>
+                                <h4 className={`font-semibold text-${method.color}-900 mb-2 flex items-center text-sm`}>
+                                  <MethodIcon className="w-4 h-4 mr-2" />
                                   {method.name}
                                 </h4>
-                                <ul className={`text-${method.color}-800 text-sm space-y-1`}>
+                                <ul className={`text-${method.color}-800 text-xs space-y-1 leading-relaxed`}>
                                   {method.items.map((item, itemIdx) => (
                                     <li key={itemIdx}>• {item}</li>
                                   ))}
                                 </ul>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
 
                         {faq.conditions && (
                           <>
-                            <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                              <h4 className="font-semibold text-blue-900 mb-2">Điều kiện rút tiền:</h4>
-                              <ul className="text-blue-800 space-y-1">
+                            <div className="bg-blue-50 rounded-lg p-3.5 mb-3 border border-blue-200">
+                              <h4 className="font-semibold text-blue-900 mb-2 text-sm">Điều kiện rút tiền:</h4>
+                              <ul className="text-blue-800 space-y-1 text-sm">
                                 {faq.conditions.map((condition, idx) => (
                                   <li key={idx}>• {condition}</li>
                                 ))}
                               </ul>
                             </div>
                             {faq.withdrawalInfo && (
-                              <div className="bg-green-50 rounded-lg p-4">
-                                <h4 className="font-semibold text-green-900 mb-2">Thời gian và phí:</h4>
-                                <ul className="text-green-800 space-y-1">
+                              <div className="bg-green-50 rounded-lg p-3.5 border border-green-200">
+                                <h4 className="font-semibold text-green-900 mb-2 text-sm">Thời gian và phí:</h4>
+                                <ul className="text-green-800 space-y-1 text-sm">
                                   {faq.withdrawalInfo.map((info, idx) => (
                                     <li key={idx}>• {info}</li>
                                   ))}
@@ -524,9 +576,9 @@ const FAQs = () => {
                         )}
 
                         {faq.verification && (
-                          <div className="bg-green-50 rounded-lg p-4">
-                            <h4 className="font-semibold text-green-900 mb-2">Xác minh:</h4>
-                            <ul className="text-green-800 space-y-1">
+                          <div className="bg-green-50 rounded-lg p-3.5 border border-green-200">
+                            <h4 className="font-semibold text-green-900 mb-2 text-sm">Xác minh:</h4>
+                            <ul className="text-green-800 space-y-1 text-sm">
                               {faq.verification.map((item, idx) => (
                                 <li key={idx}>• {item}</li>
                               ))}
@@ -535,9 +587,9 @@ const FAQs = () => {
                         )}
 
                         {faq.requirements && (
-                          <div className="bg-purple-50 rounded-lg p-4">
-                            <h4 className="font-semibold text-purple-900 mb-2">Yêu cầu:</h4>
-                            <ul className="text-purple-800 space-y-1">
+                          <div className="bg-purple-50 rounded-lg p-3.5 border border-purple-200">
+                            <h4 className="font-semibold text-purple-900 mb-2 text-sm">Yêu cầu:</h4>
+                            <ul className="text-purple-800 space-y-1 text-sm">
                               {faq.requirements.map((req, idx) => (
                                 <li key={idx}>• {req}</li>
                               ))}
@@ -546,9 +598,9 @@ const FAQs = () => {
                         )}
 
                         {faq.security && (
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <h4 className="font-semibold text-blue-900 mb-2">Bảo mật:</h4>
-                            <ul className="text-blue-800 space-y-1">
+                          <div className="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
+                            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Bảo mật:</h4>
+                            <ul className="text-blue-800 space-y-1 text-sm">
                               {faq.security.map((item, idx) => (
                                 <li key={idx}>• {item}</li>
                               ))}
@@ -557,34 +609,36 @@ const FAQs = () => {
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
 
       {/* Contact CTA */}
-      <section className="py-16">
+      <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="contact-cta animate-on-scroll">
+          <div className="contact-cta-new animate-on-scroll">
             <div className="relative z-10">
-              <div className="text-5xl mb-6">💬</div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              <MessageSquare className="w-16 h-16 mx-auto mb-6 text-white" />
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
                 Vẫn còn thắc mắc?
               </h2>
-              <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+              <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto text-white">
                 Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giải đáp mọi câu hỏi của bạn. 
                 Liên hệ ngay để được tư vấn miễn phí.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/contact" className="bg-white text-green-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
-                  <span className="mr-2">📞</span>
+                  <Phone className="w-5 h-5 mr-2" />
                   Liên hệ hỗ trợ
                 </Link>
                 <Link to="/auth" className="bg-green-600 text-white px-8 py-4 rounded-full font-bold hover:bg-green-700 transition-colors inline-flex items-center justify-center">
-                  <span className="mr-2">🔑</span>
+                  <LogIn className="w-5 h-5 mr-2" />
                   Đăng nhập
                 </Link>
               </div>
@@ -599,7 +653,7 @@ const FAQs = () => {
         onClick={scrollToTop}
         aria-label="Back to top"
       >
-        ↑
+        <ChevronUp className="w-6 h-6" />
       </button>
     </div>
   );

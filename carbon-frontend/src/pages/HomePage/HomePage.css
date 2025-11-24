@@ -234,6 +234,24 @@
   font-size: 1.2rem;
 }
 
+/* New Step Cards */
+.step-card-new {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(39, 174, 96, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  height: 100%;
+}
+
+.step-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(39, 174, 96, 0.2);
+  border-color: rgba(39, 174, 96, 0.3);
+}
+
 /* Community Cards */
 .community-card {
   background: white;
@@ -260,6 +278,83 @@
   right: 0;
   height: 4px;
   background: #27AE60;
+}
+
+/* New Community Cards with Beautiful Borders */
+.community-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 2px solid transparent;
+}
+
+.community-card-new::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.community-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.community-card-new:hover::before {
+  opacity: 1;
+}
+
+.community-card-green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.community-card-green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+.community-card-green::before {
+  background: linear-gradient(90deg, transparent, #22c55e, transparent);
+}
+
+.community-card-blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.community-card-blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+}
+
+.community-card-blue::before {
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+}
+
+.community-card-purple {
+  border-color: rgba(139, 92, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.community-card-purple:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.2);
+}
+
+.community-card-purple::before {
+  background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
 }
 
 /* Stats Animation */

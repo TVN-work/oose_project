@@ -44,6 +44,12 @@
   background-position: center;
 }
 
+.hero-bg-new {
+  background: linear-gradient(135deg, rgba(39, 174, 96, 0.9) 0%, rgba(52, 152, 219, 0.8) 100%);
+  background-size: cover;
+  background-position: center;
+}
+
 /* Animations */
 .fade-in {
   animation: fadeIn 0.8s ease-in;
@@ -247,6 +253,63 @@
   background: linear-gradient(180deg, #3498DB, #5DADE2);
 }
 
+/* New Step Cards */
+.step-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-card-new:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.step-card-new.green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.step-card-new.green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+.step-card-new.green::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+
+.step-card-new.blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.step-card-new.blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+}
+
+.step-card-new.blue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+
 /* Flow Arrow */
 .flow-arrow {
   width: 4px;
@@ -268,6 +331,13 @@
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 12px solid #3498DB;
+}
+
+.flow-arrow-new {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Flowchart */
@@ -308,6 +378,69 @@
   border-color: #F59E0B;
 }
 
+/* New Flowchart */
+.flowchart-new {
+  background: white;
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.flowchart-node-new {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.flowchart-node-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.flowchart-node-new.green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.flowchart-node-new.green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 12px 35px rgba(34, 197, 94, 0.2);
+}
+
+.flowchart-node-new.blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.flowchart-node-new.blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.2);
+}
+
+.flowchart-node-new.purple {
+  border-color: rgba(139, 92, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.flowchart-node-new.purple:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 35px rgba(139, 92, 246, 0.2);
+}
+
+.flowchart-node-new.orange {
+  border-color: rgba(249, 115, 22, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(249, 115, 22, 0.02) 100%);
+}
+
+.flowchart-node-new.orange:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 12px 35px rgba(249, 115, 22, 0.2);
+}
+
 /* Process Illustration */
 .process-illustration {
   background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
@@ -337,6 +470,32 @@
   }
 }
 
+/* New Process Illustration */
+.process-illustration-new {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+  border-radius: 24px;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.process-illustration-new::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(39, 174, 96, 0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+.step-flow-new {
+  animation: stepFlow 3s ease-in-out infinite;
+}
+
 /* Tech Cards */
 .tech-card {
   background: white;
@@ -351,6 +510,27 @@
 .tech-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* New Tech Cards */
+.tech-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tech-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* Benefit Cards */
@@ -396,6 +576,93 @@
   background: linear-gradient(90deg, #F59E0B, #D97706);
 }
 
+/* New Benefit Cards */
+.benefit-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.benefit-card-new:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.benefit-card-new::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.benefit-card-new.green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.benefit-card-new.green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+.benefit-card-new.green::before {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.benefit-card-new.blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.benefit-card-new.blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+}
+
+.benefit-card-new.blue::before {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.benefit-card-new.purple {
+  border-color: rgba(139, 92, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.benefit-card-new.purple:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.2);
+}
+
+.benefit-card-new.purple::before {
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+.benefit-card-new.orange {
+  border-color: rgba(249, 115, 22, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(249, 115, 22, 0.02) 100%);
+}
+
+.benefit-card-new.orange:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 16px 40px rgba(249, 115, 22, 0.2);
+}
+
+.benefit-card-new.orange::before {
+  background: linear-gradient(90deg, #f97316, #ea580c);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -414,6 +681,36 @@
   background: #229954;
 }
 
+/* Guide Step Cards */
+.guide-step-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.guide-step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* FAQ Cards */
+.faq-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.faq-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .step-card {
@@ -426,6 +723,14 @@
 
   .process-illustration {
     padding: 2rem;
+  }
+
+  .guide-step-card {
+    padding: 1.25rem;
+  }
+
+  .faq-card {
+    padding: 1.25rem;
   }
 }
 

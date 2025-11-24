@@ -1,19 +1,70 @@
 /* PublicFooter specific styles */
 .public-footer {
-  /* Footer styles are handled by Tailwind classes */
+  background: #111827;
+  border-top: 1px solid #1f2937;
 }
 
 /* Gradient green utility */
 .gradient-green {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
 /* Primary green color */
 .text-primary-green {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .hover\:text-primary-green:hover {
-  color: #10b981;
+  color: #22c55e;
+}
+
+.bg-primary-green {
+  background-color: #22c55e;
+}
+
+.hover\:bg-green-600:hover {
+  background-color: #16a34a;
+}
+
+/* Social media icons hover effect */
+.public-footer a[aria-label] {
+  transition: all 0.3s ease;
+}
+
+.public-footer a[aria-label]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* Link hover animations */
+.public-footer a:not([aria-label]):not([type="submit"]) {
+  transition: all 0.2s ease;
+}
+
+.public-footer a:not([aria-label]):not([type="submit"]):hover {
+  transform: translateX(2px);
+}
+
+/* Newsletter form */
+.public-footer input[type="email"]:focus {
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+/* Trust badges */
+.public-footer .trust-badge {
+  transition: all 0.2s ease;
+}
+
+.public-footer .trust-badge:hover {
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .public-footer {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
 }
 

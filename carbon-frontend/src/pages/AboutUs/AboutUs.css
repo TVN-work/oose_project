@@ -187,6 +187,66 @@
   background: linear-gradient(90deg, #3498DB, #5DADE2);
 }
 
+/* New Mission Cards */
+.mission-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mission-card-new:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.mission-card-green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.mission-card-green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+.mission-card-green::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.mission-card-blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.mission-card-blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+}
+
+.mission-card-blue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
 /* Problem Solution Cards */
 .problem-solution-card {
   background: white;
@@ -202,6 +262,25 @@
 .problem-solution-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* New Problem Solution Cards */
+.problem-solution-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.problem-solution-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* Benefit Cards */
@@ -232,6 +311,86 @@
   background: linear-gradient(90deg, #27AE60, #3498DB);
 }
 
+/* New Benefit Cards */
+.benefit-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.benefit-card-new:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.benefit-card-green {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(34, 197, 94, 0.02) 100%);
+}
+
+.benefit-card-green:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+.benefit-card-green::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.benefit-card-blue {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.benefit-card-blue:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+}
+
+.benefit-card-blue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.benefit-card-purple {
+  border-color: rgba(139, 92, 246, 0.2);
+  background: linear-gradient(to bottom, white 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.benefit-card-purple:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.2);
+}
+
+.benefit-card-purple::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
 /* Technology Cards */
 .tech-card {
   background: white;
@@ -246,6 +405,27 @@
 .tech-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* New Tech Cards */
+.tech-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tech-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* Team Cards */
@@ -276,6 +456,38 @@
   color: white;
 }
 
+/* New Team Cards */
+.team-card-new {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.team-card-new:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.team-avatar-new {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 /* Partner Logos */
 .partner-logo {
   background: white;
@@ -293,6 +505,26 @@
 .partner-logo:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* New Partner Logos */
+.partner-logo-new {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+}
+
+.partner-logo-new:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* EV Car Animation */
