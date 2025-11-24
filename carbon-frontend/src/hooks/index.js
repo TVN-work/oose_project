@@ -65,6 +65,7 @@ export {
 
 // Journey hooks
 export {
+  useJourneys,
   useJourney,
   useCreateJourney,
   useJourneyUtils,
@@ -104,5 +105,15 @@ export {
   usePayTransaction,
   useTransactionUtils,
 } from './useTransaction';
+
+// Audit hooks
+export {
+  useAudit,
+  useAllAudits,
+  useAuditById,
+  useCreateAudit,
+  useUpdateAudit,
+  useDeleteAudit,
+} from './useAudit';
 
 export default {};

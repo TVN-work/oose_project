@@ -18,6 +18,12 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      // Get cached user info from localStorage as fallback
+      const cachedUserId = localStorage.getItem('userId');
+      const cachedUsername = localStorage.getItem('username');
+      const cachedRole = localStorage.getItem('userRole');
+      const cachedFullName = localStorage.getItem('userFullName');
+
       // Try to fetch user profile with token
       try {
         const profile = await authService.getProfile();
@@ -30,12 +36,38 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(mappedUser);
         setIsAuthenticated(true);
+
+        // Update cached user info
+        if (profile.id) localStorage.setItem('userId', profile.id);
+        if (profile.fullName) localStorage.setItem('userFullName', profile.fullName);
       } catch (error) {
         console.error('Failed to fetch profile:', error);
-        // Clear invalid token
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-        setIsAuthenticated(false);
+
+        // Only logout if it's an auth error (401), not network error
+        if (error?.code === 'UNAUTHORIZED' || error?.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          setIsAuthenticated(false);
+        } else if (cachedUserId && cachedRole) {
+          // Use cached user info as fallback when API is unavailable
+          console.log('Using cached user info');
+          const fallbackUser = {
+            id: cachedUserId,
+            username: cachedUsername,
+            email: cachedUsername,
+            name: cachedFullName || cachedUsername,
+            fullName: cachedFullName || cachedUsername,
+            role: cachedRole,
+            roles: cachedRole,
+          };
+          setUser(fallbackUser);
+          setIsAuthenticated(true);
+        } else {
+          // No cached info and API failed, need to re-login
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          setIsAuthenticated(false);
+        }
       }
 
       setLoading(false);
@@ -83,6 +115,11 @@ export const AuthProvider = ({ children }) => {
         role: profile.role || data.role,
       };
       setUser(mappedUser);
+
+      // Cache fullName for refresh fallback
+      if (profile.fullName) {
+        localStorage.setItem('userFullName', profile.fullName);
+      }
     } catch (error) {
       console.error('Failed to fetch profile after login:', error);
       // Fallback to basic user object if profile fetch fails
@@ -112,6 +149,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('userFullName');
       setUser(null);
       setIsAuthenticated(false);
     }

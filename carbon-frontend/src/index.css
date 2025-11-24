@@ -9,7 +9,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  /* Force light color scheme for consistent form control styling */
+  color-scheme: light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -24,6 +25,7 @@ a {
   color: #ffffff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #f0f0f0;
 }
@@ -51,12 +53,36 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #ffffff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Always show light (white) backgrounds for form fields regardless of OS theme */
+input,
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: #213547 !important;
+  border-color: #d1d5db;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Remove default dark-mode inversion on autofill */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  -webkit-text-fill-color: #213547 !important;
 }
 
 @media (prefers-color-scheme: light) {
@@ -64,9 +90,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #f0f0f0;
   }
+
   button {
     background-color: #f9f9f9;
   }
@@ -78,6 +106,7 @@ button:focus-visible {
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -93,6 +122,7 @@ button:focus-visible {
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -113,6 +143,7 @@ button:focus-visible {
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -124,6 +155,7 @@ button:focus-visible {
     opacity: 1;
     transform: translateX(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateX(20px) scale(0.95);
@@ -135,9 +167,11 @@ button:focus-visible {
     transform: scale(0) rotate(-180deg);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.2) rotate(10deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
     opacity: 1;
@@ -146,7 +180,8 @@ button:focus-visible {
 
 .alert-fade-in {
   animation: alertFadeInSlide 0.3s ease-out forwards;
-  opacity: 1 !important; /* Ensure alert is always visible */
+  opacity: 1 !important;
+  /* Ensure alert is always visible */
 }
 
 .alert-fade-out {
@@ -165,6 +200,7 @@ button:focus-visible {
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -176,6 +212,7 @@ button:focus-visible {
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(100%);
@@ -197,8 +234,10 @@ button:focus-visible {
 }
 
 .sidebar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Hide scrollbar for certificate modal */
@@ -207,6 +246,8 @@ button:focus-visible {
 }
 
 .certificate-scrollable {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

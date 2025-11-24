@@ -33,7 +33,6 @@ import EVOwnerDashboard from '../features/ev-owner/pages/Dashboard';
 import CarbonWallet from '../features/ev-owner/pages/CarbonWallet';
 import ListingsManagement from '../features/ev-owner/pages/ListingsManagement';
 import TransactionHistory from '../features/ev-owner/pages/TransactionHistory';
-import Reports from '../features/ev-owner/pages/Reports';
 import UploadTrips from '../features/ev-owner/pages/UploadTrips';
 import Settings from '../features/ev-owner/pages/Settings';
 
@@ -67,240 +66,240 @@ import AdminSettings from '../features/admin/pages/Settings';
 // Create router configuration
 const createRouter = () => createBrowserRouter(
   [
-  // Public routes with shared layout
-  {
-    path: '/',
-    element: <PublicLayout />,
-    children: [
-      {
-        index: true,
-        element: <HomePage />,
-      },
-      {
-        path: 'about',
-        element: <AboutUs />,
-      },
-      {
-        path: 'auth',
-        element: <Auth />,
-      },
-      {
-        path: 'blog',
-        element: <Blog />,
-      },
-      {
-        path: 'contact',
-        element: <Contact />,
-      },
-      {
-        path: 'faqs',
-        element: <FAQs />,
-      },
-      {
-        path: 'how-it-works',
-        element: <HowItWorks />,
-      },
-      {
-        path: 'marketplace',
-        element: <PublicMarketplace />,
-      },
-      {
-        path: 'login',
-        element: <Auth />,
-      },
-      {
-        path: 'register',
-        element: <Auth />,
-      },
-    ],
-  },
-  // EV Owner routes
-  {
-    path: '/ev-owner',
-    element: (
-      <ProtectedRoute allowedRoles={[USER_ROLES.EV_OWNER]}>
-        <EVOwnerLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <EVOwnerDashboard />,
-      },
-      {
-        path: 'dashboard',
-        element: <EVOwnerDashboard />,
-      },
-      {
-        path: 'carbon-wallet',
-        element: <CarbonWallet />,
-      },
-      {
-        path: 'listings',
-        element: <ListingsManagement />,
-      },
-      {
-        path: 'transactions',
-        element: <TransactionHistory />,
-      },
-      {
-        path: 'reports',
-        element: <Reports />,
-      },
-      {
-        path: 'upload-trips',
-        element: <UploadTrips />,
-      },
-      {
-        path: 'settings',
-        element: <Settings />,
-      },
-    ],
-  },
-  // Buyer routes
-  {
-    path: '/buyer',
-    element: (
-      <ProtectedRoute allowedRoles={[USER_ROLES.BUYER]}>
-        <BuyerLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <BuyerDashboard />,
-      },
-      {
-        path: 'dashboard',
-        element: <BuyerDashboard />,
-      },
-      {
-        path: 'marketplace',
-        element: <Marketplace />,
-      },
-      {
-        path: 'marketplace/:id',
-        element: <ListingDetail />,
-      },
-      {
-        path: 'checkout',
-        element: <Checkout />,
-      },
-      {
-        path: 'auction/:id',
-        element: <AuctionPage />,
-      },
-      {
-        path: 'purchase-history',
-        element: <PurchaseHistory />,
-      },
-      {
-        path: 'certificates',
-        element: <Certificates />,
-      },
-      {
-        path: 'settings',
-        element: <BuyerSettings />,
-      },
-    ],
-  },
-  // Verifier routes
-  {
-    path: '/verifier',
-    element: (
-      <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER]}>
-        <VerifierLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <VerifierDashboard />,
-      },
-      {
-        path: 'dashboard',
-        element: <VerifierDashboard />,
-      },
-      {
-        path: 'verification-requests',
-        element: <VerificationRequests />,
-      },
-      {
-        path: 'issue-credits',
-        element: <IssueCredits />,
-      },
-      {
-        path: 'reports',
-        element: <VerifierReports />,
-      },
-      {
-        path: 'settings',
-        element: <VerifierSettings />,
-      },
-    ],
-  },
-  // Admin routes
-  {
-    path: '/admin',
-    element: (
-      <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
-        <AdminLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <AdminDashboard />,
-      },
-      {
-        path: 'dashboard',
-        element: <AdminDashboard />,
-      },
-      {
-        path: 'users',
-        element: <AdminUsers />,
-      },
-      {
-        path: 'transactions',
-        element: <AdminTransactions />,
-      },
-      {
-        path: 'listings',
-        element: <AdminListings />,
-      },
-      {
-        path: 'wallets',
-        element: <AdminWallets />,
-      },
-      {
-        path: 'reports',
-        element: <AdminReports />,
-      },
-      {
-        path: 'settings',
-        element: <AdminSettings />,
-      },
-    ],
-  },
-  // Admin/CVA Login (Hidden - not linked from public pages)
-  {
-    path: '/admin/login',
-    element: <AdminAuth />,
-  },
-  {
-    path: '/verifier/login',
-    element: <AdminAuth />,
-  },
-  // Unauthorized Route
-  {
-    path: '/unauthorized',
-    element: <Unauthorized />,
-  },
-  // 404 Route - must be last
-  {
-    path: '*',
-    element: <NotFound />,
-  },
+    // Public routes with shared layout
+    {
+      path: '/',
+      element: <PublicLayout />,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        {
+          path: 'about',
+          element: <AboutUs />,
+        },
+        {
+          path: 'auth',
+          element: <Auth />,
+        },
+        {
+          path: 'blog',
+          element: <Blog />,
+        },
+        {
+          path: 'contact',
+          element: <Contact />,
+        },
+        {
+          path: 'faqs',
+          element: <FAQs />,
+        },
+        {
+          path: 'how-it-works',
+          element: <HowItWorks />,
+        },
+        {
+          path: 'marketplace',
+          element: <PublicMarketplace />,
+        },
+        {
+          path: 'login',
+          element: <Auth />,
+        },
+        {
+          path: 'register',
+          element: <Auth />,
+        },
+      ],
+    },
+    // EV Owner routes
+    {
+      path: '/ev-owner',
+      element: (
+        <ProtectedRoute allowedRoles={[USER_ROLES.EV_OWNER]}>
+          <EVOwnerLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <EVOwnerDashboard />,
+        },
+        {
+          path: 'dashboard',
+          element: <EVOwnerDashboard />,
+        },
+        {
+          path: 'carbon-wallet',
+          element: <CarbonWallet />,
+        },
+        {
+          path: 'listings',
+          element: <ListingsManagement />,
+        },
+        {
+          path: 'transactions',
+          element: <TransactionHistory />,
+        },
+        {
+          path: 'reports',
+          element: <EVOwnerDashboard />, // Reports merged into Dashboard
+        },
+        {
+          path: 'upload-trips',
+          element: <UploadTrips />,
+        },
+        {
+          path: 'settings',
+          element: <Settings />,
+        },
+      ],
+    },
+    // Buyer routes
+    {
+      path: '/buyer',
+      element: (
+        <ProtectedRoute allowedRoles={[USER_ROLES.BUYER]}>
+          <BuyerLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <BuyerDashboard />,
+        },
+        {
+          path: 'dashboard',
+          element: <BuyerDashboard />,
+        },
+        {
+          path: 'marketplace',
+          element: <Marketplace />,
+        },
+        {
+          path: 'marketplace/:id',
+          element: <ListingDetail />,
+        },
+        {
+          path: 'checkout',
+          element: <Checkout />,
+        },
+        {
+          path: 'auction/:id',
+          element: <AuctionPage />,
+        },
+        {
+          path: 'purchase-history',
+          element: <PurchaseHistory />,
+        },
+        {
+          path: 'certificates',
+          element: <Certificates />,
+        },
+        {
+          path: 'settings',
+          element: <BuyerSettings />,
+        },
+      ],
+    },
+    // Verifier routes
+    {
+      path: '/verifier',
+      element: (
+        <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER]}>
+          <VerifierLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <VerifierDashboard />,
+        },
+        {
+          path: 'dashboard',
+          element: <VerifierDashboard />,
+        },
+        {
+          path: 'verification-requests',
+          element: <VerificationRequests />,
+        },
+        {
+          path: 'issue-credits',
+          element: <IssueCredits />,
+        },
+        {
+          path: 'reports',
+          element: <VerifierReports />,
+        },
+        {
+          path: 'settings',
+          element: <VerifierSettings />,
+        },
+      ],
+    },
+    // Admin routes
+    {
+      path: '/admin',
+      element: (
+        <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+          <AdminLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <AdminDashboard />,
+        },
+        {
+          path: 'dashboard',
+          element: <AdminDashboard />,
+        },
+        {
+          path: 'users',
+          element: <AdminUsers />,
+        },
+        {
+          path: 'transactions',
+          element: <AdminTransactions />,
+        },
+        {
+          path: 'listings',
+          element: <AdminListings />,
+        },
+        {
+          path: 'wallets',
+          element: <AdminWallets />,
+        },
+        {
+          path: 'reports',
+          element: <AdminReports />,
+        },
+        {
+          path: 'settings',
+          element: <AdminSettings />,
+        },
+      ],
+    },
+    // Admin/CVA Login (Hidden - not linked from public pages)
+    {
+      path: '/admin/login',
+      element: <AdminAuth />,
+    },
+    {
+      path: '/verifier/login',
+      element: <AdminAuth />,
+    },
+    // Unauthorized Route
+    {
+      path: '/unauthorized',
+      element: <Unauthorized />,
+    },
+    // 404 Route - must be last
+    {
+      path: '*',
+      element: <NotFound />,
+    },
   ],
   {
     future: {

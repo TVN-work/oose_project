@@ -8,6 +8,122 @@ import { API_ENDPOINTS } from '../../config/api';
  */
 const journeyService = {
   /**
+   * Get all journeys with optional filters and pagination
+   * @param {Object} params - Query parameters
+   * @param {string} params.journeyId - Journey ID filter (optional)
+   * @param {string} params.journeyStatus - Status filter: PENDING, APPROVED, REJECTED, CANCELLED (optional)
+   * @param {number} params.page - Page number (default: 0)
+   * @param {number} params.entry - Items per page (default: 10)
+   * @param {string} params.field - Sort field (default: 'id')
+   * @param {string} params.sort - Sort direction: 'ASC' or 'DESC' (default: 'DESC')
+   * @returns {Promise<Array>} List of journeys
+   */
+  getAllJourneys: async (params = {}) => {
+    try {
+      const {
+        journeyId,
+        journeyStatus,
+        page = 0,
+        entry = 10,
+        field = 'id',
+        sort = 'DESC'
+      } = params;
+
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        entry: entry.toString(),
+        field,
+        sort,
+      });
+
+      // Add optional filters
+      if (journeyId) queryParams.append('journeyId', journeyId);
+      if (journeyStatus) queryParams.append('journeyStatus', journeyStatus);
+
+      const response = await apiClient.get(`/journeys?${queryParams.toString()}`, {
+        headers: {
+          'accept': '*/*',
+        },
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Error fetching journeys:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get journey history by journey ID
+   * Returns list of journey history records for a specific journey
+   * @param {string} journeyId - Journey ID
+   * @param {Object} params - Query parameters
+   * @param {number} params.page - Page number (default: 0)
+   * @param {number} params.size - Items per page (default: 10)
+   * @param {string} params.sort - Sort field (default: 'createdAt')
+   * @param {string} params.order - Sort direction: 'asc' or 'desc' (default: 'desc')
+   * @returns {Promise<Object>} Paginated journey history response with content and totalElements
+   */
+  getJourneyHistoryByJourneyId: async (journeyId, params = {}) => {
+    try {
+      const {
+        page = 0,
+        size = 10,
+        sort = 'createdAt',
+        order = 'desc'
+      } = params;
+
+      const queryParams = new URLSearchParams({
+        journeyId,
+        page: page.toString(),
+        entry: size.toString(),
+        field: sort,
+        sort: order.toUpperCase(),
+      });
+
+      const response = await apiClient.get(`/journeys?${queryParams.toString()}`, {
+        headers: {
+          'accept': '*/*',
+        },
+      });
+
+      // Transform response to match expected pagination structure
+      if (Array.isArray(response)) {
+        // If API returns array, wrap in pagination structure
+        return {
+          content: response,
+          totalElements: response.length,
+          totalPages: 1,
+          size: response.length,
+          number: 0
+        };
+      } else if (response && typeof response === 'object') {
+        // If API already returns pagination structure, use as is
+        return response;
+      } else {
+        // Fallback for unexpected response
+        return {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: size,
+          number: page
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching journey history:', error);
+      // Return empty pagination structure on error
+      return {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: params.size || 10,
+        number: params.page || 0
+      };
+    }
+  },
+
+  /**
    * Create a new journey
    * @param {Object} journeyData - Journey data
    * @param {string} journeyData.journeyId - Journey ID (required)

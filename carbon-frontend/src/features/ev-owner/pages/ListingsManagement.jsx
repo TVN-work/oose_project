@@ -20,8 +20,9 @@ import {
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
-import { evOwnerService } from '../../../services/evOwner/evOwnerService';
-import { useCarbonWallet, useListings, useCreateListing } from '../../../hooks/useEvOwner';
+import { useMyCarbonCredit } from '../../../hooks/useCarbonCredit';
+import { useListings, useCreateListing } from '../../../hooks/useMarket';
+import { useAuth } from '../../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
 const LISTING_TYPE = {
@@ -32,14 +33,15 @@ const LISTING_TYPE = {
 const ListingsManagement = () => {
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  // Fetch wallet data to get available credits
-  const { data: walletData, refetch: refetchWallet } = useCarbonWallet();
-  const availableCredits = walletData?.balance || walletData?.available || 0;
+  // Fetch carbon credit data to get available credits
+  const { data: carbonCreditData } = useMyCarbonCredit();
+  const availableCredits = carbonCreditData?.availableCredit || 0;
 
-  // Fetch listings from API
-  const { data: listingsData, isLoading: listingsLoading } = useListings();
-  const myListings = listingsData?.data || listingsData || [];
+  // Fetch listings from API filtered by sellerId
+  const { data: listingsData, isLoading: listingsLoading } = useListings({ sellerId: user?.id });
+  const myListings = listingsData || [];
 
   // Create listing mutation
   const createListingMutation = useCreateListing();
@@ -223,11 +225,10 @@ const ListingsManagement = () => {
 
       if (notification.type === 'listing_rejected' && notification.listingId) {
         // Refetch listings to get updated status
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'listings'] });
+        queryClient.invalidateQueries({ queryKey: ['listings'] });
 
-        // Refetch wallet to get updated balance
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
-        refetchWallet();
+        // Refetch carbon credits to get updated balance
+        queryClient.invalidateQueries({ queryKey: ['carbonCredits'] });
       }
     };
 
@@ -236,7 +237,7 @@ const ListingsManagement = () => {
     return () => {
       window.removeEventListener('listing-rejected', handleListingRejected);
     };
-  }, [queryClient, refetchWallet]);
+  }, [queryClient]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -269,19 +270,23 @@ const ListingsManagement = () => {
     }
 
     try {
-      // Prepare listing data
+      // Prepare listing data according to API spec
       const listingData = {
-        listingType: formData.listingType,
+        sellerId: user?.id,
+        creditId: carbonCreditData?.id, // Use the carbon credit ID
         quantity: qty,
         pricePerCredit: formData.listingType === LISTING_TYPE.FIXED_PRICE
           ? parseFloat(formData.pricePerCredit)
           : parseFloat(formData.startingPrice),
-        startingPrice: formData.listingType === LISTING_TYPE.AUCTION
-          ? parseFloat(formData.startingPrice)
-          : undefined,
+        type: formData.listingType,
         endTime: formData.listingType === LISTING_TYPE.AUCTION
-          ? formData.endTime
-          : undefined,
+          ? new Date(formData.endTime).toISOString()  // Convert to proper ISO format
+          : (() => {
+            // For fixed price listings, set endTime to 14 days from now
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + 14);
+            return endDate.toISOString();
+          })(),
       };
 
       // Create listing via mutation
@@ -506,8 +511,8 @@ const ListingsManagement = () => {
                     type="button"
                     onClick={() => handleListingTypeChange(LISTING_TYPE.FIXED_PRICE)}
                     className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${formData.listingType === LISTING_TYPE.FIXED_PRICE
-                        ? 'bg-blue-50 border-blue-400 shadow-lg'
-                        : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+                      ? 'bg-blue-50 border-blue-400 shadow-lg'
+                      : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
                       }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -525,8 +530,8 @@ const ListingsManagement = () => {
                     type="button"
                     onClick={() => handleListingTypeChange(LISTING_TYPE.AUCTION)}
                     className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${formData.listingType === LISTING_TYPE.AUCTION
-                        ? 'bg-purple-50 border-purple-400 shadow-lg'
-                        : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
+                      ? 'bg-purple-50 border-purple-400 shadow-lg'
+                      : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
                       }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -794,12 +799,12 @@ const ListingsManagement = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {myListings.map((listing) => {
               const quantity = listing.quantity || 0;
-              const pricePerCredit = listing.pricePerCredit || listing.price_per_credit || 0;
-              const listingType = listing.listingType || listing.listing_type || LISTING_TYPE.FIXED_PRICE;
+              const pricePerCredit = listing.pricePerCredit || 0;
+              const listingType = listing.type || LISTING_TYPE.FIXED_PRICE;
               const status = listing.status || 'ACTIVE';
-              const verificationStatus = listing.verificationStatus || listing.verification_status || 'PENDING_VERIFICATION';
-              const revenue = listing.revenue || 0;
-              const createdAt = listing.createdAt || listing.created_at || new Date();
+              const verificationStatus = 'VERIFIED'; // Assume all listings are verified for now
+              const revenue = 0; // Calculate revenue if sold
+              const createdAt = listing.createdAt || new Date();
               const date = new Date(createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
               return (

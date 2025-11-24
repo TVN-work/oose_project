@@ -26,7 +26,7 @@ All authentication requests go through the API Gateway:
 
 - **Login**: `POST http://localhost:8222/api/auth/login`
 - **Register**: `POST http://localhost:8222/api/auth/register`
-- **Profile**: `GET http://localhost:8222/api/auth/profile`
+- **Profile**: `GET http://localhost:8222/api/customer/profile`
 - **Logout**: `POST http://localhost:8222/api/auth/logout`
 
 ## Authentication Flow

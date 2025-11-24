@@ -1,254 +1,217 @@
 import { Link } from 'react-router-dom';
 import { TrendingUp, DollarSign, RefreshCw, Star, Tag, BarChart3, Upload, Wallet, Leaf, Coins, ArrowUpRight, ArrowDownLeft, Activity, CreditCard, TrendingDown } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useCarbonWallet, useWalletTransactions } from '../../../hooks/useEvOwner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../../context/AuthContext';
+import { useCarbonCreditByUserId } from '../../../hooks/useCarbonCredit';
+import { useWalletByUserId } from '../../../hooks/useWallet';
+import { useJourneys } from '../../../hooks/useJourney';
+import { useTransactions } from '../../../hooks/useTransaction';
+import { useAudit } from '../../../hooks/useAudit';
+import { AUDIT_TYPES, AUDIT_ACTIONS } from '../../../services/audit/auditService';
 import Loading from '../../../components/common/Loading';
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
-import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
-import { evOwnerService } from '../../../services/evOwner/evOwnerService';
 
 const CarbonWallet = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
-  const [refreshKey, setRefreshKey] = useState(0);
-  
-  // Fetch wallet data
-  const { data: walletData, isLoading: walletLoading, refetch: refetchWallet } = useCarbonWallet();
-  const { data: transactionsData, isLoading: transactionsLoading, refetch: refetchTransactions } = useWalletTransactions();
-  const queryClient = useQueryClient();
-  
-  // Fetch payment wallet data
-  const [paymentWallet, setPaymentWallet] = useState({ balance: 0, currency: 'VND' });
-  const [paymentTransactions, setPaymentTransactions] = useState([]);
-  const [isLoadingPaymentWallet, setIsLoadingPaymentWallet] = useState(false);
 
-  // Load payment wallet data
-  useEffect(() => {
-    const loadPaymentWallet = async () => {
-      setIsLoadingPaymentWallet(true);
-      try {
-        const data = await evOwnerService.getPaymentWallet();
-        setPaymentWallet(data || { balance: 0, currency: 'VND' });
-        
-        const txData = await evOwnerService.getPaymentWalletTransactions();
-        setPaymentTransactions(txData?.data || txData || []);
-      } catch (error) {
-        console.error('Error loading payment wallet:', error);
-        setPaymentWallet({ balance: 5000000, currency: 'VND' }); // Fallback
-        setPaymentTransactions([]);
-      } finally {
-        setIsLoadingPaymentWallet(false);
-      }
+  // Fetch data using same hooks as Dashboard
+  const { data: carbonCredit, isLoading: loadingCredit } = useCarbonCreditByUserId(userId);
+  const { data: wallet, isLoading: loadingWallet } = useWalletByUserId(userId);
+  const { data: journeysResponse, isLoading: loadingJourneys } = useJourneys({
+    journeyStatus: 'APPROVED',
+    page: 0,
+    entry: 100,
+    sort: 'DESC',
+    ownerId: userId
+  });
+  const { data: transactionsResponse, isLoading: loadingTransactions } = useTransactions({
+    sellerId: userId,
+    page: 0,
+    entry: 100,
+    sort: 'DESC',
+    ownerId: userId
+  });
+
+  // Fetch audit data for carbon credit and wallet history
+  const { data: carbonAuditResponse, isLoading: loadingCarbonAudit } = useAudit({
+    type: AUDIT_TYPES.CARBON_CREDIT,
+    page: 0,
+    entry: 100,
+    field: 'id',
+    sort: 'DESC',
+    ownerId: userId
+  });
+
+  const { data: walletAuditResponse, isLoading: loadingWalletAudit } = useAudit({
+    type: AUDIT_TYPES.WALLET,
+    page: 0,
+    entry: 100,
+    field: 'id',
+    sort: 'DESC',
+    ownerId: userId
+  });
+
+  const isLoading = loadingCredit || loadingWallet || loadingJourneys || loadingTransactions || loadingCarbonAudit || loadingWalletAudit;
+
+  // Process data
+  const journeys = Array.isArray(journeysResponse) ? journeysResponse : [];
+  const transactions = Array.isArray(transactionsResponse) ? transactionsResponse : [];
+  const carbonAudits = Array.isArray(carbonAuditResponse) ? carbonAuditResponse : [];
+  const walletAudits = Array.isArray(walletAuditResponse) ? walletAuditResponse : [];
+
+  // Calculate statistics from API data
+  const calculateStats = () => {
+    const totalCredits = carbonCredit?.totalCredit || 0;
+    const availableCredits = carbonCredit?.availableCredit || 0;
+    const tradedCredits = carbonCredit?.tradedCredit || 0;
+    const walletBalance = wallet?.balance || 0;
+
+    const totalDistance = journeys.reduce((sum, j) => sum + (j.newDistance || 0), 0);
+    const successfulTransactions = transactions.filter(t => t.status === 'SUCCESS');
+    const totalRevenue = successfulTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const creditsSold = successfulTransactions.reduce((sum, t) => sum + (t.credit || 0), 0);
+
+    return {
+      totalCredits,
+      availableCredits,
+      tradedCredits,
+      walletBalance,
+      totalDistance,
+      totalRevenue,
+      creditsSold
     };
-    loadPaymentWallet();
-  }, [refreshKey]);
-
-  // Use data from hooks, with fallback to default values
-  const wallet = walletData || {
-    balance: 245.5,
-    available: 245.5,
-    totalEarned: 189.2,
-    totalSold: 189.2,
-    statistics: {
-      totalCredits: 245.5,
-      soldCredits: 189.2,
-      pendingCredits: 0,
-      availableCredits: 245.5,
-    },
   };
-  
-  const transactions = transactionsData?.data || transactionsData || [];
 
-  // Listen for verification status changes (when credits are issued)
-  useEffect(() => {
-    const handleVerificationStatusChange = async (event) => {
-      const notification = event.detail;
-      
-      if (notification.type === 'credit_issued') {
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
-        
-        setTimeout(async () => {
-          queryClient.removeQueries({ queryKey: ['evOwner', 'wallet'] });
-          queryClient.removeQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
-          
-          await Promise.all([
-            refetchWallet(),
-            refetchTransactions(),
-          ]);
-          
-          setRefreshKey(prev => prev + 1);
-        }, 300);
-        
-        showAlert(
-          `Tín chỉ đã được cấp! ${notification.message} Số dư mới: ${notification.newBalance?.toFixed(2) || '0.00'} tín chỉ`,
-          'success',
-          5000
-        );
-      }
-    };
+  const stats = isLoading ? null : calculateStats();
 
-    const handleListingRejected = async (event) => {
-      const notification = event.detail;
-      
-      if (notification.type === 'listing_rejected') {
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
-        queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
-        
-        setTimeout(async () => {
-          queryClient.removeQueries({ queryKey: ['evOwner', 'wallet'] });
-          queryClient.removeQueries({ queryKey: ['evOwner', 'wallet', 'transactions'] });
-          
-          await Promise.all([
-            refetchWallet(),
-            refetchTransactions(),
-          ]);
-          
-          setRefreshKey(prev => prev + 1);
-        }, 300);
-        
-        showAlert(
-          `Niêm yết bị từ chối! ${notification.quantity || 0} tín chỉ đã được hoàn trả vào ví. Lý do: ${notification.reason || 'Niêm yết không hợp lệ'}`,
-          'info',
-          5000
-        );
-      }
-    };
-
-    window.addEventListener('verification-status-changed', handleVerificationStatusChange);
-    window.addEventListener('listing-rejected', handleListingRejected);
-    
-    return () => {
-      window.removeEventListener('verification-status-changed', handleVerificationStatusChange);
-      window.removeEventListener('listing-rejected', handleListingRejected);
-    };
-  }, [refetchWallet, refetchTransactions, queryClient, showAlert]);
-
-  // Format carbon credit transactions
-  // Only show: earned (from journeys), listing_created (when creating listings), and listing_rejected (when listing is rejected)
-  // Do NOT show: sold (sales to buyers - those go to sales history)
+  // Format carbon credit transactions from audit data
   const formattedCarbonTransactions = useMemo(() => {
-    const filteredTransactions = (transactions || []).filter(tx => {
-      // Only include earned, listing_created, and listing_rejected transactions
-      return tx.type === 'earned' || tx.type === 'listing_created' || tx.type === 'listing_rejected';
-    });
-    
-    return filteredTransactions.slice(0, 10).map((tx, idx) => {
-      const date = new Date(tx.date || tx.createdAt);
+    return (carbonAudits || []).slice(0, 10).map((audit, idx) => {
+      const date = new Date(audit.createdAt || audit.timestamp);
       const isToday = date.toDateString() === new Date().toDateString();
       const isYesterday = date.toDateString() === new Date(Date.now() - 86400000).toDateString();
-      
+
       let timeStr = '';
       if (isToday) {
         timeStr = `Hôm nay • ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
       } else if (isYesterday) {
         timeStr = `Hôm qua • ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
       } else {
-        timeStr = date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }) + 
-                  ' • ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        timeStr = date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }) +
+          ' • ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
       }
-      
-      const amount = tx.amount || 0;
+
+      const amount = audit.amount || audit.creditAmount || 0;
       const isPositive = amount > 0;
-      
-      // Determine title based on transaction type
-      let title = tx.description;
+
+      let title = audit.description || audit.action;
       if (!title) {
-        if (tx.type === 'earned') {
+        if (audit.action === AUDIT_ACTIONS.CREDIT_TOP_UP) {
           title = 'Tạo tín chỉ từ hành trình';
-        } else if (tx.type === 'listing_created') {
+        } else if (audit.action === AUDIT_ACTIONS.CREDIT_TRADE) {
           title = 'Tạo niêm yết tín chỉ';
-        } else if (tx.type === 'listing_rejected') {
-          title = 'Hoàn trả tín chỉ - Niêm yết bị từ chối';
+        } else if (audit.action === AUDIT_ACTIONS.ADJUST_MANUAL) {
+          title = 'Điều chỉnh thủ công';
         } else {
-          title = 'Giao dịch tín chỉ';
+          title = 'Hoạt động tín chỉ';
         }
       }
-      
+
       return {
-        id: tx.id || `tx-${idx}`,
+        id: audit.id || `audit-${idx}`,
         type: isPositive ? 'credit' : 'debit',
         title: title,
         time: timeStr,
         amount: isPositive ? `+${amount.toFixed(2)}` : `${amount.toFixed(2)}`,
         color: isPositive ? 'green' : 'red',
-        originalTx: tx,
+        originalAudit: audit,
       };
     });
-  }, [transactions, refreshKey]);
+  }, [carbonAudits]);
 
-  // Format payment wallet transactions
-  const formattedPaymentTransactions = useMemo(() => {
-    return (paymentTransactions || []).slice(0, 10).map((tx, idx) => {
-      const date = new Date(tx.date || tx.createdAt);
+  // Format wallet transactions from audit data  
+  const formattedWalletTransactions = useMemo(() => {
+    return (walletAudits || []).slice(0, 10).map((audit, idx) => {
+      const date = new Date(audit.createdAt || audit.timestamp);
       const isToday = date.toDateString() === new Date().toDateString();
       const isYesterday = date.toDateString() === new Date(Date.now() - 86400000).toDateString();
-      
+
       let timeStr = '';
       if (isToday) {
         timeStr = `Hôm nay • ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
       } else if (isYesterday) {
         timeStr = `Hôm qua • ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
       } else {
-        timeStr = date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }) + 
-                  ' • ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        timeStr = date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' }) +
+          ' • ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
       }
-      
-      const amount = tx.amount || 0;
+
+      const amount = audit.amount || 0;
       const isPositive = amount > 0;
-      
-      // Determine title based on listing type
-      let title = tx.description;
+
+      let title = audit.description || audit.action;
       if (!title) {
-        if (tx.listingType === 'auction') {
-          title = 'Bán tín chỉ - Đấu giá';
-        } else if (tx.listingType === 'fixed_price') {
-          title = 'Bán tín chỉ - Giá cố định';
-        } else {
+        if (audit.action === 'SALE' || audit.type === 'sale') {
           title = 'Bán tín chỉ';
+        } else if (audit.action === 'WITHDRAW') {
+          title = 'Rút tiền';
+        } else {
+          title = 'Giao dịch ví';
         }
       }
-      
+
       return {
-        id: tx.id || `ptx-${idx}`,
+        id: audit.id || `wallet-audit-${idx}`,
         type: isPositive ? 'credit' : 'debit',
         title: title,
         time: timeStr,
         amount: isPositive ? `+${amount.toLocaleString('vi-VN')}` : `-${Math.abs(amount).toLocaleString('vi-VN')}`,
         color: isPositive ? 'green' : 'red',
-        originalTx: tx,
+        originalAudit: audit,
       };
     });
-  }, [paymentTransactions, refreshKey]);
+  }, [walletAudits]);
 
-  // Early return AFTER all hooks have been called
-  if (walletLoading || isLoadingPaymentWallet) {
+  // Loading state
+  if (isLoading) {
     return <Loading />;
   }
 
-  // Calculate statistics
-  const totalEarned = wallet.totalEarned || 0;
-  const totalSold = wallet.totalSold || 0;
-  const availableCredits = wallet.balance || 0;
-  const totalRevenue = totalSold * 25; // USD - Only for sold credits
-  const paymentBalanceVnd = paymentWallet.balance || 0; // Already in VND
+  // Calculate statistics  
+  const totalCredits = stats?.totalCredits || 0;
+  const availableCredits = stats?.availableCredits || 0;
+  const tradedCredits = stats?.tradedCredits || 0;
+  const walletBalance = stats?.walletBalance || 0;
+  const totalRevenue = stats?.totalRevenue || 0;
+
+  // Format currency helper
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6" key={refreshKey}>
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Alert Messages */}
       {alertMessage && (
-        <Alert 
+        <Alert
           key={`alert-${alertMessage}`}
-          variant={alertType} 
-          dismissible 
+          variant={alertType}
+          dismissible
           position="toast"
           onDismiss={hideAlert}
         >
           {alertMessage}
         </Alert>
       )}
-      
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -267,7 +230,7 @@ const CarbonWallet = () => {
           {/* Decorative background */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
@@ -280,10 +243,10 @@ const CarbonWallet = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mb-8">
               <div className="flex items-baseline space-x-3 mb-3">
-                <p className="text-5xl font-bold" id="wallet-balance" key={`balance-${refreshKey}`}>
+                <p className="text-5xl font-bold" id="wallet-balance">
                   {availableCredits.toFixed(2)}
                 </p>
                 <span className="text-xl opacity-90">tín chỉ</span>
@@ -298,13 +261,13 @@ const CarbonWallet = () => {
 
             <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white border-opacity-20">
               <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-xs opacity-75 mb-2">Tổng đã kiếm</p>
-                <p className="text-2xl font-bold">{totalEarned.toFixed(2)}</p>
+                <p className="text-xs opacity-75 mb-2">Tổng tín chỉ</p>
+                <p className="text-2xl font-bold">{totalCredits.toFixed(2)}</p>
                 <p className="text-xs opacity-75 mt-1">tín chỉ</p>
               </div>
               <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
                 <p className="text-xs opacity-75 mb-2">Đã bán</p>
-                <p className="text-2xl font-bold">{totalSold.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{tradedCredits.toFixed(2)}</p>
                 <p className="text-xs opacity-75 mt-1">tín chỉ</p>
               </div>
             </div>
@@ -316,7 +279,7 @@ const CarbonWallet = () => {
           {/* Decorative background */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
@@ -329,11 +292,11 @@ const CarbonWallet = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mb-8">
               <div className="flex items-baseline space-x-3 mb-3">
                 <p className="text-5xl font-bold">
-                  {(paymentWallet.balance || 0).toLocaleString('vi-VN')}
+                  {(walletBalance || 0).toLocaleString('vi-VN')}
                 </p>
                 <span className="text-xl opacity-90">VNĐ</span>
               </div>
@@ -349,12 +312,12 @@ const CarbonWallet = () => {
               <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
                 <p className="text-xs opacity-75 mb-2">Tổng nhận</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrencyFromUsd(totalRevenue, false)}
+                  {formatCurrency(totalRevenue)}
                 </p>
               </div>
               <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
                 <p className="text-xs opacity-75 mb-2">Lượt bán</p>
-                <p className="text-2xl font-bold">{paymentTransactions.length}</p>
+                <p className="text-2xl font-bold">{walletAudits.length}</p>
                 <p className="text-xs opacity-75 mt-1">lượt</p>
               </div>
             </div>
@@ -370,11 +333,11 @@ const CarbonWallet = () => {
               <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
             <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-              +{((totalEarned / (totalEarned + totalSold)) * 100 || 0).toFixed(0)}%
+              +{((totalCredits / (totalCredits + tradedCredits)) * 100 || 0).toFixed(0)}%
             </span>
           </div>
-          <p className="text-2xl font-bold text-gray-800">{totalEarned.toFixed(2)}</p>
-          <p className="text-sm text-gray-600">Tín chỉ đã kiếm</p>
+          <p className="text-2xl font-bold text-gray-800">{totalCredits.toFixed(2)}</p>
+          <p className="text-sm text-gray-600">Tín chỉ tổng cộng</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-all">
@@ -383,7 +346,7 @@ const CarbonWallet = () => {
               <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-800">{(paymentWallet.balance || 0).toLocaleString('vi-VN')}</p>
+          <p className="text-2xl font-bold text-gray-800">{(walletBalance || 0).toLocaleString('vi-VN')}</p>
           <p className="text-sm text-gray-600">Số dư ví tiền (VNĐ)</p>
         </div>
 
@@ -393,7 +356,7 @@ const CarbonWallet = () => {
               <Activity className="w-5 h-5 text-purple-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-800">{transactions.length + paymentTransactions.length}</p>
+          <p className="text-2xl font-bold text-gray-800">{carbonAudits.length + walletAudits.length}</p>
           <p className="text-sm text-gray-600">Tổng hoạt động</p>
         </div>
 
@@ -427,7 +390,7 @@ const CarbonWallet = () => {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto" key={`carbon-transactions-${refreshKey}`}>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {formattedCarbonTransactions.length === 0 ? (
                 <div className="text-center py-12">
                   <Leaf className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -440,9 +403,8 @@ const CarbonWallet = () => {
                       key={tx.id}
                       className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
                     >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
-                        tx.color === 'green' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${tx.color === 'green' ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
                         {tx.type === 'credit' ? (
                           <ArrowDownLeft className={`w-6 h-6 ${tx.color === 'green' ? 'text-green-600' : 'text-red-600'}`} />
                         ) : (
@@ -466,12 +428,12 @@ const CarbonWallet = () => {
             </div>
           </div>
 
-          {/* Sales History */}
+          {/* Transaction History */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <Coins className="w-5 h-5 text-blue-600" />
-                Lịch sử bán
+                Lịch sử giao dịch
               </h3>
               <Link
                 to="/ev-owner/transactions"
@@ -481,22 +443,21 @@ const CarbonWallet = () => {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto" key={`payment-transactions-${refreshKey}`}>
-              {formattedPaymentTransactions.length === 0 ? (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {formattedWalletTransactions.length === 0 ? (
                 <div className="text-center py-12">
                   <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">Chưa có lịch sử bán nào</p>
+                  <p className="text-gray-500">Chưa có lịch sử giao dịch nào</p>
                 </div>
               ) : (
-                formattedPaymentTransactions.map((tx) => {
+                formattedWalletTransactions.map((tx) => {
                   return (
                     <div
                       key={tx.id}
                       className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
                     >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
-                        tx.color === 'green' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${tx.color === 'green' ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
                         {tx.type === 'credit' ? (
                           <ArrowDownLeft className={`w-6 h-6 ${tx.color === 'green' ? 'text-green-600' : 'text-red-600'}`} />
                         ) : (
@@ -538,9 +499,8 @@ const CarbonWallet = () => {
                     return (
                       <div key={month} className="flex flex-col items-center flex-1">
                         <div
-                          className={`${
-                            isCurrent ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                          } rounded-t-lg w-full transition-all duration-300 cursor-pointer`}
+                          className={`${isCurrent ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            } rounded-t-lg w-full transition-all duration-300 cursor-pointer`}
                           style={{ height: `${heights[index]}%` }}
                           title={`${month}: ${heights[index]}%`}
                         ></div>
@@ -554,7 +514,7 @@ const CarbonWallet = () => {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Tháng này:</span>
-                <span className="font-semibold text-green-600">+{totalEarned.toFixed(1)} tín chỉ</span>
+                <span className="font-semibold text-green-600">+{totalCredits.toFixed(1)} tín chỉ</span>
               </div>
             </div>
           </div>
@@ -607,11 +567,11 @@ const CarbonWallet = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Tổng tín chỉ:</span>
-                <span className="font-bold text-gray-800">{totalEarned.toFixed(2)}</span>
+                <span className="font-bold text-gray-800">{totalCredits.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Đã bán:</span>
-                <span className="font-bold text-gray-800">{totalSold.toFixed(2)}</span>
+                <span className="font-bold text-gray-800">{tradedCredits.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Còn lại:</span>
@@ -621,7 +581,7 @@ const CarbonWallet = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-gray-700">Tổng thu nhập:</span>
                   <span className="font-bold text-lg text-blue-600">
-                    {formatCurrencyFromUsd(totalRevenue, false)}
+                    {formatCurrency(totalRevenue)}
                   </span>
                 </div>
               </div>
