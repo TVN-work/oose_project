@@ -15,6 +15,7 @@ export { default as verificationService } from './verification/verificationServi
 export { default as marketService } from './market/marketService';
 export { default as bidService } from './bid/bidService';
 export { default as transactionService } from './transaction/transactionService';
+export { auditService } from './audit/auditService';
 
 export default {};
 

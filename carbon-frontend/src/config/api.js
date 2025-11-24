@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
-    PROFILE: '/auth/profile',
+    PROFILE: '/customer/profile',
     CHANGE_PASSWORD: '/auth/change-password',
   },
 

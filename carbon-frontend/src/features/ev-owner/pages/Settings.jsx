@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { User, Lock, Bell, Key, Info, Loader2, Eye, EyeOff, Mail, Phone, Calendar, Save } from 'lucide-react';
-import VehicleManagement from '../components/VehicleManagement';
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 import { authService } from '../../../services/auth/authService';
@@ -9,16 +8,16 @@ import { useAuth } from '../../../context/AuthContext';
 const Settings = () => {
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
   const { user, setUser } = useAuth();
-  
+
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  
+
   // Password visibility states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Profile form data
   const [profileData, setProfileData] = useState({
     fullName: '',
@@ -26,7 +25,7 @@ const Settings = () => {
     phoneNumber: '',
     dob: '',
   });
-  
+
   const [notifications, setNotifications] = useState({
     transaction: true,
     newCredit: true,
@@ -34,7 +33,7 @@ const Settings = () => {
     weeklyReport: true,
     monthlyReport: true,
   });
-  
+
   // Load user data into form
   useEffect(() => {
     if (user) {
@@ -46,11 +45,11 @@ const Settings = () => {
       });
     }
   }, [user]);
-  
+
   // Password validation function
   const validatePassword = (password) => {
     const errors = [];
-    
+
     if (password.length < 8) {
       errors.push('Mật khẩu phải có ít nhất 8 ký tự');
     }
@@ -66,31 +65,31 @@ const Settings = () => {
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
       errors.push('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...)');
     }
-    
+
     return errors;
   };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!profileData.fullName || profileData.fullName.trim() === '') {
       showAlert('Vui lòng nhập họ và tên', 'error');
       return;
     }
-    
+
     if (!profileData.email || profileData.email.trim() === '') {
       showAlert('Vui lòng nhập email', 'error');
       return;
     }
-    
+
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(profileData.email)) {
       showAlert('Email không hợp lệ', 'error');
       return;
     }
-    
+
     setIsUpdatingProfile(true);
     try {
       const response = await authService.updateProfile({
@@ -99,23 +98,28 @@ const Settings = () => {
         phoneNumber: profileData.phoneNumber.trim() || null,
         dob: profileData.dob || null,
       });
-      
-      // Update user in context
-      if (response.user) {
-        setUser(response.user);
+
+      // Update user in context with the response data
+      if (response && response.data) {
+        setUser(response.data);
+      } else if (response) {
+        setUser(response);
       }
-      
+
       showAlert('Đã cập nhật thông tin cá nhân thành công!', 'success');
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          'Có lỗi xảy ra khi cập nhật thông tin';
-      
+      console.error('Profile update error:', error);
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Có lỗi xảy ra khi cập nhật thông tin';
+
       // Check for specific errors
       const errorLower = errorMessage.toLowerCase();
       if (errorLower.includes('email') && errorLower.includes('exist')) {
         showAlert('Email này đã được sử dụng. Vui lòng chọn email khác!', 'error');
+      } else if (errorLower.includes('unauthorized') || error.response?.status === 401) {
+        showAlert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!', 'error');
       } else {
         showAlert(errorMessage, 'error');
       }
@@ -131,43 +135,43 @@ const Settings = () => {
     const currentPassword = formData.get('currentPassword')?.trim() || '';
     const newPassword = formData.get('newPassword')?.trim() || '';
     const confirmPassword = formData.get('confirmPassword')?.trim() || '';
-    
+
     // Validation: Mật khẩu hiện tại
     if (!currentPassword) {
       showAlert('Vui lòng nhập mật khẩu hiện tại', 'error');
       return;
     }
-    
+
     // Validation: Mật khẩu mới
     if (!newPassword) {
       showAlert('Vui lòng nhập mật khẩu mới', 'error');
       return;
     }
-    
+
     // Validation: Mật khẩu mới không được trùng với mật khẩu hiện tại
     if (currentPassword === newPassword) {
       showAlert('Mật khẩu mới không được trùng với mật khẩu hiện tại', 'error');
       return;
     }
-    
+
     // Validation: Điều kiện mật khẩu mới
     const passwordErrors = validatePassword(newPassword);
     if (passwordErrors.length > 0) {
       showAlert(passwordErrors[0], 'error');
       return;
     }
-    
+
     // Validation: Xác nhận mật khẩu
     if (!confirmPassword) {
       showAlert('Vui lòng xác nhận mật khẩu mới', 'error');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       showAlert('Mật khẩu xác nhận không khớp với mật khẩu mới', 'error');
       return;
     }
-    
+
     // Call API to change password
     setIsChangingPassword(true);
     try {
@@ -175,23 +179,26 @@ const Settings = () => {
       showAlert('Đã đổi mật khẩu thành công!', 'success');
       e.target.reset();
     } catch (error) {
+      console.error('Password change error:', error);
       // Handle error from backend
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          'Có lỗi xảy ra khi đổi mật khẩu';
-      
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Có lỗi xảy ra khi đổi mật khẩu';
+
       // Check if it's a wrong current password error
       const errorLower = errorMessage.toLowerCase();
-      if (errorLower.includes('invalid old password') || 
-          errorLower.includes('mật khẩu hiện tại') || 
-          errorLower.includes('current password') ||
-          errorLower.includes('old password') ||
-          errorLower.includes('sai') ||
-          errorLower.includes('incorrect') ||
-          errorLower.includes('invalid') ||
-          error.response?.status === 401) {
+      if (errorLower.includes('invalid old password') ||
+        errorLower.includes('mật khẩu hiện tại') ||
+        errorLower.includes('current password') ||
+        errorLower.includes('old password') ||
+        errorLower.includes('sai') ||
+        errorLower.includes('incorrect') ||
+        errorLower.includes('invalid') ||
+        error.response?.status === 401) {
         showAlert('Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại!', 'error');
+      } else if (errorLower.includes('unauthorized')) {
+        showAlert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!', 'error');
       } else if (errorLower.includes('password') && errorLower.includes('match')) {
         showAlert('Mật khẩu mới và xác nhận không khớp', 'error');
       } else {
@@ -210,17 +217,17 @@ const Settings = () => {
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Alert Messages (Toast style) */}
       {alertMessage && (
-        <Alert 
+        <Alert
           key={`alert-${alertMessage}`}
-          variant={alertType} 
-          dismissible 
+          variant={alertType}
+          dismissible
           position="toast"
           onDismiss={hideAlert}
         >
           {alertMessage}
         </Alert>
       )}
-      
+
       {/* Profile Settings */}
       <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-8 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
         <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
@@ -238,7 +245,7 @@ const Settings = () => {
                 type="text"
                 name="fullName"
                 value={profileData.fullName}
-                onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500 transition-colors"
                 placeholder="Nhập họ và tên"
                 required
@@ -253,14 +260,14 @@ const Settings = () => {
                 type="email"
                 name="email"
                 value={profileData.email}
-                onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500 transition-colors"
                 placeholder="your.email@example.com"
                 required
               />
             </div>
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -271,7 +278,7 @@ const Settings = () => {
                 type="tel"
                 name="phoneNumber"
                 value={profileData.phoneNumber}
-                onChange={(e) => setProfileData({...profileData, phoneNumber: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500 transition-colors"
                 placeholder="0123 456 789"
               />
@@ -285,13 +292,13 @@ const Settings = () => {
                 type="date"
                 name="dob"
                 value={profileData.dob}
-                onChange={(e) => setProfileData({...profileData, dob: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-green-500 transition-colors"
                 max={new Date().toISOString().split('T')[0]}
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end pt-4">
             <button
               type="submit"
@@ -312,11 +319,6 @@ const Settings = () => {
             </button>
           </div>
         </form>
-      </div>
-
-      {/* Vehicle Management Section */}
-      <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-8 hover:shadow-lg hover:border-gray-300 transition-all duration-300">
-        <VehicleManagement />
       </div>
 
       {/* Change Password */}
@@ -348,7 +350,7 @@ const Settings = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-6 items-start">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2 h-6">
@@ -396,7 +398,7 @@ const Settings = () => {
                 </div>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 h-6">
                 Xác nhận mật khẩu mới <span className="text-red-500">*</span>
@@ -420,7 +422,7 @@ const Settings = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex justify-end pt-4">
             <button
               type="submit"

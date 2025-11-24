@@ -128,44 +128,80 @@ export const authService = {
   },
 
   changePassword: async (currentPassword, newPassword, confirmPassword) => {
-    const token = localStorage.getItem('authToken');
-    const response = await axios.patch(
-      `${API_BASE_URL}${API_ENDPOINTS.AUTH.CHANGE_PASSWORD}`,
-      {
-        oldPassword: currentPassword,
-        newPassword: newPassword,
-        confirmPassword: confirmPassword,
-      },
-      {
-        headers: {
-          'accept': '*/*',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+    // Use mock if explicitly enabled
+    if (shouldUseMock()) {
+      return mockAuthService.changePassword(currentPassword, newPassword, confirmPassword);
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
-    );
-    return response.data;
+
+      const response = await axios.patch(
+        `${API_BASE_URL}${API_ENDPOINTS.AUTH.CHANGE_PASSWORD}`,
+        {
+          oldPassword: currentPassword,
+          newPassword: newPassword,
+          confirmPassword: confirmPassword,
+        },
+        {
+          headers: {
+            'accept': '*/*',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      // Fallback to mock if network error (backend not running)
+      if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED' || error.message?.includes('Network Error')) {
+        console.warn('Backend not available, using mock service for changePassword');
+        return mockAuthService.changePassword(currentPassword, newPassword, confirmPassword);
+      }
+      throw error;
+    }
   },
 
   updateProfile: async (profileData) => {
-    const token = localStorage.getItem('authToken');
-    const response = await axios.patch(
-      `${API_BASE_URL}${API_ENDPOINTS.AUTH.PROFILE}`,
-      {
-        fullName: profileData.fullName || profileData.full_name,
-        email: profileData.email,
-        phoneNumber: profileData.phoneNumber || profileData.phone_number,
-        dob: profileData.dob,
-      },
-      {
-        headers: {
-          'accept': '*/*',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+    // Use mock if explicitly enabled
+    if (shouldUseMock()) {
+      return mockAuthService.updateProfile(profileData);
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
-    );
-    return response.data;
+
+      const response = await axios.patch(
+        `${API_BASE_URL}${API_ENDPOINTS.AUTH.PROFILE}`,
+        {
+          fullName: profileData.fullName || profileData.full_name,
+          email: profileData.email,
+          phoneNumber: profileData.phoneNumber || profileData.phone_number,
+          dob: profileData.dob,
+        },
+        {
+          headers: {
+            'accept': '*/*',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      // Fallback to mock if network error (backend not running)
+      if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED' || error.message?.includes('Network Error')) {
+        console.warn('Backend not available, using mock service for updateProfile');
+        return mockAuthService.updateProfile(profileData);
+      }
+      throw error;
+    }
   },
 };
 

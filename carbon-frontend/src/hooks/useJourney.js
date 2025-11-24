@@ -2,12 +2,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import journeyService from '../services/journey/journeyService';
 
 /**
+ * Hook to fetch all journeys with filters
+ * @param {Object} params - Query parameters
+ * @param {string} params.journeyId - Filter by journey ID (optional)
+ * @param {string} params.journeyStatus - Filter by status: PENDING, APPROVED, REJECTED, CANCELLED (optional)
+ * @param {number} params.page - Page number (default: 0)
+ * @param {number} params.entry - Entries per page (default: 10)
+ * @param {string} params.field - Sort field (default: 'id')
+ * @param {string} params.sort - Sort order: ASC, DESC (default: 'DESC')
+ */
+export const useJourneys = (params = {}) => {
+  return useQuery({
+    queryKey: ['journeys', params],
+    queryFn: () => journeyService.getAllJourneys(params),
+    staleTime: 60000,
+    retry: 1,
+  });
+};
+
+/**
  * Hook to fetch journey by ID
  * @param {string} journeyId - Journey ID
  */
 export const useJourney = (journeyId) => {
   return useQuery({
-    queryKey: ['journeys', journeyId],
+    queryKey: ['journey', journeyId],
     queryFn: () => journeyService.getJourneyById(journeyId),
     enabled: !!journeyId,
     staleTime: 60000,

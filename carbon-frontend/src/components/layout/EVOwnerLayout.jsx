@@ -38,8 +38,8 @@ const EVOwnerLayout = () => {
     { path: '/ev-owner/upload-trips', icon: Upload, label: 'Tải dữ liệu hành trình' },
     { path: '/ev-owner/carbon-wallet', icon: Wallet, label: 'Ví Carbon', badge: 3 },
     { path: '/ev-owner/listings', icon: Tag, label: 'Niêm yết tín chỉ' },
-    { path: '/ev-owner/transactions', icon: CreditCard, label: 'Giao dịch' },
-    { path: '/ev-owner/reports', icon: BarChart3, label: 'Báo cáo' },
+    // { path: '/ev-owner/transactions', icon: CreditCard, label: 'Giao dịch' },
+    // { path: '/ev-owner/reports', icon: BarChart3, label: 'Báo cáo' },
     { path: '/ev-owner/settings', icon: Settings, label: 'Cài đặt' },
   ];
 
