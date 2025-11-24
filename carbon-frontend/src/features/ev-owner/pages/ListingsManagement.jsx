@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { 
-  Tag, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  DollarSign, 
+import {
+  Tag,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  DollarSign,
   Clock,
   Info,
   LineChart,
@@ -21,7 +21,7 @@ import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
 import { evOwnerService } from '../../../services/evOwner/evOwnerService';
-import { useCarbonWallet } from '../../../hooks/useEvOwner';
+import { useCarbonWallet, useListings, useCreateListing } from '../../../hooks/useEvOwner';
 import { useQueryClient } from '@tanstack/react-query';
 
 const LISTING_TYPE = {
@@ -32,11 +32,18 @@ const LISTING_TYPE = {
 const ListingsManagement = () => {
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
   const queryClient = useQueryClient();
-  
+
   // Fetch wallet data to get available credits
   const { data: walletData, refetch: refetchWallet } = useCarbonWallet();
   const availableCredits = walletData?.balance || walletData?.available || 0;
-  
+
+  // Fetch listings from API
+  const { data: listingsData, isLoading: listingsLoading } = useListings();
+  const myListings = listingsData?.data || listingsData || [];
+
+  // Create listing mutation
+  const createListingMutation = useCreateListing();
+
   const [formData, setFormData] = useState({
     listingType: LISTING_TYPE.FIXED_PRICE, // Default: Fixed Price
     quantity: '',
@@ -47,42 +54,6 @@ const ListingsManagement = () => {
 
   const [priceSuggestion, setPriceSuggestion] = useState(null);
   const [totalPrice, setTotalPrice] = useState(null);
-  const [isCreatingListing, setIsCreatingListing] = useState(false);
-
-  // Your Listing History (Dynamic State)
-  // Lưu ý: pricePerCredit và revenue đều là VNĐ (không phải USD)
-  const [myListings, setMyListings] = useState([
-    {
-      id: 'LST-001',
-      date: '15/11/2024',
-      quantity: 0.52,
-      pricePerCredit: usdToVnd(18.5), // 462,500 VNĐ
-      listingType: LISTING_TYPE.FIXED_PRICE,
-      status: 'ACTIVE', // Đang bán
-      verificationStatus: 'VERIFIED', // Đã xác minh CVA
-      revenue: usdToVnd(9.62) // 240,500 VNĐ
-    },
-    {
-      id: 'LST-002',
-      date: '10/11/2024',
-      quantity: 0.28,
-      pricePerCredit: usdToVnd(16.0), // 400,000 VNĐ
-      listingType: LISTING_TYPE.AUCTION,
-      status: 'BIDDING', // Đang đấu giá
-      verificationStatus: 'PENDING_VERIFICATION', // Chờ xác minh CVA
-      revenue: 0
-    },
-    {
-      id: 'LST-003',
-      date: '05/11/2024',
-      quantity: 1.15,
-      pricePerCredit: usdToVnd(17.8), // 445,000 VNĐ
-      listingType: LISTING_TYPE.FIXED_PRICE,
-      status: 'SOLD', // Đã bán
-      verificationStatus: 'VERIFIED', // Đã xác minh CVA
-      revenue: usdToVnd(20.47) // 511,750 VNĐ
-    },
-  ]);
 
   // ============ PRICE SUGGESTION TABLE ============
   // Bảng giá gợi ý dựa trên số lượng tín chỉ (đơn giản hóa, không phân biệt thị trường)
@@ -94,14 +65,16 @@ const ListingsManagement = () => {
     { min: 500, max: Infinity, price: 8.5, discount: 15 },
   ];
 
-  // Market Statistics (Mock)
+  // Market Statistics - Calculate from real listings data
   const marketStats = {
-    totalListings: 1247,
-    activeBuyers: 89,
-    avgPrice: 18.5,
-    last30DaysSales: 3420,
-    priceChange24h: +2.3,
-    supplyDemandRatio: 0.92,
+    totalListings: myListings.length || 0,
+    activeBuyers: 89, // TODO: Get from API when available
+    avgPrice: myListings.length > 0
+      ? myListings.reduce((sum, l) => sum + (l.pricePerCredit || l.price_per_credit || 0), 0) / myListings.length / 25000 // Convert VND to USD for display
+      : 18.5,
+    last30DaysSales: myListings.filter(l => l.status === 'SOLD').length || 0,
+    priceChange24h: +2.3, // TODO: Calculate from real data
+    supplyDemandRatio: 0.92, // TODO: Get from API
   };
 
   // ============ AI PRICE SUGGESTION ============
@@ -109,7 +82,7 @@ const ListingsManagement = () => {
     if (!quantity || parseFloat(quantity) <= 0) return null;
 
     const qty = parseFloat(quantity);
-    
+
     // Tìm range phù hợp
     const range = priceSuggestionRanges.find(r => qty >= r.min && qty < r.max);
     if (!range) {
@@ -124,29 +97,29 @@ const ListingsManagement = () => {
   const calculatePriceFromRange = (quantity, range) => {
     // Giá cơ bản từ bảng
     let basePrice = range.price;
-    
+
     // Điều chỉnh theo supply/demand
     if (marketStats.supplyDemandRatio < 0.9) {
       basePrice *= 1.05; // High demand, +5%
     } else if (marketStats.supplyDemandRatio > 1.2) {
       basePrice *= 0.97; // Oversupply, -3%
     }
-    
+
     // Điều chỉnh theo xu hướng giá
     if (marketStats.priceChange24h > 0) {
       basePrice *= (1 + marketStats.priceChange24h / 100);
     }
-    
+
     // Tính toán range giá
     const suggested = parseFloat(basePrice.toFixed(2));
     const minPrice = parseFloat((suggested * 0.92).toFixed(2));
     const maxPrice = parseFloat((suggested * 1.08).toFixed(2));
-    
+
     // Confidence score dựa trên số lượng
     let confidence = 85;
     if (quantity >= 10 && quantity < 100) confidence = 90;
     if (quantity >= 100) confidence = 92;
-    
+
     return {
       suggested,
       min: minPrice,
@@ -160,9 +133,9 @@ const ListingsManagement = () => {
   const calculateTotalPrice = (quantity, pricePerCredit) => {
     const qty = parseFloat(quantity) || 0;
     const price = parseFloat(pricePerCredit) || 0; // pricePerCredit đã là VNĐ
-    
+
     if (!qty || !price) return null;
-    
+
     return Math.round(qty * price); // Tổng giá tiền = số lượng × giá mỗi tín chỉ (VNĐ)
   };
 
@@ -173,7 +146,7 @@ const ListingsManagement = () => {
   };
 
   const handleListingTypeChange = (type) => {
-    setFormData(prev => ({ 
+    setFormData(prev => ({
       ...prev,
       listingType: type,
       // Reset price fields when switching type
@@ -190,29 +163,29 @@ const ListingsManagement = () => {
     if (formData.quantity) {
       const suggestion = calculateAIPriceSuggestion(formData.quantity);
       setPriceSuggestion(suggestion);
-      
+
       // Auto-fill price based on listing type
       if (suggestion) {
         if (formData.listingType === LISTING_TYPE.FIXED_PRICE) {
           // Tự động điền giá mỗi tín chỉ với giá đề xuất (convert USD sang VNĐ)
           const priceInVnd = usdToVnd(suggestion.suggested);
-          setFormData(prev => ({ 
-            ...prev, 
-            pricePerCredit: priceInVnd.toString() 
+          setFormData(prev => ({
+            ...prev,
+            pricePerCredit: priceInVnd.toString()
           }));
         } else if (formData.listingType === LISTING_TYPE.AUCTION) {
           // For auction, starting price is usually 80% of suggested price (convert USD sang VNĐ)
           const startingPriceInUsd = suggestion.suggested * 0.8;
           const startingPriceInVnd = usdToVnd(startingPriceInUsd);
-          setFormData(prev => ({ 
-            ...prev, 
-            startingPrice: startingPriceInVnd.toString() 
+          setFormData(prev => ({
+            ...prev,
+            startingPrice: startingPriceInVnd.toString()
           }));
         }
       }
     } else {
       setPriceSuggestion(null);
-      setFormData(prev => ({ 
+      setFormData(prev => ({
         ...prev,
         pricePerCredit: '',
         startingPrice: '',
@@ -247,19 +220,11 @@ const ListingsManagement = () => {
   useEffect(() => {
     const handleListingRejected = (event) => {
       const notification = event.detail;
-      
+
       if (notification.type === 'listing_rejected' && notification.listingId) {
-        // Update listing status to REJECTED
-        setMyListings(prev => prev.map(listing => {
-          if (listing.id === notification.listingId) {
-            return {
-              ...listing,
-              verificationStatus: 'REJECTED',
-            };
-          }
-          return listing;
-        }));
-        
+        // Refetch listings to get updated status
+        queryClient.invalidateQueries({ queryKey: ['evOwner', 'listings'] });
+
         // Refetch wallet to get updated balance
         queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
         refetchWallet();
@@ -267,7 +232,7 @@ const ListingsManagement = () => {
     };
 
     window.addEventListener('listing-rejected', handleListingRejected);
-    
+
     return () => {
       window.removeEventListener('listing-rejected', handleListingRejected);
     };
@@ -295,35 +260,33 @@ const ListingsManagement = () => {
     } else if (formData.listingType === LISTING_TYPE.AUCTION) {
       if (!formData.startingPrice || parseFloat(formData.startingPrice) <= 0) {
         showAlert('Vui lòng nhập giá khởi điểm hợp lệ', 'error');
-      return;
-    }
+        return;
+      }
       if (!formData.endTime) {
         showAlert('Vui lòng chọn thời gian kết thúc', 'error');
-      return;
+        return;
+      }
     }
-    }
-    
-    setIsCreatingListing(true);
-    
+
     try {
       // Prepare listing data
       const listingData = {
         listingType: formData.listingType,
         quantity: qty,
-        pricePerCredit: formData.listingType === LISTING_TYPE.FIXED_PRICE 
+        pricePerCredit: formData.listingType === LISTING_TYPE.FIXED_PRICE
           ? parseFloat(formData.pricePerCredit)
           : parseFloat(formData.startingPrice),
-        startingPrice: formData.listingType === LISTING_TYPE.AUCTION 
+        startingPrice: formData.listingType === LISTING_TYPE.AUCTION
           ? parseFloat(formData.startingPrice)
           : undefined,
-        endTime: formData.listingType === LISTING_TYPE.AUCTION 
+        endTime: formData.listingType === LISTING_TYPE.AUCTION
           ? formData.endTime
           : undefined,
       };
-      
-      // Create listing via service (this will automatically subtract credits from wallet)
-      const result = await evOwnerService.createListing(listingData);
-      
+
+      // Create listing via mutation
+      await createListingMutation.mutateAsync(listingData);
+
       // Show success message
       const typeLabel = formData.listingType === LISTING_TYPE.FIXED_PRICE ? 'giá cố định' : 'đấu giá';
       showAlert(
@@ -331,25 +294,6 @@ const ListingsManagement = () => {
         'success',
         5000
       );
-      
-      // Create new listing for local state
-      const newListing = {
-        id: result.id || `LST-${Date.now()}`,
-        date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-        quantity: qty,
-        pricePerCredit: listingData.pricePerCredit,
-        listingType: formData.listingType,
-        status: formData.listingType === LISTING_TYPE.FIXED_PRICE ? 'ACTIVE' : 'BIDDING',
-        verificationStatus: 'PENDING_VERIFICATION', // Chờ xác minh CVA
-        revenue: 0
-      };
-      
-      // Add to listings (newest first)
-      setMyListings(prev => [newListing, ...prev]);
-      
-      // Invalidate and refetch wallet to get updated balance
-      queryClient.invalidateQueries({ queryKey: ['evOwner', 'wallet'] });
-      await refetchWallet();
 
       // Reset form
       setFormData({
@@ -365,8 +309,6 @@ const ListingsManagement = () => {
       console.error('Error creating listing:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi tạo niêm yết';
       showAlert(errorMessage, 'error');
-    } finally {
-      setIsCreatingListing(false);
     }
   };
 
@@ -380,7 +322,7 @@ const ListingsManagement = () => {
       AUCTION_ENDED: 'bg-gray-100 text-gray-700 border-gray-200',
       EXPIRED: 'bg-gray-100 text-gray-700 border-gray-200',
     };
-    
+
     const icons = {
       ACTIVE: <CheckCircle className="w-4 h-4" />,
       BIDDING: <Gavel className="w-4 h-4" />,
@@ -388,7 +330,7 @@ const ListingsManagement = () => {
       AUCTION_ENDED: <Clock className="w-4 h-4" />,
       EXPIRED: <Clock className="w-4 h-4" />,
     };
-    
+
     const labels = {
       ACTIVE: 'Đang bán',
       BIDDING: 'Đang đấu giá',
@@ -396,7 +338,7 @@ const ListingsManagement = () => {
       AUCTION_ENDED: 'Đã đấu giá',
       EXPIRED: 'Hết hạn',
     };
-    
+
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[status] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
         {icons[status] || <Clock className="w-4 h-4" />}
@@ -412,19 +354,19 @@ const ListingsManagement = () => {
       PENDING_VERIFICATION: 'bg-yellow-100 text-yellow-700 border-yellow-200',
       REJECTED: 'bg-red-100 text-red-700 border-red-200',
     };
-    
+
     const icons = {
       VERIFIED: <CheckCircle className="w-4 h-4" />,
       PENDING_VERIFICATION: <Clock className="w-4 h-4" />,
       REJECTED: <XCircle className="w-4 h-4" />,
     };
-    
+
     const labels = {
       VERIFIED: 'Đã xác minh',
       PENDING_VERIFICATION: 'Chờ xác minh',
       REJECTED: 'Bị từ chối',
     };
-    
+
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[verificationStatus] || styles.PENDING_VERIFICATION}`}>
         {icons[verificationStatus] || icons.PENDING_VERIFICATION}
@@ -455,23 +397,23 @@ const ListingsManagement = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Alert Messages */}
       {alertMessage && (
-        <Alert 
+        <Alert
           key={`alert-${alertMessage}`}
-          variant={alertType} 
-          dismissible 
+          variant={alertType}
+          dismissible
           position="toast"
           onDismiss={hideAlert}
         >
           {alertMessage}
         </Alert>
       )}
-      
+
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-8 mb-6">
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
           <Tag className="w-8 h-8" />
           Niêm yết tín chỉ carbon
-          </h1>
+        </h1>
         <p className="text-green-100">
           Tạo niêm yết mới để bán tín chỉ carbon của bạn trên sàn giao dịch
         </p>
@@ -522,7 +464,7 @@ const ListingsManagement = () => {
       {/* Wallet Balance */}
       <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between">
-              <div>
+          <div>
             <div className="flex items-center gap-2 mb-2">
               <Wallet className="w-5 h-5 text-green-600" />
               <h3 className="text-sm font-semibold text-gray-700">Số dư tín chỉ khả dụng</h3>
@@ -551,7 +493,7 @@ const ListingsManagement = () => {
                 <Tag className="w-5 h-5 text-green-600" />
                 Tạo niêm yết mới
               </h2>
-              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Listing Type Selection */}
@@ -563,18 +505,17 @@ const ListingsManagement = () => {
                   <button
                     type="button"
                     onClick={() => handleListingTypeChange(LISTING_TYPE.FIXED_PRICE)}
-                    className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${
-                      formData.listingType === LISTING_TYPE.FIXED_PRICE
+                    className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${formData.listingType === LISTING_TYPE.FIXED_PRICE
                         ? 'bg-blue-50 border-blue-400 shadow-lg'
                         : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <ShoppingCart className={`w-6 h-6 ${formData.listingType === LISTING_TYPE.FIXED_PRICE ? 'text-blue-600' : 'text-gray-400'}`} />
                       <span className={`font-bold text-lg ${formData.listingType === LISTING_TYPE.FIXED_PRICE ? 'text-blue-700' : 'text-gray-700'}`}>
                         Giá cố định
                       </span>
-              </div>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Bán với giá niêm yết cố định. Người mua có thể mua ngay.
                     </p>
@@ -583,11 +524,10 @@ const ListingsManagement = () => {
                   <button
                     type="button"
                     onClick={() => handleListingTypeChange(LISTING_TYPE.AUCTION)}
-                    className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${
-                      formData.listingType === LISTING_TYPE.AUCTION
+                    className={`p-6 rounded-xl text-left transition-all duration-300 border-2 ${formData.listingType === LISTING_TYPE.AUCTION
                         ? 'bg-purple-50 border-purple-400 shadow-lg'
                         : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <Gavel className={`w-6 h-6 ${formData.listingType === LISTING_TYPE.AUCTION ? 'text-purple-600' : 'text-gray-400'}`} />
@@ -689,17 +629,17 @@ const ListingsManagement = () => {
                   </div>
                 </div>
               ) : (
-              <div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Gavel className="w-4 h-4 text-purple-600" />
                     Giá khởi điểm <span className="text-red-500">*</span>
-                </label>
+                  </label>
                   <div className="relative">
                     <input
                       type="number"
                       name="startingPrice"
                       value={formData.startingPrice}
-                  onChange={handleInputChange}
+                      onChange={handleInputChange}
                       step="0.01"
                       min="0.01"
                       placeholder={priceSuggestion ? usdToVnd(priceSuggestion.suggested * 0.8).toLocaleString('vi-VN') : "Nhập giá khởi điểm"}
@@ -707,13 +647,13 @@ const ListingsManagement = () => {
                       required
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">VNĐ/tín chỉ</span>
-              </div>
+                  </div>
                   <div className="mt-2">
                     <Alert variant="info" className="py-2.5">
                       <Info className="w-4 h-4 inline mr-1" />
                       <span className="text-sm">Giá khởi điểm thường thấp hơn 20-30% so với giá thị trường để thu hút người đấu giá</span>
                     </Alert>
-              </div>
+                  </div>
                 </div>
               )}
 
@@ -766,22 +706,22 @@ const ListingsManagement = () => {
                       <span className="font-semibold text-gray-800">Tổng giá tiền:</span>
                       <span className="font-bold text-green-600 text-xl">{totalPrice ? totalPrice.toLocaleString('vi-VN') : '0'} VNĐ</span>
                     </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={
-                  isCreatingListing ||
-                  !formData.quantity || 
+                  createListingMutation.isPending ||
+                  !formData.quantity ||
                   (formData.listingType === LISTING_TYPE.FIXED_PRICE && !formData.pricePerCredit) ||
                   (formData.listingType === LISTING_TYPE.AUCTION && (!formData.startingPrice || !formData.endTime))
                 }
                 className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-5 px-8 rounded-xl font-bold text-lg hover:shadow-xl hover:from-green-600 hover:to-green-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {isCreatingListing ? (
+                {createListingMutation.isPending ? (
                   <>
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Đang tạo niêm yết...</span>
@@ -795,7 +735,7 @@ const ListingsManagement = () => {
               </button>
             </form>
           </div>
-          </div>
+        </div>
 
         {/* Price Suggestion Table */}
         <div className="lg:col-span-1">
@@ -803,7 +743,7 @@ const ListingsManagement = () => {
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
               <LineChart className="w-5 h-5 text-blue-600" />
               Bảng giá gợi ý
-              </h3>
+            </h3>
 
             <div className="space-y-2">
               {priceSuggestionRanges.map((range, idx) => (
@@ -819,7 +759,7 @@ const ListingsManagement = () => {
                       <span className="text-xs text-green-600 ml-1">(-{range.discount}%)</span>
                     )}
                   </div>
-              </div>
+                </div>
               ))}
             </div>
 
@@ -839,62 +779,78 @@ const ListingsManagement = () => {
           <BarChart3 className="w-6 h-6 text-blue-600" />
           Niêm yết của tôi
         </h3>
-        
-        {myListings.length === 0 ? (
+
+        {listingsLoading ? (
+          <div className="text-center py-12">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-gray-500">Đang tải...</p>
+          </div>
+        ) : myListings.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p>Chưa có niêm yết nào</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myListings.map((listing) => (
-              <div key={listing.id} className="border-2 border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-gray-300 transition-all">
-                {/* Header: Số lượng tín chỉ, Ngày khởi tạo và Xác minh CVA (góc phải) */}
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="text-base font-bold text-gray-800">
-                      {listing.quantity} tín chỉ
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">Ngày khởi tạo: {listing.date}</p>
-                  </div>
-                  {getVerificationBadge(listing.verificationStatus)}
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  {/* Loại niêm yết */}
-                  <div className="flex items-center justify-between">
-                    {getListingTypeBadge(listing.listingType)}
-                  </div>
-                  
-                  {/* Giá/tín chỉ */}
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">
-                      {listing.listingType === LISTING_TYPE.FIXED_PRICE ? 'Giá:' : 'Giá khởi điểm:'}
-                    </span>
-                    <span className="font-bold text-gray-800">{(listing.pricePerCredit || 0).toLocaleString('vi-VN')} VNĐ/tín chỉ</span>
-                  </div>
-                  
-                  {/* Trạng thái niêm yết: đã bán, đang bán, đang đấu giá, đã đấu giá */}
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Trạng thái:</span>
-                    {getStatusBadge(listing.status)}
-        </div>
-      </div>
+            {myListings.map((listing) => {
+              const quantity = listing.quantity || 0;
+              const pricePerCredit = listing.pricePerCredit || listing.price_per_credit || 0;
+              const listingType = listing.listingType || listing.listing_type || LISTING_TYPE.FIXED_PRICE;
+              const status = listing.status || 'ACTIVE';
+              const verificationStatus = listing.verificationStatus || listing.verification_status || 'PENDING_VERIFICATION';
+              const revenue = listing.revenue || 0;
+              const createdAt = listing.createdAt || listing.created_at || new Date();
+              const date = new Date(createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-                {/* Doanh thu */}
-                {listing.revenue > 0 && (
-                  <div className="pt-3 border-t border-gray-200">
+              return (
+                <div key={listing.id} className="border-2 border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-gray-300 transition-all">
+                  {/* Header: Số lượng tín chỉ, Ngày khởi tạo và Xác minh CVA (góc phải) */}
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="text-base font-bold text-gray-800">
+                        {quantity} tín chỉ
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">Ngày khởi tạo: {date}</p>
+                    </div>
+                    {getVerificationBadge(verificationStatus)}
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    {/* Loại niêm yết */}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        Doanh thu:
+                      {getListingTypeBadge(listingType)}
+                    </div>
+
+                    {/* Giá/tín chỉ */}
+                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-600">
+                        {listingType === LISTING_TYPE.FIXED_PRICE ? 'Giá:' : 'Giá khởi điểm:'}
                       </span>
-                      <span className="text-lg font-bold text-green-600">{(listing.revenue || 0).toLocaleString('vi-VN')} VNĐ</span>
+                      <span className="font-bold text-gray-800">{pricePerCredit.toLocaleString('vi-VN')} VNĐ/tín chỉ</span>
+                    </div>
+
+                    {/* Trạng thái niêm yết: đã bán, đang bán, đang đấu giá, đã đấu giá */}
+                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-600">Trạng thái:</span>
+                      {getStatusBadge(status)}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Doanh thu */}
+                  {revenue > 0 && (
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 flex items-center gap-1">
+                          <DollarSign className="w-4 h-4" />
+                          Doanh thu:
+                        </span>
+                        <span className="text-lg font-bold text-green-600">{revenue.toLocaleString('vi-VN')} VNĐ</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
