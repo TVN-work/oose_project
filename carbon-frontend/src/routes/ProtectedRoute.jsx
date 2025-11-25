@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Use useContext directly instead of useAuth hook to avoid throwing error
   // if context is not available yet (during router initialization)
   const authContext = useContext(AuthContext);
-  
+
   // If context is not available yet, show loading
   if (!authContext) {
     return (
@@ -26,7 +26,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       </div>
     );
   }
-  
+
   const { isAuthenticated, user, loading } = authContext;
 
   // Show loading state while checking authentication
@@ -50,8 +50,17 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (allowedRoles.length > 0) {
     // Use roleHelpers to support multiple roles
     const hasAccess = hasAnyRole(user, allowedRoles);
-    
+
+    console.log('ProtectedRoute - Role Check:', {
+      user,
+      userRole: user?.role,
+      userRoles: user?.roles,
+      allowedRoles,
+      hasAccess
+    });
+
     if (!hasAccess) {
+      console.log('Access denied - redirecting to /unauthorized');
       // Redirect to unauthorized page or home
       return <Navigate to="/unauthorized" replace />;
     }

@@ -160,7 +160,7 @@ const createRouter = () => createBrowserRouter(
     {
       path: '/buyer',
       element: (
-        <ProtectedRoute allowedRoles={[USER_ROLES.BUYER]}>
+        <ProtectedRoute allowedRoles={[USER_ROLES.BUYER, USER_ROLES.CC_BUYER]}>
           <BuyerLayout />
         </ProtectedRoute>
       ),
@@ -207,7 +207,7 @@ const createRouter = () => createBrowserRouter(
     {
       path: '/verifier',
       element: (
-        <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER]}>
+        <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER, USER_ROLES.CVA]}>
           <VerifierLayout />
         </ProtectedRoute>
       ),
