@@ -102,9 +102,9 @@ const mediaService = {
 
     const path = mediaService.getImageUrl(imageId);
 
-    // In development, use localhost:8222
-    // In production, this would be your backend domain
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8222';
+    // Use VITE_API_URL for API base URL (relative /api in production)
+    // In development with Vite proxy, use empty string to let proxy handle it
+    const baseUrl = import.meta.env.VITE_API_URL || '';
 
     // Remove '/api' prefix if exists since we'll add the full base URL
     const cleanPath = path.startsWith('/api') ? path : `/api${path}`;

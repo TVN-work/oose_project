@@ -14,10 +14,11 @@ COPY . .
 
 # Accept build arguments for Vite environment variables
 # These must be set at BUILD time, not runtime
-ARG VITE_API_URL=http://localhost:8222/api/v1
+# Use relative /api path so nginx can proxy and handle CORS
+ARG VITE_API_URL=/api
 ARG VITE_APP_NAME="Carbon Credit Marketplace"
 ARG VITE_APP_VERSION="1.0.0"
-ARG VITE_API_GATEWAY_URL=http://localhost:8222
+ARG VITE_API_GATEWAY_URL=/api
 
 # Set environment variables for build
 ENV VITE_API_URL=$VITE_API_URL
@@ -37,8 +38,8 @@ RUN apk add --no-cache wget
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration (standalone mode with CORS handling)
+COPY nginx.standalone.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80

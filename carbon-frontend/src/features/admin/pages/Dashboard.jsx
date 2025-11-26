@@ -31,30 +31,11 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { useSystemStats } from '../../../hooks/useAdmin';
-import Loading from '../../../components/common/Loading';
 import { formatCurrency, formatNumber } from '../../../utils';
 
 const Dashboard = () => {
-  // Fetch system stats from API
-  const { data: systemStats, isLoading, error } = useSystemStats();
-
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-          <p className="text-red-600">Không thể tải dữ liệu hệ thống. Vui lòng thử lại sau.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Extract data from API response
-  const stats = systemStats || {
+  // Mock system stats (will be replaced with real API when backend is ready)
+  const stats = {
     users: 1247,
     transactions: 847,
     credits: 12.47,

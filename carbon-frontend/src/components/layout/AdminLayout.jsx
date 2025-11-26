@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useSystemStats } from '../../hooks/useAdmin';
 import { useUsers } from '../../hooks/useUser';
 import { formatNumber } from '../../utils';
 
@@ -28,19 +27,10 @@ const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch system stats for sidebar
-  const { data: systemStats } = useSystemStats();
-
   // Fetch users count from userService
   const { data: usersData } = useUsers({ page: 0, entry: 1000 });
   const usersArray = Array.isArray(usersData) ? usersData : (usersData?.content || usersData?.data || []);
   const usersCount = usersArray.length;
-
-  const stats = systemStats || {
-    users: usersCount || 0,
-    transactions: 847,
-    credits: 12.47,
-  };
 
   const handleLogout = async () => {
     try {
@@ -63,7 +53,6 @@ const AdminLayout = () => {
       path: '/admin/transactions',
       icon: CreditCard,
       label: 'Quản lý Giao dịch',
-      badge: stats.transactions ? formatNumber(stats.transactions) : null,
     },
     {
       path: '/admin/listings',

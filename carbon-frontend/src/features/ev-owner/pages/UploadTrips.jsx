@@ -324,7 +324,7 @@ const UploadTrips = () => {
       const newImages = uploadResults.map(result => ({
         id: Date.now() + Math.random(),
         pathUrl: result.pathUrl,
-        fullUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8222'}${result.pathUrl}`,
+        fullUrl: `${import.meta.env.VITE_API_URL || ''}${result.pathUrl}`,
         name: result.pathUrl.split('/').pop()
       }));
 
