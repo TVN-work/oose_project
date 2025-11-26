@@ -259,14 +259,14 @@ const UploadTrips = () => {
 
     try {
       // Get current distance from journey
-      const currentDistance = selectedVehicle.journey?.distanceKm ||
-        selectedVehicle.journey?.distance_km ||
-        selectedVehicle.journey?.distance ||
-        selectedVehicle.mileage ||
-        selectedVehicle.distance || 0;
+      const currentDistance = selectedVehicle.journey.distanceKm;
 
       // Generate random additional distance between 50-150 km
       const additionalDistance = Math.floor(Math.random() * (150 - 50 + 1)) + 50;
+      console.log('🛰️ Simulating IoT data:  ', {
+        currentDistance,
+        additionalDistance,
+      });
 
       // Calculate new total distance = current distance + additional distance
       // This ensures newTotalDistance > currentDistance
@@ -278,8 +278,7 @@ const UploadTrips = () => {
 
       const journeyData = {
         journeyId: selectedVehicle.journey.id,
-        newDistance: additionalDistance, // Quãng đường thêm vào (50-150km)
-        newDistanceKm: newTotalDistance, // Tổng quãng đường mới (current + additional) - LUÔN LỚN HƠN current
+        newDistance: newTotalDistance, // Quãng đường thêm vào (50-150km)
         averageSpeed: randomSpeed,
         energyUsed: energyUsed,
         certificateImageUrl: [],

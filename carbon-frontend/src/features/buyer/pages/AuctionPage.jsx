@@ -4,6 +4,8 @@ import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check, Info, Lock, L
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import marketService, { LISTING_STATUSES } from '../../../services/market/marketService';
 import bidService from '../../../services/bid/bidService';
+import { useAllBids } from '../../../hooks/useBid';
+import { BID_SORT, SORT_DIRECTION } from '../../../types/constants';
 import Modal from '../../../components/common/Modal';
 import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
@@ -17,11 +19,24 @@ const AuctionPage = () => {
   const { user } = useAuth();
   const countdownIntervalRef = useRef(null);
 
+  // Bid pagination state
+  const [bidPage, setBidPage] = useState(0);
+  const [bidPageSize, setBidPageSize] = useState(10);
+
   // Fetch listing data from database
   const { data: listingData, isLoading, error, refetch } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => marketService.getListingById(id),
     enabled: !!id,
+  });
+
+  // Fetch bids separately with pagination and sorting
+  const { data: bidsData, isLoading: bidsLoading, refetch: refetchBids } = useAllBids({
+    listingId: id,
+    page: bidPage,
+    size: bidPageSize,
+    sortBy: BID_SORT.AMOUNT,
+    sort: SORT_DIRECTION.DESC,
   });
 
   // Place bid mutation
@@ -31,7 +46,9 @@ const AuctionPage = () => {
       toast.success('✓ Đặt giá thành công!');
       setBidAmount('');
       refetch(); // Refresh listing data
+      refetchBids(); // Refresh bids list
       queryClient.invalidateQueries({ queryKey: ['listing', id] });
+      queryClient.invalidateQueries({ queryKey: ['bids'] });
     },
     onError: (error) => {
       toast.error('❌ Lỗi: ' + (error.response?.data?.message || 'Không thể đặt giá'));
@@ -53,12 +70,19 @@ const AuctionPage = () => {
     const now = new Date();
     const isEnded = now >= endTime || listingData.status === LISTING_STATUSES.ENDED || listingData.status === LISTING_STATUSES.SOLD;
 
-    // Get highest bid as current price
-    const highestBid = marketService.getHighestBid(listingData.bidResponseList || []);
+    // Get bids from separate API call (sorted by amount desc)
+    console.log('🔍 bidsData:', bidsData);
+    
+    // Handle both array response and paginated response
+    const bidsList = Array.isArray(bidsData) ? bidsData : (bidsData?.content || []);
+    console.log('📊 bidsList:', bidsList);
+
+    // Get highest bid as current price (first item is highest due to DESC sort)
+    const highestBid = bidsList.length > 0 ? bidsList[0] : null;
     const currentPrice = highestBid ? highestBid.amount : listingData.pricePerCredit;
 
     // Format bid history
-    const bidHistory = (listingData.bidResponseList || []).map((bid, index) => {
+    const bidHistory = bidsList.map((bid, index) => {
       return {
         id: bid.id || index,
         bidder: bid.bidderName,
@@ -75,9 +99,25 @@ const AuctionPage = () => {
       currentPrice: currentPrice,
       highestBid: highestBid,
       bidHistory: bidHistory,
-      totalBids: marketService.countBids(listingData.bidResponseList),
+      totalBids: Array.isArray(bidsData) ? bidsData.length : (bidsData?.totalElements || 0),
+      totalBidPages: Array.isArray(bidsData) ? Math.ceil(bidsData.length / bidPageSize) : (bidsData?.totalPages || 0),
     };
-  }, [listingData]);
+  }, [listingData, bidsData, bidPageSize]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 AuctionPage Debug:', {
+      id,
+      listingData: !!listingData,
+      bidsData,
+      bidsLoading,
+      auctionData: auctionData ? {
+        totalBids: auctionData.totalBids,
+        bidHistoryLength: auctionData.bidHistory?.length,
+        bidHistory: auctionData.bidHistory,
+      } : null,
+    });
+  }, [id, listingData, bidsData, bidsLoading, auctionData]);
 
   // Countdown timer
   useEffect(() => {
@@ -350,8 +390,32 @@ const AuctionPage = () => {
               </div>
               <div className="p-6">
                 <div className="space-y-3">
-                  {auctionData.bidHistory && auctionData.bidHistory.length > 0 ? (
-                    auctionData.bidHistory.map((bid, index) => (
+                  {(() => {
+                    console.log('🎨 Render conditions:', {
+                      bidsLoading,
+                      hasBidHistory: !!auctionData?.bidHistory,
+                      bidHistoryLength: auctionData?.bidHistory?.length,
+                      bidHistory: auctionData?.bidHistory,
+                    });
+
+                    if (bidsLoading) {
+                      return (
+                        <div className="text-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">Đang tải lượt đặt giá...</p>
+                        </div>
+                      );
+                    }
+
+                    if (!auctionData?.bidHistory || auctionData.bidHistory.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-gray-500">
+                          <p className="text-sm">Chưa có lượt đặt giá nào</p>
+                        </div>
+                      );
+                    }
+
+                    return auctionData.bidHistory.map((bid, index) => (
                       <div
                         key={bid.id}
                         className={`p-4 rounded-lg transition-all border-l-4 ${bid.isWinning
@@ -362,7 +426,7 @@ const AuctionPage = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                              {index + 1}
+                              {bidPage * bidPageSize + index + 1}
                             </div>
                             <div>
                               <div className="font-semibold text-gray-800">{bid.bidder}</div>
@@ -381,13 +445,84 @@ const AuctionPage = () => {
                           </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p className="text-sm">Chưa có lượt đặt giá nào</p>
-                    </div>
-                  )}
+                    ));
+                  })()}
                 </div>
+
+                {/* Pagination Controls */}
+                {auctionData?.totalBids > bidPageSize && (
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Hiển thị:</span>
+                        <select
+                          value={bidPageSize}
+                          onChange={(e) => {
+                            setBidPageSize(parseInt(e.target.value));
+                            setBidPage(0);
+                          }}
+                          className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                        </select>
+                        <span className="text-sm text-gray-600">
+                          ({Math.min(bidPage * bidPageSize + 1, auctionData?.totalBids || 0)} -
+                          {Math.min((bidPage + 1) * bidPageSize, auctionData?.totalBids || 0)} / {auctionData?.totalBids || 0})
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setBidPage(Math.max(0, bidPage - 1))}
+                          disabled={bidPage === 0 || bidsLoading}
+                          className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                          Trước
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, auctionData?.totalBidPages || 0) }, (_, i) => {
+                            const totalPages = auctionData?.totalBidPages || 0;
+                            let pageNumber;
+                            if (totalPages <= 5) {
+                              pageNumber = i;
+                            } else if (bidPage < 3) {
+                              pageNumber = i;
+                            } else if (bidPage > totalPages - 4) {
+                              pageNumber = totalPages - 5 + i;
+                            } else {
+                              pageNumber = bidPage - 2 + i;
+                            }
+
+                            return (
+                              <button
+                                key={pageNumber}
+                                onClick={() => setBidPage(pageNumber)}
+                                className={`px-3 py-1 text-sm border rounded-md transition-colors ${pageNumber === bidPage
+                                  ? 'bg-blue-600 text-white border-blue-600'
+                                  : 'border-gray-300 hover:bg-gray-50'
+                                  }`}
+                              >
+                                {pageNumber + 1}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          onClick={() => setBidPage(Math.min((auctionData?.totalBidPages || 1) - 1, bidPage + 1))}
+                          disabled={bidPage >= (auctionData?.totalBidPages || 1) - 1 || bidsLoading}
+                          className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                          Sau
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -492,12 +627,12 @@ const AuctionPage = () => {
                   onClick={placeBid}
                   disabled={auctionData.isEnded || placeBidMutation.isPending || !bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice}
                   className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform mb-4 ${auctionData.isEnded
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : (!bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice)
                       ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                      : (!bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice)
-                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                        : placeBidMutation.isPending
-                          ? 'bg-blue-500 text-white cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 hover:shadow-lg text-white hover:scale-105'
+                      : placeBidMutation.isPending
+                        ? 'bg-blue-500 text-white cursor-not-allowed'
+                        : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 hover:shadow-lg text-white hover:scale-105'
                     }`}
                 >
                   {placeBidMutation.isPending ? (

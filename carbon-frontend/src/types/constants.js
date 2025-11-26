@@ -214,6 +214,24 @@ export const ALLOWED_DATA_TYPES = ['text/csv', 'application/json', 'application/
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // ==========================================
+// Bid Sort Fields
+// ==========================================
+export const BID_SORT = {
+  AMOUNT: 'amount',
+  CREATED_AT: 'createdAt',
+  BIDDER_NAME: 'bidderName',
+};
+
+// Sort Direction (Spring Boot format)
+export const SORT_DIRECTION = {
+  ASC: 'ASC',
+  DESC: 'DESC',
+};
+
+// Legacy support
+export const BID_ORDER = SORT_DIRECTION;
+
+// ==========================================
 // Pagination
 // ==========================================
 export const DEFAULT_PAGE_SIZE = 20;
@@ -261,6 +279,9 @@ export default {
   AUDIT_ACTION_LABELS,
   PAYMENT_METHOD,
   PAYMENT_METHOD_LABELS,
+  BID_SORT,
+  BID_ORDER,
+  SORT_DIRECTION,
   ALLOWED_IMAGE_TYPES,
   ALLOWED_DOCUMENT_TYPES,
   ALLOWED_DATA_TYPES,

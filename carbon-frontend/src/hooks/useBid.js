@@ -2,6 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import bidService from '../services/bid/bidService';
 
 /**
+ * Hook to fetch all bids with pagination and sorting
+ * @param {Object} params - Query parameters
+ */
+export const useAllBids = (params = {}) => {
+  return useQuery({
+    queryKey: ['bids', 'all', params],
+    queryFn: () => bidService.getAllBids(params),
+    enabled: !!params.listingId, // Only fetch when listingId exists
+    staleTime: 10000, // 10 seconds
+    retry: 1,
+  });
+};
+
+/**
  * Hook to fetch bid by ID
  * @param {string} bidId - Bid ID
  */

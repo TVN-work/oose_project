@@ -67,6 +67,67 @@ const bidService = {
   },
 
   /**
+   * Get all bids with pagination and sorting
+   * @param {Object} params - Query parameters
+   * @param {number} params.page - Page number (default: 0)
+   * @param {number} params.size - Page size (default: 10)
+   * @param {string} params.sortBy - Sort field (default: 'amount')
+   * @param {string} params.sort - Sort direction: 'ASC' or 'DESC' (default: 'DESC')
+   * @param {string} params.listingId - Filter by listing ID (optional)
+   * @returns {Promise<Object>} Paginated bids
+   * 
+   * Response format:
+   * {
+   *   "content": [
+   *     {
+   *       "id": "string",
+   *       "bidderName": "string",
+   *       "amount": 0.1
+   *     }
+   *   ],
+   *   "totalElements": 0,
+   *   "totalPages": 0,
+   *   "number": 0,
+   *   "size": 0
+   * }
+   */
+  getAllBids: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+
+      // Add pagination params
+      if (params.page !== undefined) queryParams.append('page', params.page);
+      if (params.size !== undefined) queryParams.append('size', params.size);
+
+      // Add sorting params (Spring Boot format)
+      // sortBy = field name (e.g., 'amount', 'createdAt')
+      // sort = direction (e.g., 'ASC', 'DESC')
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sort) queryParams.append('sort', params.sort.toUpperCase());
+
+      // Add filter params
+      if (params.listingId) queryParams.append('listingId', params.listingId);
+
+      const queryString = queryParams.toString();
+      const url = `/bid${queryString ? `?${queryString}` : ''}`;
+
+      console.log('🌐 Fetching bids from:', url);
+
+      const response = await apiClient.get(url, {
+        headers: {
+          'accept': '*/*',
+        },
+      });
+
+      console.log('✅ Bids response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error fetching all bids:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Delete a bid
    * @param {string} bidId - Bid ID
    * @returns {Promise<void>}
