@@ -99,7 +99,14 @@ const marketService = {
       if (sellerId) queryParams.append('sellerId', sellerId);
       if (creditId) queryParams.append('creditId', creditId);
       if (type) queryParams.append('type', type);
-      if (status) queryParams.append('status', status);
+      // Support multiple status values (array or single value)
+      if (status) {
+        if (Array.isArray(status)) {
+          status.forEach(s => queryParams.append('status', s));
+        } else {
+          queryParams.append('status', status);
+        }
+      }
       if (minPrice !== undefined) queryParams.append('minPrice', minPrice.toString());
       if (maxPrice !== undefined) queryParams.append('maxPrice', maxPrice.toString());
       if (minQuantity !== undefined) queryParams.append('minQuantity', minQuantity.toString());

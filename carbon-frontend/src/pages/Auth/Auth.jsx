@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Car, 
-  Building2, 
-  Lock, 
-  Mail, 
-  User, 
-  Phone, 
-  CheckCircle2, 
-  Shield, 
-  BarChart3, 
+import {
+  Car,
+  Building2,
+  Lock,
+  Mail,
+  User,
+  Phone,
+  CheckCircle2,
+  Shield,
+  BarChart3,
   Loader2,
   Eye,
   EyeOff,
@@ -21,7 +21,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import Alert from '../../components/common/Alert';
 import { useAlert } from '../../hooks/useAlert';
-import authService from '../../services/auth/authService';
+import apiClient from '../../services/api/client';
+import { API_ENDPOINTS } from '../../config/api';
 import './Auth.css';
 
 const Auth = () => {
@@ -39,9 +40,10 @@ const Auth = () => {
   const [signupData, setSignupData] = useState({
     fullName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
+    dob: '',
   });
 
   const openAuthModal = (role, formType) => {
@@ -58,9 +60,10 @@ const Auth = () => {
     setSignupData({
       fullName: '',
       email: '',
-      phone: '',
+      phoneNumber: '',
       password: '',
       confirmPassword: '',
+      dob: '',
     });
   };
 
@@ -85,44 +88,51 @@ const Auth = () => {
         return;
       }
 
+      // Login via AuthContext to update state properly  
       const response = await login({
         email: email,
         password: password,
       });
 
+      console.log('Login response:', response);
+
       setIsLoading(false);
-      showAlert(`Đăng nhập thành công!`, 'success');
+      showAlert('Đăng nhập thành công!', 'success');
       closeAuthModal();
 
       // Navigate based on user's actual role from API response
       setTimeout(() => {
-        const userData = response.data || response;
-        const userRole = userData.role || userData.user?.role;
+        const data = response.data || response;
+        const userRole = data.role;
+
+        console.log('User role from response:', userRole);
+        console.log('Current role from UI:', currentRole);
 
         if (userRole === 'EV_OWNER') {
+          console.log('Navigating to EV Owner dashboard');
           navigate('/ev-owner/dashboard');
-        } else if (userRole === 'BUYER') {
+        } else if (userRole === 'CC_BUYER') {
+          console.log('Navigating to Buyer dashboard');
           navigate('/buyer/dashboard');
-        } else if (userRole === 'VERIFIER') {
+        } else if (userRole === 'CVA') {
+          console.log('Navigating to Verifier dashboard');
           navigate('/verifier/dashboard');
         } else if (userRole === 'ADMIN') {
+          console.log('Navigating to Admin dashboard');
           navigate('/admin/dashboard');
         } else {
           // Default fallback based on selected role in UI
+          console.log('Using UI role for navigation');
           if (currentRole === 'ev-owner') {
             navigate('/ev-owner/dashboard');
           } else if (currentRole === 'buyer') {
             navigate('/buyer/dashboard');
-          } else if (currentRole === 'verifier') {
-            navigate('/verifier/dashboard');
-          } else if (currentRole === 'admin') {
-            navigate('/admin/dashboard');
           }
         }
       }, 500);
     } catch (error) {
       setIsLoading(false);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin đăng nhập.';
+      const errorMessage = error?.message || 'Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin đăng nhập.';
       showAlert(errorMessage, 'error');
       console.error('Login error:', error);
     }
@@ -140,58 +150,73 @@ const Auth = () => {
         return;
       }
 
-      const roleKey = currentRole === 'ev-owner' ? 'EV_OWNER' : 'BUYER';
+      // Map role to correct enum values
+      const roleKey = currentRole === 'ev-owner' ? 'EV_OWNER' : 'CC_BUYER';
 
-      // Register via auth service
+      // Create FormData for multipart/form-data request
+      const formData = new FormData();
+      formData.append('fullName', signupData.fullName);
+      formData.append('email', signupData.email);
+      formData.append('phoneNumber', signupData.phoneNumber);
+      formData.append('password', signupData.password);
+      formData.append('role', roleKey);
+      formData.append('dob', signupData.dob || '2000-01-01');
+
+      // Register via API client
       try {
-        await authService.register({
-          email: signupData.email,
-          fullName: signupData.fullName,
-          phone: signupData.phone,
-          password: signupData.password,
-          role: roleKey,
+        const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
-      } catch (registerError) {
-        // Handle registration errors
-        if (registerError?.response?.status === 409) {
-          showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
-        } else {
-          const errorMessage = registerError?.response?.data?.message || registerError?.message || 'Đăng ký thất bại! Vui lòng thử lại.';
-          showAlert(errorMessage, 'error');
+
+        console.log('Registration successful:', response);
+
+        // Auto login after successful signup
+        try {
+          await login({
+            email: signupData.email,
+            password: signupData.password,
+          });
+
+          setIsLoading(false);
+          showAlert(`Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'CC Buyer'} mới!`, 'success');
+          closeAuthModal();
+
+          // Navigate to dashboard after successful signup and login
+          setTimeout(() => {
+            if (currentRole === 'ev-owner') {
+              navigate('/ev-owner/dashboard');
+            } else if (currentRole === 'buyer') {
+              navigate('/buyer/dashboard');
+            }
+          }, 500);
+        } catch (loginError) {
+          console.error('Auto login after signup failed:', loginError);
+          setIsLoading(false);
+          showAlert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
+          toggleAuthForm('login');
         }
+      } catch (registerError) {
+        console.error('Registration error:', registerError);
         setIsLoading(false);
-        return;
-      }
 
-      // Auto login after successful signup
-      try {
-        await login({
-          email: signupData.email,
-          password: signupData.password,
-        });
-
-        setIsLoading(false);
-        showAlert(`Đăng ký thành công! Chào mừng ${currentRole === 'ev-owner' ? 'EV Owner' : 'Buyer'} mới!`, 'success');
-        closeAuthModal();
-
-        // Navigate to dashboard after successful signup and login
-        setTimeout(() => {
-          if (currentRole === 'ev-owner') {
-            navigate('/ev-owner/dashboard');
-          } else if (currentRole === 'buyer') {
-            navigate('/buyer/dashboard');
-          }
-        }, 500);
-      } catch (loginError) {
-        console.error('Auto login after signup failed:', loginError);
-        // If auto login fails, still show success but ask user to login manually
-        setIsLoading(false);
-        showAlert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
-        toggleAuthForm('login');
+        // Handle API client errors (already processed by interceptor)
+        if (registerError.code === 'CONFLICT' || registerError.message?.includes('đã được sử dụng')) {
+          showAlert('Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc đăng nhập.', 'error');
+        } else if (registerError.code === 'NOT_FOUND') {
+          showAlert('Thông tin đăng ký không hợp lệ! Vui lòng kiểm tra lại thông tin.', 'error');
+        } else if (registerError.code === 'VALIDATION_ERROR') {
+          showAlert(registerError.message || 'Thông tin đăng ký không đúng định dạng! Vui lòng kiểm tra lại.', 'error');
+        } else if (registerError.code === 'NETWORK_ERROR') {
+          showAlert('Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng và thử lại.', 'error');
+        } else {
+          showAlert(registerError.message || 'Đăng ký thất bại! Vui lòng thử lại.', 'error');
+        }
       }
     } catch (error) {
       setIsLoading(false);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Đăng ký thất bại! Vui lòng thử lại.';
+      const errorMessage = error?.message || 'Đăng ký thất bại! Vui lòng thử lại.';
       showAlert(errorMessage, 'error');
       console.error('Signup error:', error);
     }
@@ -260,15 +285,8 @@ const Auth = () => {
 
             <div className="space-y-3">
               <button
-                onClick={() => openAuthModal('ev-owner', 'login')}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <LogIn className="w-5 h-5" />
-                Đăng nhập
-              </button>
-              <button
                 onClick={() => openAuthModal('ev-owner', 'signup')}
-                className="w-full bg-transparent border-2 border-green-600 text-green-600 py-3 px-6 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
                 Đăng ký
@@ -317,15 +335,8 @@ const Auth = () => {
 
             <div className="space-y-3">
               <button
-                onClick={() => openAuthModal('buyer', 'login')}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <LogIn className="w-5 h-5" />
-                Đăng nhập
-              </button>
-              <button
                 onClick={() => openAuthModal('buyer', 'signup')}
-                className="w-full bg-transparent border-2 border-blue-600 text-blue-600 py-3 px-6 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
                 Đăng ký
@@ -348,7 +359,7 @@ const Auth = () => {
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={closeAuthModal}
         >
-          <div 
+          <div
             className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-y-auto auth-modal-scrollable"
             onClick={(e) => e.stopPropagation()}
           >
@@ -359,7 +370,7 @@ const Auth = () => {
                   {currentForm === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                 </h2>
                 <p className="text-gray-600 mt-1 text-sm">
-                  {currentForm === 'login' 
+                  {currentForm === 'login'
                     ? 'Truy cập vào tài khoản của bạn'
                     : 'Tạo tài khoản mới'
                   }
@@ -369,22 +380,22 @@ const Auth = () => {
 
             {/* Modal Content */}
             <div className="p-5">
-                {/* Role Badge */}
-                <div className="text-center mb-5">
-                  <div className={`w-14 h-14 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-2.5`}>
-                    {currentRole === 'ev-owner' ? (
-                      <Car className="w-7 h-7 text-green-600" />
-                    ) : (
-                      <Building2 className="w-7 h-7 text-blue-600" />
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {currentRole === 'ev-owner' 
-                      ? 'Chủ sở hữu xe điện'
-                      : 'Người mua tín chỉ carbon'
-                    }
-                  </div>
+              {/* Role Badge */}
+              <div className="text-center mb-5">
+                <div className={`w-14 h-14 mx-auto ${currentRole === 'ev-owner' ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mb-2.5`}>
+                  {currentRole === 'ev-owner' ? (
+                    <Car className="w-7 h-7 text-green-600" />
+                  ) : (
+                    <Building2 className="w-7 h-7 text-blue-600" />
+                  )}
                 </div>
+                <div className="text-sm text-gray-600">
+                  {currentRole === 'ev-owner'
+                    ? 'Chủ sở hữu xe điện'
+                    : 'Người mua tín chỉ carbon'
+                  }
+                </div>
+              </div>
 
               {/* Login Form */}
               {currentForm === 'login' && (
@@ -397,7 +408,7 @@ const Auth = () => {
                     <input
                       type="email"
                       name="email"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                       placeholder="your.email@example.com"
                       required
                     />
@@ -411,7 +422,7 @@ const Auth = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         name="password"
-                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm" 
+                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                         placeholder="••••••••"
                         required
                       />
@@ -484,8 +495,8 @@ const Auth = () => {
                       <input
                         type="tel"
                         required
-                        value={signupData.phone}
-                        onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
+                        value={signupData.phoneNumber}
+                        onChange={(e) => setSignupData({ ...signupData, phoneNumber: e.target.value })}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                         placeholder="0123 456 789"
                         autoComplete="off"
@@ -512,6 +523,21 @@ const Auth = () => {
                       data-bwignore="true"
                       name="signup-email"
                       id="signup-email-field"
+                    />
+                  </div>
+
+                  {/* Date of Birth - Full width */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Ngày sinh
+                    </label>
+                    <input
+                      type="date"
+                      value={signupData.dob}
+                      onChange={(e) => setSignupData({ ...signupData, dob: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
+                      autoComplete="off"
                     />
                   </div>
 

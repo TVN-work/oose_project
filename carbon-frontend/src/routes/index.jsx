@@ -45,6 +45,7 @@ import Certificates from '../features/buyer/pages/Certificates';
 import BuyerSettings from '../features/buyer/pages/Settings';
 import Checkout from '../features/buyer/pages/Checkout';
 import AuctionPage from '../features/buyer/pages/AuctionPage';
+import PaymentCallback from '../features/buyer/pages/PaymentCallback';
 
 // Verifier pages
 import VerifierDashboard from '../features/verifier/pages/Dashboard';
@@ -160,7 +161,7 @@ const createRouter = () => createBrowserRouter(
     {
       path: '/buyer',
       element: (
-        <ProtectedRoute allowedRoles={[USER_ROLES.BUYER]}>
+        <ProtectedRoute allowedRoles={[USER_ROLES.BUYER, USER_ROLES.CC_BUYER]}>
           <BuyerLayout />
         </ProtectedRoute>
       ),
@@ -190,6 +191,10 @@ const createRouter = () => createBrowserRouter(
           element: <AuctionPage />,
         },
         {
+          path: 'payment/callback',
+          element: <PaymentCallback />,
+        },
+        {
           path: 'purchase-history',
           element: <PurchaseHistory />,
         },
@@ -207,7 +212,7 @@ const createRouter = () => createBrowserRouter(
     {
       path: '/verifier',
       element: (
-        <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER]}>
+        <ProtectedRoute allowedRoles={[USER_ROLES.VERIFIER, USER_ROLES.CVA]}>
           <VerifierLayout />
         </ProtectedRoute>
       ),

@@ -20,15 +20,15 @@ import { USER_ROLES } from '../constants/roles';
 export const parseRoles = (roles) => {
   // Handle null/undefined
   if (!roles) return [];
-  
+
   // Already an array
   if (Array.isArray(roles)) return roles;
-  
+
   // String - may be comma-separated
   if (typeof roles === 'string') {
     return roles.split(',').map(r => r.trim()).filter(Boolean);
   }
-  
+
   // Unknown format
   console.warn('Unknown roles format:', roles);
   return [];
@@ -37,7 +37,7 @@ export const parseRoles = (roles) => {
 /**
  * Check if user has a specific role
  * 
- * @param {Object} user - User object with roles property
+ * @param {Object} user - User object with roles/role property
  * @param {string} role - Role to check (from USER_ROLES constant)
  * @returns {boolean}
  * 
@@ -45,9 +45,10 @@ export const parseRoles = (roles) => {
  * hasRole(user, USER_ROLES.EV_OWNER) // true/false
  */
 export const hasRole = (user, role) => {
-  if (!user || !user.roles) return false;
-  
-  const userRoles = parseRoles(user.roles);
+  if (!user) return false;
+
+  // Check both user.roles and user.role for compatibility
+  const userRoles = parseRoles(user.roles || user.role);
   return userRoles.includes(role);
 };
 
@@ -55,7 +56,7 @@ export const hasRole = (user, role) => {
  * Check if user has ANY of the specified roles
  * Useful for components that can be accessed by multiple roles
  * 
- * @param {Object} user - User object with roles property
+ * @param {Object} user - User object with roles/role property
  * @param {array} roles - Array of roles to check
  * @returns {boolean}
  * 
@@ -63,10 +64,11 @@ export const hasRole = (user, role) => {
  * hasAnyRole(user, [USER_ROLES.EV_OWNER, USER_ROLES.BUYER]) // true if user has either
  */
 export const hasAnyRole = (user, roles) => {
-  if (!user || !user.roles) return false;
+  if (!user) return false;
   if (!Array.isArray(roles)) return false;
-  
-  const userRoles = parseRoles(user.roles);
+
+  // Check both user.roles and user.role for compatibility
+  const userRoles = parseRoles(user.roles || user.role);
   return roles.some(role => userRoles.includes(role));
 };
 
@@ -84,7 +86,7 @@ export const hasAnyRole = (user, roles) => {
 export const hasAllRoles = (user, roles) => {
   if (!user || !user.roles) return false;
   if (!Array.isArray(roles)) return false;
-  
+
   const userRoles = parseRoles(user.roles);
   return roles.every(role => userRoles.includes(role));
 };
@@ -98,7 +100,7 @@ export const hasAllRoles = (user, roles) => {
  */
 export const getPrimaryRole = (user) => {
   if (!user || !user.roles) return null;
-  
+
   const userRoles = parseRoles(user.roles);
   return userRoles[0] || null;
 };
@@ -127,18 +129,20 @@ export const isValidRole = (role) => {
 /**
  * Get default route for user based on their primary role
  * 
- * @param {Object} user - User object with roles property
+ * @param {Object} user - User object with roles/role property
  * @returns {string} - Default route path
  */
 export const getDefaultRoute = (user) => {
   const primaryRole = getPrimaryRole(user);
-  
+
   switch (primaryRole) {
     case USER_ROLES.EV_OWNER:
       return '/ev-owner/dashboard';
     case USER_ROLES.BUYER:
+    case USER_ROLES.CC_BUYER: // Add CC_BUYER support
       return '/buyer/dashboard';
     case USER_ROLES.VERIFIER:
+    case USER_ROLES.CVA: // Add CVA support
       return '/verifier/dashboard';
     case USER_ROLES.ADMIN:
       return '/admin/dashboard';
@@ -159,7 +163,7 @@ export const getDefaultRoute = (user) => {
  */
 export const formatRoles = (roles, roleLabels) => {
   const userRoles = parseRoles(roles);
-  
+
   // Import ROLE_LABELS dynamically to avoid circular dependency
   const labels = roleLabels || {
     [USER_ROLES.EV_OWNER]: 'Chủ sở hữu xe điện',
@@ -167,7 +171,7 @@ export const formatRoles = (roles, roleLabels) => {
     [USER_ROLES.VERIFIER]: 'Tổ chức kiểm toán',
     [USER_ROLES.ADMIN]: 'Quản trị viên',
   };
-  
+
   return userRoles
     .map(role => labels[role] || role)
     .join(', ');
