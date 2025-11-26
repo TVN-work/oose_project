@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { 
-  Users, 
-  CreditCard, 
-  DollarSign, 
-  TrendingUp, 
-  Activity, 
+import {
+  Users,
+  CreditCard,
+  DollarSign,
+  TrendingUp,
+  Activity,
   AlertTriangle,
   Shield,
   Wallet,
@@ -15,21 +15,21 @@ import {
   XCircle,
   Clock
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell 
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import { useSystemStats } from '../../../hooks/useAdmin';
 import Loading from '../../../components/common/Loading';
@@ -460,7 +460,7 @@ const Dashboard = () => {
               {recentTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-3 px-4">
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">#{tx.id}</span>
+                    <span className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">#{tx.id}</span>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center">

@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { 
-  Clock, 
-  CheckCircle, 
-  TrendingUp, 
+import {
+  Clock,
+  CheckCircle,
+  TrendingUp,
   TrendingDown,
-  FileCheck, 
-  Shield, 
-  Award, 
+  FileCheck,
+  Shield,
+  Award,
   BarChart3,
   Activity,
   AlertCircle,
@@ -39,15 +39,15 @@ const Dashboard = () => {
   const approvedCount = requests.filter(r => r.status === 'approved').length;
   const rejectedCount = requests.filter(r => r.status === 'rejected').length;
   const totalVerified = approvedCount;
-  
+
   // Calculate total credits issued
   const totalCreditsIssued = requests
     .filter(r => r.status === 'approved')
     .reduce((sum, r) => sum + (parseFloat(r.credits || r.creditAmount || 0)), 0);
-  
+
   // Calculate approval rate
   const totalProcessed = approvedCount + rejectedCount;
-  const approvalRate = totalProcessed > 0 
+  const approvalRate = totalProcessed > 0
     ? parseFloat(((approvedCount / totalProcessed) * 100).toFixed(1))
     : 0;
 
@@ -55,7 +55,7 @@ const Dashboard = () => {
   const lastMonthPending = Math.max(0, pendingCount - 2);
   const lastMonthApproved = Math.max(0, approvedCount - 5);
   const lastMonthCredits = Math.max(0, totalCreditsIssued - 0.5);
-  
+
   const pendingChange = pendingCount > 0 ? ((pendingCount - lastMonthPending) / Math.max(1, lastMonthPending) * 100) : 0;
   const approvedChange = approvedCount > 0 ? ((approvedCount - lastMonthApproved) / Math.max(1, lastMonthApproved) * 100) : 0;
   const creditsChange = totalCreditsIssued > 0 ? ((totalCreditsIssued - lastMonthCredits) / Math.max(0.1, lastMonthCredits) * 100) : 0;
@@ -165,24 +165,24 @@ const Dashboard = () => {
 
   // Performance metrics
   const performanceMetrics = [
-    { 
-      label: 'Yêu cầu đã xử lý', 
-      current: totalProcessed, 
-      target: requests.length, 
+    {
+      label: 'Yêu cầu đã xử lý',
+      current: totalProcessed,
+      target: requests.length,
       color: 'blue',
       percentage: requests.length > 0 ? Math.min(100, (totalProcessed / requests.length * 100)) : 0,
     },
-    { 
-      label: 'Tỷ lệ duyệt', 
-      current: approvalRate, 
-      target: 95, 
+    {
+      label: 'Tỷ lệ duyệt',
+      current: approvalRate,
+      target: 95,
       color: 'green',
       percentage: Math.min(100, (approvalRate / 95 * 100)),
     },
-    { 
-      label: 'Tín chỉ đã phát hành', 
-      current: totalCreditsIssued, 
-      target: totalCreditsIssued * 1.2 || 1, 
+    {
+      label: 'Tín chỉ đã phát hành',
+      current: totalCreditsIssued,
+      target: totalCreditsIssued * 1.2 || 1,
       color: 'purple',
       percentage: totalCreditsIssued > 0 ? Math.min(100, (totalCreditsIssued / (totalCreditsIssued * 1.2) * 100)) : 0,
     },
@@ -218,33 +218,33 @@ const Dashboard = () => {
 
   const getColorClasses = (color) => {
     const classes = {
-      yellow: { 
-        bg: 'bg-yellow-50', 
-        icon: 'bg-yellow-100 text-yellow-600', 
+      yellow: {
+        bg: 'bg-yellow-50',
+        icon: 'bg-yellow-100 text-yellow-600',
         border: 'border-yellow-200',
         text: 'text-yellow-600',
       },
-      green: { 
-        bg: 'bg-green-50', 
-        icon: 'bg-green-100 text-green-600', 
+      green: {
+        bg: 'bg-green-50',
+        icon: 'bg-green-100 text-green-600',
         border: 'border-green-200',
         text: 'text-green-600',
       },
-      blue: { 
-        bg: 'bg-blue-50', 
-        icon: 'bg-blue-100 text-blue-600', 
+      blue: {
+        bg: 'bg-blue-50',
+        icon: 'bg-blue-100 text-blue-600',
         border: 'border-blue-200',
         text: 'text-blue-600',
       },
-      purple: { 
-        bg: 'bg-purple-50', 
-        icon: 'bg-purple-100 text-purple-600', 
+      purple: {
+        bg: 'bg-purple-50',
+        icon: 'bg-purple-100 text-purple-600',
         border: 'border-purple-200',
         text: 'text-purple-600',
       },
-      orange: { 
-        bg: 'bg-orange-50', 
-        icon: 'bg-orange-100 text-orange-600', 
+      orange: {
+        bg: 'bg-orange-50',
+        icon: 'bg-orange-100 text-orange-600',
         border: 'border-orange-200',
         text: 'text-orange-600',
       },
@@ -325,19 +325,19 @@ const Dashboard = () => {
                         stat.color === 'yellow'
                           ? '#f59e0b'
                           : stat.color === 'green'
-                          ? '#10b981'
-                          : stat.color === 'blue'
-                          ? '#3b82f6'
-                          : '#8b5cf6'
+                            ? '#10b981'
+                            : stat.color === 'blue'
+                              ? '#3b82f6'
+                              : '#8b5cf6'
                       }
                       fill={
                         stat.color === 'yellow'
                           ? '#f59e0b'
                           : stat.color === 'green'
-                          ? '#10b981'
-                          : stat.color === 'blue'
-                          ? '#3b82f6'
-                          : '#8b5cf6'
+                            ? '#10b981'
+                            : stat.color === 'blue'
+                              ? '#3b82f6'
+                              : '#8b5cf6'
                       }
                       fillOpacity={0.2}
                       strokeWidth={2}
@@ -594,7 +594,7 @@ const Dashboard = () => {
                   {recentRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-4">
-                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">#{request.id}</span>
+                        <span className="font-mono text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">#{request.id}</span>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center">

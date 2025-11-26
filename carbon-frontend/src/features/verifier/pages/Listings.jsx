@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Search, Filter, Download, Eye, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, Gavel, DollarSign, User, X, Calendar, Hash, FileText, Tag, Edit2, Save, Users } from 'lucide-react';
+import { ShoppingBag, Search, Filter, Download, Eye, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, Gavel, DollarSign, User, X, Calendar, Hash, FileText, Tag, Edit2, Save } from 'lucide-react';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import marketService from '../../../services/market/marketService';
 import userService from '../../../services/user/userService';
@@ -9,10 +9,10 @@ import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 
 /**
- * Listings Management Page for Admin
+ * Listings Management Page for Verifier
  * View and manage all marketplace listings
  */
-const ListingsPage = () => {
+const Listings = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -22,37 +22,17 @@ const ListingsPage = () => {
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
-  // User search states
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-
   const queryClient = useQueryClient();
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
 
-  // Fetch users for search dropdown
-  const { data: searchUsers, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users', 'search', userSearchTerm],
-    queryFn: () => userService.getAllUsers({
-      page: 0,
-      entry: 20,
-      fullName: userSearchTerm || undefined,
-    }),
-    enabled: userSearchTerm.length >= 1,
-    staleTime: 30000,
-  });
-
-  const userSearchResults = Array.isArray(searchUsers) ? searchUsers : (searchUsers?.content || searchUsers?.data || []);
-
-  // Fetch listings with userId filter
+  // Fetch listings
   const { data: listings, isLoading } = useQuery({
-    queryKey: ['listings', 'admin', page, pageSize, typeFilter, statusFilter, selectedUserId],
+    queryKey: ['listings', 'verifier', page, pageSize, typeFilter, statusFilter],
     queryFn: () => marketService.getAllListings({
       page,
       entry: pageSize,
       type: typeFilter !== 'ALL' ? typeFilter : undefined,
       status: statusFilter !== 'ALL' ? statusFilter : undefined,
-      sellerId: selectedUserId || undefined,
       field: 'createdAt',
       sort: 'DESC',
     }),
@@ -94,7 +74,8 @@ const ListingsPage = () => {
   const updateStatusMutation = useMutation({
     mutationFn: ({ listingId, status }) => marketService.updateListingStatus(listingId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries(['listings', 'admin']);
+      // Refetch listings
+      queryClient.invalidateQueries(['listings', 'verifier']);
       setIsEditingStatus(false);
       setSelectedListing(null);
       showAlert('Cập nhật trạng thái thành công!', 'success');
@@ -123,21 +104,6 @@ const ListingsPage = () => {
     });
   };
 
-  // Handler for selecting user from dropdown
-  const handleSelectUser = (user) => {
-    setSelectedUserId(user.id);
-    setUserSearchTerm(user.fullName || user.username || user.email || '');
-    setShowUserDropdown(false);
-    setPage(0);
-  };
-
-  // Handler for clearing user filter
-  const handleClearUserFilter = () => {
-    setSelectedUserId(null);
-    setUserSearchTerm('');
-    setPage(0);
-  };
-
   // Helper to get seller display name
   const getSellerDisplay = (sellerId) => {
     if (!sellerId) return 'N/A';
@@ -148,19 +114,21 @@ const ListingsPage = () => {
     return sellerId.substring(0, 8) + '...';
   };
 
-  // Helper to format datetime
+  // Helper to format datetime - handles both ISO and pre-formatted strings
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: 'N/A', time: 'N/A' };
 
+    // Check if it's already formatted as "HH:MM DD-MM-YYYY"
     if (typeof dateString === 'string' && dateString.includes('-') && dateString.includes(':')) {
       const parts = dateString.split(' ');
       if (parts.length >= 2) {
-        const time = parts[0];
-        const datePart = parts[1];
+        const time = parts[0]; // "07:23"
+        const datePart = parts[1]; // "26-11-2025"
         return { date: datePart, time: time };
       }
     }
 
+    // Fallback to Date parsing for ISO format
     try {
       const date = new Date(dateString);
       return {
@@ -322,77 +290,14 @@ const ListingsPage = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* User Search with Dropdown */}
-          <div className="md:col-span-2 relative">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-gray-400" />
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Tìm người bán theo tên..."
-                  value={userSearchTerm}
-                  onChange={(e) => {
-                    setUserSearchTerm(e.target.value);
-                    setShowUserDropdown(true);
-                    if (!e.target.value) {
-                      setSelectedUserId(null);
-                    }
-                  }}
-                  onFocus={() => setShowUserDropdown(true)}
-                  className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                {(userSearchTerm || selectedUserId) && (
-                  <button
-                    onClick={handleClearUserFilter}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* User Dropdown */}
-            {showUserDropdown && userSearchTerm && userSearchResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {isLoadingUsers ? (
-                  <div className="p-3 text-center text-gray-500">Đang tìm kiếm...</div>
-                ) : (
-                  userSearchResults.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleSelectUser(user)}
-                      className="w-full px-4 py-3 text-left bg-white hover:bg-gray-100 flex items-center gap-3 border-b border-gray-100 last:border-b-0 transition-colors"
-                    >
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 text-sm truncate">
-                          {user.fullName || user.username || 'N/A'}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">{user.email || user.phoneNumber || ''}</p>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-
-            {selectedUserId && (
-              <p className="text-xs text-purple-600 mt-1">Đang lọc niêm yết của người bán đã chọn</p>
-            )}
-          </div>
-
-          {/* Listing ID Search */}
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Tìm mã niêm yết..."
+                placeholder="Tìm theo ID niêm yết, người bán..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -596,8 +501,8 @@ const ListingsPage = () => {
                         key={i}
                         onClick={() => setPage(i)}
                         className={`px-3 py-1.5 rounded-lg text-sm transition ${currentPage === i
-                          ? 'bg-purple-600 text-white font-semibold'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                            ? 'bg-purple-600 text-white font-semibold'
+                            : 'border border-gray-300 hover:bg-gray-50'
                           }`}
                       >
                         {i + 1}
@@ -821,4 +726,4 @@ const ListingsPage = () => {
   );
 };
 
-export default ListingsPage;
+export default Listings;

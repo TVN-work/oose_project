@@ -1,42 +1,38 @@
 import { useState, useMemo } from 'react';
 import {
-  Wallet,
+  Leaf,
   Search,
   Download,
-  CheckCircle,
-  XCircle,
-  Clock,
   User,
   X,
-  Calendar,
-  Hash,
   FileText,
-  DollarSign,
   Users,
   TrendingUp,
   TrendingDown,
   ArrowUpRight,
   ArrowDownLeft,
   RefreshCw,
+  DollarSign,
+  Activity,
+  BarChart3,
 } from 'lucide-react';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import walletService from '../../../services/wallet/walletService';
+import carbonCreditService from '../../../services/carbonCredit/carbonCreditService';
 import userService from '../../../services/user/userService';
 import { auditService, AUDIT_TYPES, AUDIT_ACTIONS } from '../../../services/audit/auditService';
-import { formatCurrency } from '../../../utils';
 import Loading from '../../../components/common/Loading';
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 
 /**
- * Wallets Management Page for Admin
- * View and manage all platform wallets with audit history
+ * Carbon Credits Management Page for Admin
+ * View and manage all platform carbon credits with audit history
  */
-const WalletsPage = () => {
+const CarbonCreditsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
-  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [selectedCredit, setSelectedCredit] = useState(null);
 
   // User search states
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -59,10 +55,10 @@ const WalletsPage = () => {
 
   const userSearchResults = Array.isArray(searchUsers) ? searchUsers : (searchUsers?.content || searchUsers?.data || []);
 
-  // Fetch wallets
-  const { data: wallets, isLoading } = useQuery({
-    queryKey: ['wallets', 'admin', page, pageSize],
-    queryFn: () => walletService.getAllWallets({
+  // Fetch carbon credits
+  const { data: carbonCredits, isLoading } = useQuery({
+    queryKey: ['carbonCredits', 'admin', page, pageSize],
+    queryFn: () => carbonCreditService.getAllCarbonCredits({
       page,
       entry: pageSize,
       field: 'id',
@@ -71,23 +67,23 @@ const WalletsPage = () => {
     staleTime: 30000,
   });
 
-  // Extract wallet list
-  const walletList = useMemo(() => {
-    if (!wallets) return [];
-    return Array.isArray(wallets) ? wallets : (wallets?.content || wallets?.data || []);
-  }, [wallets]);
+  // Extract carbon credit list
+  const creditList = useMemo(() => {
+    if (!carbonCredits) return [];
+    return Array.isArray(carbonCredits) ? carbonCredits : (carbonCredits?.content || carbonCredits?.data || []);
+  }, [carbonCredits]);
 
-  // Extract unique owner IDs from wallets
+  // Extract unique owner IDs from carbon credits
   const ownerIds = useMemo(() => {
-    if (!walletList) return [];
+    if (!creditList) return [];
     const ids = new Set();
-    walletList.forEach(w => {
-      if (w.ownerId) ids.add(w.ownerId);
+    creditList.forEach(c => {
+      if (c.ownerId) ids.add(c.ownerId);
     });
     return Array.from(ids);
-  }, [walletList]);
+  }, [creditList]);
 
-  // Fetch user details for wallet owners using useQueries
+  // Fetch user details for credit owners using useQueries
   const ownerQueries = useQueries({
     queries: ownerIds.map(ownerId => ({
       queryKey: ['user', ownerId],
@@ -108,25 +104,25 @@ const WalletsPage = () => {
     return map;
   }, [ownerQueries, ownerIds]);
 
-  // Fetch audit for selected wallet using ownerId directly from wallet
-  const { data: walletAudits, isLoading: isLoadingAudits } = useQuery({
-    queryKey: ['audit', 'wallet', selectedWallet?.ownerId],
+  // Fetch audit for selected carbon credit using ownerId directly
+  const { data: creditAudits, isLoading: isLoadingAudits } = useQuery({
+    queryKey: ['audit', 'carbon-credit', selectedCredit?.ownerId],
     queryFn: () => auditService.getAll({
-      ownerId: selectedWallet?.ownerId,
-      type: AUDIT_TYPES.WALLET,
+      ownerId: selectedCredit?.ownerId,
+      type: AUDIT_TYPES.CARBON_CREDIT,
       page: 0,
       entry: 50,
       field: 'createdAt',
       sort: 'DESC',
     }),
-    enabled: !!selectedWallet?.ownerId,
+    enabled: !!selectedCredit?.ownerId,
     staleTime: 30000,
   });
 
   const auditList = useMemo(() => {
-    if (!walletAudits) return [];
-    return Array.isArray(walletAudits) ? walletAudits : (walletAudits?.content || walletAudits?.data || []);
-  }, [walletAudits]);
+    if (!creditAudits) return [];
+    return Array.isArray(creditAudits) ? creditAudits : (creditAudits?.content || creditAudits?.data || []);
+  }, [creditAudits]);
 
   // Handler for selecting user from dropdown
   const handleSelectUser = (user) => {
@@ -143,8 +139,8 @@ const WalletsPage = () => {
     setPage(0);
   };
 
-  // Helper to get user display name for wallet using ownerId
-  const getWalletOwner = (ownerId) => {
+  // Helper to get user display name for credit using ownerId
+  const getCreditOwner = (ownerId) => {
     if (!ownerId) return { name: 'Không xác định', email: '', userId: null };
     const user = ownerUserMap[ownerId];
     if (user) {
@@ -181,54 +177,63 @@ const WalletsPage = () => {
     }
   };
 
-  // Filter wallets by search term and selected user
-  const filteredWallets = useMemo(() => {
-    if (!walletList) return [];
+  // Helper to format credit amount
+  const formatCredit = (credit, decimals = 2) => {
+    if (typeof credit !== 'number') {
+      return '0 tín chỉ';
+    }
+    return `${credit.toFixed(decimals)} tín chỉ`;
+  };
 
-    let result = walletList;
+  // Filter credits by search term and selected user
+  const filteredCredits = useMemo(() => {
+    if (!creditList) return [];
 
-    // Filter by selected user's wallet (using ownerId)
+    let result = creditList;
+
+    // Filter by selected user (using ownerId)
     if (selectedUserId) {
-      result = result.filter(w => w.ownerId === selectedUserId);
+      result = result.filter(c => c.ownerId === selectedUserId);
     }
 
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter(wallet => {
-        const owner = getWalletOwner(wallet.ownerId);
-        return wallet.id?.toLowerCase().includes(searchLower) ||
+      result = result.filter(credit => {
+        const owner = getCreditOwner(credit.ownerId);
+        return credit.id?.toLowerCase().includes(searchLower) ||
           owner.name?.toLowerCase().includes(searchLower);
       });
     }
 
     return result;
-  }, [walletList, searchTerm, selectedUserId, ownerUserMap]);
+  }, [creditList, searchTerm, selectedUserId, ownerUserMap]);
 
   // Calculate statistics
   const stats = useMemo(() => {
-    if (!walletList) return { total: 0, totalBalance: 0, avgBalance: 0, maxBalance: 0 };
+    if (!creditList) return { total: 0, totalCredits: 0, availableCredits: 0, tradedCredits: 0 };
 
-    const totalBalance = walletList.reduce((sum, w) => sum + (w.balance || 0), 0);
-    const maxBalance = Math.max(...walletList.map(w => w.balance || 0), 0);
+    const totalCredits = creditList.reduce((sum, c) => sum + (c.totalCredit || 0), 0);
+    const availableCredits = creditList.reduce((sum, c) => sum + (c.availableCredit || 0), 0);
+    const tradedCredits = creditList.reduce((sum, c) => sum + (c.tradedCredit || 0), 0);
 
     return {
-      total: walletList.length,
-      totalBalance,
-      avgBalance: walletList.length > 0 ? totalBalance / walletList.length : 0,
-      maxBalance,
+      total: creditList.length,
+      totalCredits,
+      availableCredits,
+      tradedCredits,
     };
-  }, [walletList]);
+  }, [creditList]);
 
   // Get action badge for audit
   const getActionBadge = (action) => {
     const config = {
-      [AUDIT_ACTIONS.DEPOSIT]: { icon: ArrowDownLeft, text: 'Nạp tiền', color: 'bg-green-100 text-green-700' },
-      [AUDIT_ACTIONS.WITHDRAW]: { icon: ArrowUpRight, text: 'Rút tiền', color: 'bg-red-100 text-red-700' },
-      [AUDIT_ACTIONS.CREDIT_TOP_UP]: { icon: TrendingUp, text: 'Nạp tín chỉ', color: 'bg-blue-100 text-blue-700' },
-      [AUDIT_ACTIONS.CREDIT_TRADE]: { icon: TrendingDown, text: 'Bán tín chỉ', color: 'bg-purple-100 text-purple-700' },
-      [AUDIT_ACTIONS.CREDIT_BUY]: { icon: DollarSign, text: 'Mua tín chỉ', color: 'bg-orange-100 text-orange-700' },
+      [AUDIT_ACTIONS.CREDIT_TOP_UP]: { icon: ArrowDownLeft, text: 'Nạp tín chỉ', color: 'bg-green-100 text-green-700' },
+      [AUDIT_ACTIONS.CREDIT_TRADE]: { icon: ArrowUpRight, text: 'Bán tín chỉ', color: 'bg-purple-100 text-purple-700' },
+      [AUDIT_ACTIONS.CREDIT_BUY]: { icon: DollarSign, text: 'Mua tín chỉ', color: 'bg-blue-100 text-blue-700' },
       [AUDIT_ACTIONS.ADJUST_MANUAL]: { icon: RefreshCw, text: 'Điều chỉnh', color: 'bg-gray-100 text-gray-700' },
+      [AUDIT_ACTIONS.DEPOSIT]: { icon: TrendingUp, text: 'Nạp', color: 'bg-green-100 text-green-700' },
+      [AUDIT_ACTIONS.WITHDRAW]: { icon: TrendingDown, text: 'Rút', color: 'bg-red-100 text-red-700' },
     };
 
     const actionConfig = config[action] || { icon: FileText, text: action || 'N/A', color: 'bg-gray-100 text-gray-700' };
@@ -265,10 +270,10 @@ const WalletsPage = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-            <Wallet className="mr-3 text-purple-600" />
-            Quản lý ví
+            <Leaf className="mr-3 text-green-600" />
+            Quản lý tín chỉ Carbon
           </h1>
-          <p className="text-gray-600 mt-1">Theo dõi và quản lý tất cả ví trên nền tảng</p>
+          <p className="text-gray-600 mt-1">Theo dõi và quản lý tất cả tín chỉ carbon trên nền tảng</p>
         </div>
         <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
           <Download className="w-4 h-4" />
@@ -280,8 +285,8 @@ const WalletsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Tổng số ví</span>
-            <Wallet className="w-5 h-5 text-purple-600" />
+            <span className="text-sm text-gray-600">Tổng số tài khoản</span>
+            <Users className="w-5 h-5 text-green-600" />
           </div>
           <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
           <p className="text-xs text-gray-500 mt-1">Trên hệ thống</p>
@@ -289,29 +294,29 @@ const WalletsPage = () => {
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Tổng số dư</span>
-            <DollarSign className="w-5 h-5 text-green-600" />
+            <span className="text-sm text-gray-600">Tổng tín chỉ</span>
+            <Leaf className="w-5 h-5 text-green-600" />
           </div>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalBalance)}</p>
-          <p className="text-xs text-gray-500 mt-1">VND</p>
+          <p className="text-2xl font-bold text-green-600">{formatCredit(stats.totalCredits)}</p>
+          <p className="text-xs text-gray-500 mt-1">Đã phát hành</p>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Số dư TB</span>
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <span className="text-sm text-gray-600">Tín chỉ khả dụng</span>
+            <Activity className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.avgBalance)}</p>
-          <p className="text-xs text-gray-500 mt-1">Trung bình/ví</p>
+          <p className="text-2xl font-bold text-blue-600">{formatCredit(stats.availableCredits)}</p>
+          <p className="text-xs text-gray-500 mt-1">Có thể giao dịch</p>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Số dư cao nhất</span>
-            <TrendingUp className="w-5 h-5 text-orange-600" />
+            <span className="text-sm text-gray-600">Đã giao dịch</span>
+            <BarChart3 className="w-5 h-5 text-purple-600" />
           </div>
-          <p className="text-2xl font-bold text-orange-600">{formatCurrency(stats.maxBalance)}</p>
-          <p className="text-xs text-gray-500 mt-1">VND</p>
+          <p className="text-2xl font-bold text-purple-600">{formatCredit(stats.tradedCredits)}</p>
+          <p className="text-xs text-gray-500 mt-1">Tổng giao dịch</p>
         </div>
       </div>
 
@@ -336,7 +341,7 @@ const WalletsPage = () => {
                     }
                   }}
                   onFocus={() => setShowUserDropdown(true)}
-                  className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 {(userSearchTerm || selectedUserId) && (
                   <button
@@ -361,8 +366,8 @@ const WalletsPage = () => {
                       onClick={() => handleSelectUser(user)}
                       className="w-full px-4 py-3 text-left bg-white hover:bg-gray-100 flex items-center gap-3 border-b border-gray-100 last:border-b-0 transition-colors"
                     >
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-purple-600" />
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-800 text-sm truncate">
@@ -377,32 +382,32 @@ const WalletsPage = () => {
             )}
 
             {selectedUserId && (
-              <p className="text-xs text-purple-600 mt-1">Đang lọc ví của người dùng đã chọn</p>
+              <p className="text-xs text-green-600 mt-1">Đang lọc tín chỉ của người dùng đã chọn</p>
             )}
           </div>
 
-          {/* Wallet ID Search */}
+          {/* Credit ID Search */}
           <div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Tìm mã ví..."
+                placeholder="Tìm mã tín chỉ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Wallets Table */}
+      {/* Carbon Credits Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-800 flex items-center">
-            <Wallet className="w-5 h-5 mr-2" />
-            Danh sách ví ({filteredWallets.length})
+            <Leaf className="w-5 h-5 mr-2 text-green-600" />
+            Danh sách tín chỉ Carbon ({filteredCredits.length})
           </h3>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Hiển thị:</label>
@@ -412,7 +417,7 @@ const WalletsPage = () => {
                 setPageSize(parseInt(e.target.value));
                 setPage(0);
               }}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-sm"
+              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -424,34 +429,37 @@ const WalletsPage = () => {
         </div>
 
         <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="w-full" style={{ minWidth: '500px' }}>
+          <table className="w-full" style={{ minWidth: '700px' }}>
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '280px' }}>Chủ sở hữu</th>
-                <th className="text-right py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '180px' }}>Số dư</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '220px' }}>Chủ sở hữu</th>
+                <th className="text-right py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '140px' }}>Tổng tín chỉ</th>
+                <th className="text-right py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '140px' }}>Khả dụng</th>
+                <th className="text-right py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '140px' }}>Đã giao dịch</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredWallets.length === 0 ? (
+              {filteredCredits.length === 0 ? (
                 <tr>
-                  <td colSpan={2} className="py-12 text-center">
-                    <Wallet className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">Không có ví nào</p>
+                  <td colSpan={4} className="py-12 text-center">
+                    <Leaf className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">Không có tín chỉ nào</p>
                   </td>
                 </tr>
               ) : (
-                filteredWallets.map((wallet) => {
-                  const owner = getWalletOwner(wallet.ownerId);
+                filteredCredits.map((credit) => {
+                  const owner = getCreditOwner(credit.ownerId);
+                  const availableCredit = (credit.totalCredit || 0) - (credit.tradedCredit || 0);
                   return (
                     <tr
-                      key={wallet.id}
+                      key={credit.id}
                       className="hover:bg-gray-50 transition cursor-pointer border-b border-gray-100 last:border-b-0"
-                      onClick={() => setSelectedWallet(wallet)}
+                      onClick={() => setSelectedCredit(credit)}
                     >
-                      <td className="py-3 px-4" style={{ minWidth: '280px' }}>
+                      <td className="py-3 px-4" style={{ minWidth: '220px' }}>
                         <div className="flex items-center whitespace-nowrap">
-                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
-                            <User className="w-4 h-4 text-purple-600" />
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                            <User className="w-4 h-4 text-green-600" />
                           </div>
                           <div>
                             <p className="font-semibold text-gray-800 text-sm">
@@ -463,10 +471,23 @@ const WalletsPage = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap" style={{ minWidth: '180px' }}>
+                      <td className="py-3 px-4 text-right whitespace-nowrap" style={{ minWidth: '140px' }}>
                         <span className="text-lg font-bold text-green-600">
-                          {formatCurrency(wallet.balance || 0)}
+                          {(credit.totalCredit || 0).toFixed(2)}
                         </span>
+                        <span className="text-xs text-gray-500 ml-1">tín chỉ</span>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap" style={{ minWidth: '140px' }}>
+                        <span className="text-lg font-bold text-blue-600">
+                          {availableCredit.toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">tín chỉ</span>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap" style={{ minWidth: '140px' }}>
+                        <span className="text-lg font-bold text-purple-600">
+                          {(credit.tradedCredit || 0).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">tín chỉ</span>
                       </td>
                     </tr>
                   );
@@ -477,10 +498,10 @@ const WalletsPage = () => {
         </div>
 
         {/* Pagination */}
-        {filteredWallets.length > 0 && (
+        {filteredCredits.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
             <div className="text-sm text-gray-600">
-              Hiển thị {filteredWallets.length > 0 ? page * pageSize + 1 : 0} - {Math.min((page + 1) * pageSize, filteredWallets.length)} trong tổng số {filteredWallets.length} ví
+              Hiển thị {filteredCredits.length > 0 ? page * pageSize + 1 : 0} - {Math.min((page + 1) * pageSize, filteredCredits.length)} trong tổng số {filteredCredits.length} tài khoản
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -501,7 +522,7 @@ const WalletsPage = () => {
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
                 {(() => {
-                  const totalPages = Math.ceil(filteredWallets.length / pageSize) || 1;
+                  const totalPages = Math.ceil(filteredCredits.length / pageSize) || 1;
                   const currentPage = page;
                   const pages = [];
 
@@ -521,7 +542,7 @@ const WalletsPage = () => {
                         key={i}
                         onClick={() => setPage(i)}
                         className={`px-3 py-1.5 rounded-lg text-sm transition ${currentPage === i
-                          ? 'bg-purple-600 text-white font-semibold'
+                          ? 'bg-green-600 text-white font-semibold'
                           : 'border border-gray-300 hover:bg-gray-50'
                           }`}
                       >
@@ -535,14 +556,14 @@ const WalletsPage = () => {
 
               <button
                 onClick={() => setPage(page + 1)}
-                disabled={page >= Math.ceil(filteredWallets.length / pageSize) - 1}
+                disabled={page >= Math.ceil(filteredCredits.length / pageSize) - 1}
                 className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Sau ›
               </button>
               <button
-                onClick={() => setPage(Math.ceil(filteredWallets.length / pageSize) - 1)}
-                disabled={page >= Math.ceil(filteredWallets.length / pageSize) - 1}
+                onClick={() => setPage(Math.ceil(filteredCredits.length / pageSize) - 1)}
+                disabled={page >= Math.ceil(filteredCredits.length / pageSize) - 1}
                 className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 »
@@ -552,18 +573,18 @@ const WalletsPage = () => {
         )}
       </div>
 
-      {/* Wallet Detail Modal with Audit History */}
-      {selectedWallet && (
+      {/* Carbon Credit Detail Modal with Audit History */}
+      {selectedCredit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <Wallet className="w-6 h-6 text-purple-600" />
-                Chi tiết ví
+                <Leaf className="w-6 h-6 text-green-600" />
+                Chi tiết tín chỉ Carbon
               </h2>
               <button
-                onClick={() => setSelectedWallet(null)}
+                onClick={() => setSelectedCredit(null)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -572,41 +593,69 @@ const WalletsPage = () => {
 
             {/* Modal Content */}
             <div className="p-6 space-y-6">
-              {/* Wallet Info */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Mã ví</p>
-                    <p className="text-lg font-mono font-bold text-purple-600">
-                      {selectedWallet.id}
+              {/* Credit Info */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 mb-1">Tổng tín chỉ</p>
+                    <p className="text-xl font-bold text-green-600">
+                      {(selectedCredit.totalCredit || 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">Số dư hiện tại</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(selectedWallet.balance || 0)}
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 mb-1">Khả dụng</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {((selectedCredit.totalCredit || 0) - (selectedCredit.tradedCredit || 0)).toFixed(2)}
                     </p>
                   </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 mb-1">Đã giao dịch</p>
+                    <p className="text-xl font-bold text-purple-600">
+                      {(selectedCredit.tradedCredit || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tỷ lệ sử dụng</span>
+                  <span className="font-medium text-gray-800">
+                    {selectedCredit.totalCredit > 0
+                      ? ((selectedCredit.tradedCredit || 0) / selectedCredit.totalCredit * 100).toFixed(1)
+                      : 0}%
+                  </span>
+                </div>
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${selectedCredit.totalCredit > 0
+                        ? Math.min(100, (selectedCredit.tradedCredit || 0) / selectedCredit.totalCredit * 100)
+                        : 0}%`
+                    }}
+                  />
                 </div>
               </div>
 
               {/* Owner Info */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <User className="w-5 h-5 text-purple-600" />
+                  <User className="w-5 h-5 text-green-600" />
                   <h3 className="font-semibold text-gray-700">Chủ sở hữu</h3>
                 </div>
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Tên</p>
                     <p className="text-sm font-medium text-gray-800">
-                      {getWalletOwner(selectedWallet.ownerId).name}
+                      {getCreditOwner(selectedCredit.ownerId).name}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Email</p>
                     <p className="text-sm text-gray-600">
-                      {getWalletOwner(selectedWallet.ownerId).email || 'Chưa có thông tin'}
+                      {getCreditOwner(selectedCredit.ownerId).email || 'Chưa có thông tin'}
                     </p>
                   </div>
                 </div>
@@ -615,13 +664,13 @@ const WalletsPage = () => {
               {/* Audit History */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-600" />
-                  Lịch sử giao dịch
+                  <FileText className="w-5 h-5 text-green-600" />
+                  Lịch sử giao dịch tín chỉ
                 </h3>
 
                 {isLoadingAudits ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                     <p className="text-gray-500 mt-2">Đang tải...</p>
                   </div>
                 ) : auditList.length === 0 ? (
@@ -655,13 +704,13 @@ const WalletsPage = () => {
                                 {getActionBadge(audit.action)}
                               </td>
                               <td className="py-2 px-3 text-right text-xs text-gray-600">
-                                {formatCurrency(audit.balanceBefore || 0)}
+                                {(audit.balanceBefore || 0).toFixed(2)}
                               </td>
                               <td className={`py-2 px-3 text-right text-xs font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                {isPositive ? '+' : ''}{formatCurrency(change)}
+                                {isPositive ? '+' : ''}{change.toFixed(2)}
                               </td>
                               <td className="py-2 px-3 text-right text-xs font-semibold text-gray-800">
-                                {formatCurrency(audit.balanceAfter || 0)}
+                                {(audit.balanceAfter || 0).toFixed(2)}
                               </td>
                             </tr>
                           );
@@ -676,8 +725,8 @@ const WalletsPage = () => {
             {/* Modal Footer */}
             <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
               <button
-                onClick={() => setSelectedWallet(null)}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
+                onClick={() => setSelectedCredit(null)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
               >
                 Đóng
               </button>
@@ -689,4 +738,4 @@ const WalletsPage = () => {
   );
 };
 
-export default WalletsPage;
+export default CarbonCreditsPage;

@@ -6,6 +6,8 @@ import {
   CreditCard,
   Tag,
   Wallet,
+  Leaf,
+  Car,
   BarChart3,
   Settings,
   Menu,
@@ -17,6 +19,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSystemStats } from '../../hooks/useAdmin';
+import { useUsers } from '../../hooks/useUser';
 import { formatNumber } from '../../utils';
 
 const AdminLayout = () => {
@@ -27,8 +30,14 @@ const AdminLayout = () => {
 
   // Fetch system stats for sidebar
   const { data: systemStats } = useSystemStats();
+
+  // Fetch users count from userService
+  const { data: usersData } = useUsers({ page: 0, entry: 1000 });
+  const usersArray = Array.isArray(usersData) ? usersData : (usersData?.content || usersData?.data || []);
+  const usersCount = usersArray.length;
+
   const stats = systemStats || {
-    users: 1247,
+    users: usersCount || 0,
     transactions: 847,
     credits: 12.47,
   };
@@ -48,23 +57,33 @@ const AdminLayout = () => {
       path: '/admin/users',
       icon: Users,
       label: 'Người dùng',
-      badge: stats.users ? formatNumber(stats.users) : '1.2K',
+      badge: usersCount > 0 ? formatNumber(usersCount) : null,
     },
     {
       path: '/admin/transactions',
       icon: CreditCard,
-      label: 'Giao dịch',
-      badge: stats.transactions ? formatNumber(stats.transactions) : '847',
+      label: 'Quản lý Giao dịch',
+      badge: stats.transactions ? formatNumber(stats.transactions) : null,
     },
     {
       path: '/admin/listings',
       icon: Tag,
-      label: 'Niêm yết tín chỉ',
+      label: 'Quản lý niêm yết',
     },
     {
       path: '/admin/wallets',
       icon: Wallet,
       label: 'Ví & dòng tiền',
+    },
+    {
+      path: '/admin/carbon-credits',
+      icon: Leaf,
+      label: 'Tín chỉ Carbon',
+    },
+    {
+      path: '/admin/vehicle-types',
+      icon: Car,
+      label: 'Quản lý loại xe',
     },
     {
       path: '/admin/reports',
@@ -109,9 +128,8 @@ const AdminLayout = () => {
 
       {/* Sidebar */}
       <div
-        className={`sidebar fixed left-0 top-0 h-full w-72 text-white z-40 transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`sidebar fixed left-0 top-0 h-full w-72 text-white z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
         style={{
           background: 'linear-gradient(180deg, #2563EB 0%, #1E40AF 100%)',
           boxShadow: '2px 0 10px rgba(0, 0, 0, 0.1)',
@@ -169,11 +187,10 @@ const AdminLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
-                    active
-                      ? 'bg-blue-400 border-r-4 border-white shadow-inner'
-                      : 'hover:bg-white hover:bg-opacity-15 hover:translate-x-1'
-                  }`}
+                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${active
+                    ? 'bg-blue-400 border-r-4 border-white shadow-inner'
+                    : 'hover:bg-white hover:bg-opacity-15 hover:translate-x-1'
+                    }`}
                 >
                   <Icon className="mr-4 w-5 h-5" />
                   <span className="font-medium flex-1">{item.label}</span>

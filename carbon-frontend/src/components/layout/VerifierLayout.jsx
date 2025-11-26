@@ -11,6 +11,8 @@ import {
   Bell,
   Shield,
   LogOut,
+  Receipt,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -25,7 +27,7 @@ const VerifierLayout = () => {
   // Fetch all requests for badges and stats
   const { data: allRequestsData } = useVerificationRequests({});
   const allRequests = allRequestsData || [];
-  
+
   // Calculate counts for badges
   const pendingCount = allRequests.filter(r => r.status === 'pending').length;
   const readyForIssuanceCount = allRequests.filter(r => r.status === 'approved').length;
@@ -48,11 +50,21 @@ const VerifierLayout = () => {
       label: 'Yêu cầu xác minh',
       badge: pendingCount > 0 ? pendingCount : null,
     },
+    // {
+    //   path: '/verifier/issue-credits',
+    //   icon: Award,
+    //   label: 'Phát hành tín chỉ',
+    //   badge: readyForIssuanceCount > 0 ? readyForIssuanceCount : null,
+    // },
     {
-      path: '/verifier/issue-credits',
-      icon: Award,
-      label: 'Phát hành tín chỉ',
-      badge: readyForIssuanceCount > 0 ? readyForIssuanceCount : null,
+      path: '/verifier/transactions',
+      icon: Receipt,
+      label: 'Quản lý giao dịch',
+    },
+    {
+      path: '/verifier/listings',
+      icon: ShoppingBag,
+      label: 'Quản lý niêm yết',
     },
     { path: '/verifier/reports', icon: BarChart3, label: 'Báo cáo' },
     { path: '/verifier/settings', icon: Settings, label: 'Cài đặt' },
@@ -98,9 +110,8 @@ const VerifierLayout = () => {
 
       {/* Sidebar */}
       <div
-        className={`sidebar fixed left-0 top-0 h-full w-72 text-white z-40 transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`sidebar fixed left-0 top-0 h-full w-72 text-white z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
         style={{
           background: 'linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)',
           boxShadow: '2px 0 10px rgba(0, 0, 0, 0.1)',
@@ -164,11 +175,10 @@ const VerifierLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
-                    active
+                  className={`sidebar-item flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${active
                       ? 'bg-blue-400 border-r-4 border-white shadow-inner'
                       : 'hover:bg-white hover:bg-opacity-15 hover:translate-x-1'
-                  }`}
+                    }`}
                 >
                   <Icon className="mr-4 w-5 h-5" />
                   <span className="font-medium flex-1">{item.label}</span>
