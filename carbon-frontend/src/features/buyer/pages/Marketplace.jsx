@@ -1,53 +1,80 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Eye, Gavel, MessageCircle, Bolt, Star, CheckCircle, Clock, XCircle, Tag, DollarSign, Calendar, FileText } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { buyerService } from '../../../services/buyer/buyerService';
+import {
+  Search,
+  ShoppingCart,
+  Eye,
+  Gavel,
+  Bolt,
+  Star,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from 'lucide-react';
+import { useListings, useMarketUtils } from '../../../hooks/useMarket';
+import {
+  LISTING_TYPES,
+  LISTING_STATUSES,
+} from '../../../services/market/marketService';
 import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
-import { formatCurrencyFromUsd, usdToVnd, formatDate } from '../../../utils';
+import { formatCurrency, formatDate } from '../../../utils';
 
 const Marketplace = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(12);
   const [filters, setFilters] = useState({
     creditAmount: '',
     priceRange: '',
-    region: '',
-    transactionType: '',
+    type: '',
+    status: [],
   });
 
-  // Build query params from filters
+  // Get market utilities
+  const { getTypeDisplay, getStatusDisplay } = useMarketUtils();
+
+  // Build query params from filters for marketService.getAllListings
   const queryParams = useMemo(() => {
-    const params = {};
-    
-    if (searchQuery) {
-      params.search = searchQuery;
+    const params = {
+      page: currentPage,
+      entry: pageSize,
+      field: 'createdAt',
+      sort: 'DESC',
+    };
+
+    // Listing type filter (FIXED_PRICE or AUCTION)
+    if (filters.type) {
+      params.type = filters.type;
     }
-    
-    // Transaction type filter
-    if (filters.transactionType === 'buy-now') {
-      params.type = 'buy-now';
-    } else if (filters.transactionType === 'auction') {
-      params.type = 'auction';
+
+    // Status filter - support multiple status values
+    if (filters.status && filters.status.length > 0) {
+      params.status = filters.status;
+    } else {
+      // Default to ACTIVE and BIDDING status if no filter selected (available for purchase)
+      params.status = [LISTING_STATUSES.ACTIVE, LISTING_STATUSES.BIDDING];
     }
-    
-    // Price range filter
+
+    // Price range filter (VND)
     if (filters.priceRange) {
-      const USD_TO_VND_RATE = 25000;
-      if (filters.priceRange === 'under-20') {
-        params.maxPrice = 20;
-      } else if (filters.priceRange === '20-25') {
-        params.minPrice = 20;
-        params.maxPrice = 25;
-      } else if (filters.priceRange === '25-30') {
-        params.minPrice = 25;
-        params.maxPrice = 30;
-      } else if (filters.priceRange === 'over-30') {
-        params.minPrice = 30;
+      if (filters.priceRange === 'under-500k') {
+        params.maxPrice = 500000;
+      } else if (filters.priceRange === '500k-1m') {
+        params.minPrice = 500000;
+        params.maxPrice = 1000000;
+      } else if (filters.priceRange === '1m-5m') {
+        params.minPrice = 1000000;
+        params.maxPrice = 5000000;
+      } else if (filters.priceRange === 'over-5m') {
+        params.minPrice = 5000000;
       }
     }
-    
+
     // Quantity range filter
     if (filters.creditAmount) {
       if (filters.creditAmount === '1-50') {
@@ -63,67 +90,164 @@ const Marketplace = () => {
         params.minQuantity = 200;
       }
     }
-    
-    // Region filter
-    if (filters.region) {
-      params.region = filters.region;
-    }
-    
+
     return params;
-  }, [searchQuery, filters]);
+  }, [currentPage, pageSize, filters]);
 
-  // Fetch marketplace data from database
-  const { data: marketplaceData, isLoading, error, refetch } = useQuery({
-    queryKey: ['buyer', 'marketplace', queryParams],
-    queryFn: () => buyerService.getMarketplace(queryParams),
-    staleTime: 30000, // 30 seconds
-  });
+  // Fetch listings from API using useListings hook
+  const {
+    data: listingsData,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useListings(queryParams);
 
-  const credits = marketplaceData?.data || [];
+  // Process listings data
+  const listings = Array.isArray(listingsData) ? listingsData : [];
+  const totalListings = listings.length;
 
-  const handleBuyNow = (credit) => {
-    // Navigate to checkout with credit data
+  // Handle buy now action
+  const handleBuyNow = (listing) => {
     navigate('/buyer/checkout', {
       state: {
-        listingId: credit.id,
-        seller: credit.owner,
-        vehicle: credit.vehicle,
-        quantity: credit.credits,
-        pricePerCredit: credit.price,
-        region: credit.region,
-        co2Saved: `${credit.co2Saved} tấn`,
-        type: 'fixed_price',
+        listingId: listing.id,
+        sellerId: listing.sellerId,
+        quantity: listing.quantity,
+        pricePerCredit: listing.pricePerCredit,
+        type: LISTING_TYPES.FIXED_PRICE,
+        totalPrice: listing.pricePerCredit * listing.quantity,
       },
     });
   };
 
-  const handleJoinAuction = (credit) => {
-    // Navigate to auction page with credit data
-    navigate(`/buyer/auction/${credit.id}`, {
+  // Handle join auction action
+  const handleJoinAuction = (listing) => {
+    const highestBid = listing.bidResponseList?.length > 0
+      ? Math.max(...listing.bidResponseList.map((b) => b.amount))
+      : listing.pricePerCredit;
+
+    navigate(`/buyer/auction/${listing.id}`, {
       state: {
-        listingId: credit.id,
-        seller: credit.owner,
-        vehicle: credit.vehicle,
-        credits: credit.credits,
-        startingPrice: credit.price * 0.8, // Assume starting price is 80% of listed price
-        currentPrice: credit.price,
-        region: credit.region,
-        co2Saved: `${credit.co2Saved} tấn`,
-        mileage: '28,500 km', // Default value
-        rating: 4.9,
-        reviews: 89,
+        listingId: listing.id,
+        sellerId: listing.sellerId,
+        quantity: listing.quantity,
+        startingPrice: listing.pricePerCredit,
+        currentPrice: highestBid,
+        endTime: listing.endTime,
+        bidCount: listing.bidResponseList?.length || 0,
+        bids: listing.bidResponseList || [],
       },
     });
   };
 
-  const handleNegotiate = (creditId) => {
-    toast.success(`Đã gửi yêu cầu thương lượng cho ${creditId}. Chờ phản hồi từ người bán...`);
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    setCurrentPage(0);
+    refetch();
+    toast.success('Đã áp dụng bộ lọc!');
   };
 
-
-  const handleApplyFilters = () => {
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      creditAmount: '',
+      priceRange: '',
+      type: '',
+      status: [],
+    });
+    setCurrentPage(0);
     refetch();
-    toast.success(`Đã áp dụng bộ lọc. Tìm thấy ${marketplaceData?.total || 0} tín chỉ phù hợp!`);
+    toast.success('Đã xóa bộ lọc!');
+  };
+
+  // Handle quick filter
+  const handleQuickFilter = (filterType) => {
+    if (filterType === 'fixed_price') {
+      setFilters((prev) => ({ ...prev, type: LISTING_TYPES.FIXED_PRICE }));
+    } else if (filterType === 'auction') {
+      setFilters((prev) => ({ ...prev, type: LISTING_TYPES.AUCTION }));
+    } else if (filterType === 'active') {
+      setFilters((prev) => ({ ...prev, status: [LISTING_STATUSES.ACTIVE] }));
+    } else if (filterType === 'bidding') {
+      setFilters((prev) => ({ ...prev, status: [LISTING_STATUSES.BIDDING] }));
+    }
+    setCurrentPage(0);
+    setTimeout(() => refetch(), 100);
+  };
+
+  // Handle pagination
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (listings.length === pageSize) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Get listing type badge
+  const getListingTypeBadge = (type) => {
+    const display = getTypeDisplay(type);
+    if (type === LISTING_TYPES.FIXED_PRICE) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+          <ShoppingCart className="w-3 h-3" />
+          {display.text}
+        </span>
+      );
+    } else if (type === LISTING_TYPES.AUCTION) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+          <Gavel className="w-3 h-3" />
+          {display.text}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+        {display.text}
+      </span>
+    );
+  };
+
+  // Get status badge
+  const getStatusBadge = (status) => {
+    const display = getStatusDisplay(status);
+    const colorMap = {
+      green: 'bg-green-100 text-green-700 border-green-200',
+      blue: 'bg-blue-100 text-blue-700 border-blue-200',
+      purple: 'bg-purple-100 text-purple-700 border-purple-200',
+      yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      red: 'bg-red-100 text-red-700 border-red-200',
+      orange: 'bg-orange-100 text-orange-700 border-orange-200',
+      gray: 'bg-gray-100 text-gray-700 border-gray-200',
+    };
+
+    const iconMap = {
+      [LISTING_STATUSES.ACTIVE]: CheckCircle,
+      [LISTING_STATUSES.BIDDING]: Gavel,
+      [LISTING_STATUSES.PENDING_PAYMENT]: Clock,
+      [LISTING_STATUSES.SOLD]: CheckCircle,
+      [LISTING_STATUSES.ENDED]: Clock,
+      [LISTING_STATUSES.CANCELED]: Clock,
+      [LISTING_STATUSES.EXPIRED]: Clock,
+    };
+
+    const Icon = iconMap[status] || Clock;
+    const colorClass = colorMap[display.color] || colorMap.gray;
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${colorClass}`}
+      >
+        <Icon className="w-3 h-3" />
+        {display.text}
+      </span>
+    );
   };
 
   if (isLoading) {
@@ -134,21 +258,19 @@ const Marketplace = () => {
     return (
       <div className="max-w-7xl mx-auto p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-          <p className="text-red-600">Không thể tải dữ liệu marketplace. Vui lòng thử lại sau.</p>
+          <p className="text-red-600">
+            Không thể tải dữ liệu marketplace. Vui lòng thử lại sau.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );
   }
-
-  const handleQuickFilter = (type) => {
-    const filterNames = {
-      verified: 'Đã xác minh',
-      instant: 'Mua ngay',
-      auction: 'Đấu giá',
-      premium: 'Premium',
-    };
-    toast.success(`Đã lọc theo: ${filterNames[type]}`);
-  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -157,35 +279,36 @@ const Marketplace = () => {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-800 flex items-center">
             <Search className="w-5 h-5 mr-3" />
-            Tìm kiếm & Lọc tín chỉ
+            Tìm kiếm & Lọc niêm yết
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span>{marketplaceData?.total || 0} tín chỉ có sẵn</span>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm theo tên chủ xe, mã tín chỉ, loại xe..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-            />
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span>{totalListings} niêm yết</span>
+            </div>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`}
+              />
+            </button>
           </div>
         </div>
 
         {/* Filters */}
         <div className="grid md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Số lượng tín chỉ</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Số lượng tín chỉ
+            </label>
             <select
               value={filters.creditAmount}
-              onChange={(e) => setFilters({ ...filters, creditAmount: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, creditAmount: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả</option>
@@ -197,57 +320,87 @@ const Marketplace = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng giá</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Khoảng giá
+            </label>
             <select
               value={filters.priceRange}
-              onChange={(e) => setFilters({ ...filters, priceRange: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, priceRange: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả mức giá</option>
-              <option value="under-20">Dưới {formatCurrencyFromUsd(20)}</option>
-              <option value="20-25">{formatCurrencyFromUsd(20)} - {formatCurrencyFromUsd(25)}</option>
-              <option value="25-30">{formatCurrencyFromUsd(25)} - {formatCurrencyFromUsd(30)}</option>
-              <option value="over-30">Trên {formatCurrencyFromUsd(30)}</option>
+              <option value="under-500k">Dưới 500.000đ</option>
+              <option value="500k-1m">500.000đ - 1.000.000đ</option>
+              <option value="1m-5m">1.000.000đ - 5.000.000đ</option>
+              <option value="over-5m">Trên 5.000.000đ</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Khu vực</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Loại niêm yết
+            </label>
             <select
-              value={filters.region}
-              onChange={(e) => setFilters({ ...filters, region: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Tất cả khu vực</option>
-              <option value="hanoi">Hà Nội</option>
-              <option value="hcm">TP.HCM</option>
-              <option value="danang">Đà Nẵng</option>
-              <option value="haiphong">Hải Phòng</option>
-              <option value="cantho">Cần Thơ</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Loại giao dịch</label>
-            <select
-              value={filters.transactionType}
-              onChange={(e) => setFilters({ ...filters, transactionType: e.target.value })}
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả</option>
-              <option value="buy-now">Mua ngay</option>
-              <option value="auction">Đấu giá</option>
-              <option value="negotiate">Thương lượng</option>
+              <option value={LISTING_TYPES.FIXED_PRICE}>Giá cố định</option>
+              <option value={LISTING_TYPES.AUCTION}>Đấu giá</option>
             </select>
           </div>
 
-          <div className="flex items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trạng thái
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: LISTING_STATUSES.ACTIVE, label: 'Đang hoạt động' },
+                { value: LISTING_STATUSES.BIDDING, label: 'Đang đấu giá' },
+                { value: LISTING_STATUSES.PENDING_PAYMENT, label: 'Chờ thanh toán' },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border cursor-pointer text-sm transition-colors ${filters.status.includes(option.value)
+                    ? 'bg-blue-100 border-blue-500 text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.status.includes(option.value)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFilters({ ...filters, status: [...filters.status, option.value] });
+                      } else {
+                        setFilters({ ...filters, status: filters.status.filter(s => s !== option.value) });
+                      }
+                    }}
+                    className="sr-only"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-end gap-2">
             <button
               onClick={handleApplyFilters}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
             >
               <Search className="w-4 h-4" />
-              Tìm kiếm
+              Lọc
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Xóa
             </button>
           </div>
         </div>
@@ -256,18 +409,18 @@ const Marketplace = () => {
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="text-sm text-gray-600 mr-2">Lọc nhanh:</span>
           <button
-            onClick={() => handleQuickFilter('verified')}
+            onClick={() => handleQuickFilter('active')}
             className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs hover:bg-green-200 transition-colors flex items-center gap-1"
           >
             <CheckCircle className="w-3 h-3" />
-            Đã xác minh
+            Đang hoạt động
           </button>
           <button
-            onClick={() => handleQuickFilter('instant')}
+            onClick={() => handleQuickFilter('fixed_price')}
             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs hover:bg-blue-200 transition-colors flex items-center gap-1"
           >
             <Bolt className="w-3 h-3" />
-            Mua ngay
+            Giá cố định
           </button>
           <button
             onClick={() => handleQuickFilter('auction')}
@@ -277,31 +430,31 @@ const Marketplace = () => {
             Đấu giá
           </button>
           <button
-            onClick={() => handleQuickFilter('premium')}
+            onClick={() => handleQuickFilter('bidding')}
             className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs hover:bg-yellow-200 transition-colors flex items-center gap-1"
           >
             <Star className="w-3 h-3" />
-            Premium
+            Đang đấu giá
           </button>
         </div>
       </div>
 
       {/* Marketplace Grid */}
-      {credits.length === 0 ? (
+      {listings.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
               <Search className="w-8 h-8 text-gray-400" />
             </div>
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Không tìm thấy tín chỉ nào</h3>
-          <p className="text-gray-600 mb-4">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm của bạn</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">
+            Không tìm thấy niêm yết nào
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm của bạn
+          </p>
           <button
-            onClick={() => {
-              setSearchQuery('');
-              setFilters({ creditAmount: '', priceRange: '', region: '', transactionType: '' });
-              refetch();
-            }}
+            onClick={handleResetFilters}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Xóa bộ lọc
@@ -309,148 +462,143 @@ const Marketplace = () => {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {credits.map((credit) => {
-            // Helper functions for badges (similar to EV Owner)
-            const getVerificationBadge = (verified) => {
-              if (verified) {
-                return (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-green-100 text-green-700 border-green-200">
-                    <CheckCircle className="w-4 h-4" />
-                    Đã xác minh
-                  </span>
-                );
-              }
-              return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-yellow-100 text-yellow-700 border-yellow-200">
-                  <Clock className="w-4 h-4" />
-                  Chờ xác minh
-                </span>
-              );
-            };
-
-            const getListingTypeBadge = (type) => {
-              if (type === 'buy-now' || type === 'fixed_price') {
-                return (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                    <ShoppingCart className="w-3 h-3" />
-                    Giá cố định
-                  </span>
-                );
-              } else if (type === 'auction') {
-                return (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
-                    <Gavel className="w-3 h-3" />
-                    Đấu giá
-                  </span>
-                );
-              }
-              return null;
-            };
-
-            const getStatusBadge = (status) => {
-              const statusMap = {
-                'ACTIVE': { label: 'Đang bán', icon: CheckCircle, style: 'bg-green-100 text-green-700 border-green-200' },
-                'BIDDING': { label: 'Đang đấu giá', icon: Gavel, style: 'bg-purple-100 text-purple-700 border-purple-200' },
-                'SOLD': { label: 'Đã bán', icon: CheckCircle, style: 'bg-blue-100 text-blue-700 border-blue-200' },
-                'AUCTION_ENDED': { label: 'Đã đấu giá', icon: Clock, style: 'bg-gray-100 text-gray-700 border-gray-200' },
-              };
-              
-              const statusInfo = statusMap[status] || { label: status || 'Đang bán', icon: CheckCircle, style: 'bg-green-100 text-green-700 border-green-200' };
-              const Icon = statusInfo.icon;
-              
-              return (
-                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusInfo.style}`}>
-                  <Icon className="w-4 h-4" />
-                  {statusInfo.label}
-                </span>
-              );
-            };
-
+          {listings.map((listing) => {
             // Calculate total value
-            const totalValue = (credit.credits || 0) * (credit.price || 0);
+            const totalValue =
+              (listing.quantity || 0) * (listing.pricePerCredit || 0);
+
+            // Get highest bid for auction
+            const highestBid =
+              listing.bidResponseList?.length > 0
+                ? Math.max(...listing.bidResponseList.map((b) => b.amount))
+                : null;
+
+            // Check if auction is ending soon (within 24 hours)
+            const isEndingSoon =
+              listing.endTime &&
+              new Date(listing.endTime).getTime() - Date.now() <
+              24 * 60 * 60 * 1000;
 
             return (
               <div
-                key={credit.id}
+                key={listing.id}
                 className="border-2 border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-gray-300 transition-all bg-white"
               >
-                {/* Header: Tên người tạo niêm yết và Xác minh CVA (góc phải) */}
+                {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="text-base font-bold text-gray-800">{credit.owner}</h4>
+                    <p className="text-xs text-gray-500 mb-1">
+                      ID: {listing.id?.slice(0, 8)}...
+                    </p>
+                    {getListingTypeBadge(listing.type)}
                   </div>
-                  {getVerificationBadge(credit.verified)}
+                  {getStatusBadge(listing.status)}
                 </div>
 
-                {/* Ngày đăng tải */}
-                <div className="mb-3">
+                {/* Dates */}
+                <div className="mb-3 space-y-1">
                   <p className="text-sm text-gray-500 flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {formatDate(credit.created_at || credit.date)}
+                    Tạo: {formatDate(listing.createdAt)}
+                  </p>
+                  {listing.endTime && (
+                    <p
+                      className={`text-sm flex items-center gap-1 ${isEndingSoon ? 'text-red-600 font-medium' : 'text-gray-500'}`}
+                    >
+                      <Clock className="w-4 h-4" />
+                      Kết thúc: {formatDate(listing.endTime)}
+                      {isEndingSoon && ' (Sắp hết hạn!)'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Quantity */}
+                <div className="mb-3">
+                  <p className="text-lg font-bold text-gray-800">
+                    {listing.quantity} tín chỉ
                   </p>
                 </div>
 
-                {/* Số lượng tín chỉ */}
-                <div className="mb-3">
-                  <p className="text-lg font-bold text-gray-800">
-                    {credit.credits} tín chỉ
-                  </p>
-                </div>
-                
                 <div className="space-y-2 mb-4">
-                  {/* Tổng giá trị */}
+                  {/* Price per credit */}
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <span className="text-sm text-gray-600 flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />
-                      Tổng giá trị:
+                      Giá/tín chỉ:
                     </span>
-                    <span className="font-bold text-green-600 text-lg">{formatCurrencyFromUsd(totalValue)}</span>
+                    <span className="font-semibold text-gray-800">
+                      {formatCurrency(listing.pricePerCredit)}
+                    </span>
                   </div>
-                  
-                  {/* Loại niêm yết */}
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Loại:</span>
-                    {getListingTypeBadge(credit.type)}
+
+                  {/* Total value */}
+                  <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Tổng giá trị:</span>
+                    <span className="font-bold text-green-600 text-lg">
+                      {formatCurrency(totalValue)}
+                    </span>
                   </div>
-                  
-                  {/* Trạng thái niêm yết */}
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Trạng thái:</span>
-                    {getStatusBadge(credit.status || 'ACTIVE')}
-                  </div>
+
+                  {/* Highest bid (for auction) */}
+                  {listing.type === LISTING_TYPES.AUCTION && (
+                    <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                      <span className="text-sm text-gray-600 flex items-center gap-1">
+                        <Gavel className="w-4 h-4" />
+                        Giá cao nhất:
+                      </span>
+                      <span className="font-semibold text-purple-600">
+                        {highestBid
+                          ? formatCurrency(highestBid)
+                          : 'Chưa có đấu giá'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Bid count (for auction) */}
+                  {listing.type === LISTING_TYPES.AUCTION &&
+                    listing.bidResponseList?.length > 0 && (
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <span className="text-sm text-gray-600">
+                          Số lượt đấu giá:
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {listing.bidResponseList.length} lượt
+                        </span>
+                      </div>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex space-x-2 pt-3 border-t border-gray-200">
-                  {credit.type === 'buy-now' && (
-                    <button
-                      onClick={() => handleBuyNow(credit)}
-                      className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-1" />
-                      Mua ngay
-                    </button>
-                  )}
-                  {credit.type === 'auction' && (
-                    <button
-                      onClick={() => handleJoinAuction(credit)}
-                      className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center justify-center"
-                    >
-                      <Gavel className="w-4 h-4 mr-1" />
-                      Tham gia đấu giá
-                    </button>
-                  )}
-                  {credit.type === 'negotiate' && (
-                    <button
-                      onClick={() => handleNegotiate(credit.id)}
-                      className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium flex items-center justify-center"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-1" />
-                      Thương lượng
-                    </button>
-                  )}
+                  {listing.type === LISTING_TYPES.FIXED_PRICE &&
+                    listing.status === LISTING_STATUSES.ACTIVE && (
+                      <button
+                        onClick={() => handleBuyNow(listing)}
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Mua ngay
+                      </button>
+                    )}
+                  {listing.type === LISTING_TYPES.AUCTION &&
+                    (listing.status === LISTING_STATUSES.ACTIVE ||
+                      listing.status === LISTING_STATUSES.BIDDING) && (
+                      <button
+                        onClick={() => handleJoinAuction(listing)}
+                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center justify-center"
+                      >
+                        <Gavel className="w-4 h-4 mr-1" />
+                        Tham gia đấu giá
+                      </button>
+                    )}
+                  {(listing.status === LISTING_STATUSES.SOLD ||
+                    listing.status === LISTING_STATUSES.ENDED) && (
+                      <span className="flex-1 text-center py-2 px-4 text-gray-500 text-sm">
+                        Đã kết thúc
+                      </span>
+                    )}
                   <Link
-                    to={`/buyer/marketplace/${credit.id}`}
+                    to={`/buyer/marketplace/${listing.id}`}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm flex items-center justify-center"
                   >
                     <Eye className="w-4 h-4" />
@@ -462,19 +610,38 @@ const Marketplace = () => {
         </div>
       )}
 
-      {/* Load More Button */}
-      <div className="text-center">
-        <button
-          onClick={() => toast.success('Đã tải thêm 6 tín chỉ carbon mới!')}
-          className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2 mx-auto"
-        >
-          <FileText className="w-4 h-4" />
-          Xem thêm tín chỉ
-        </button>
-      </div>
+      {/* Pagination */}
+      {listings.length > 0 && (
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 0}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === 0
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Trang trước
+          </button>
+          <span className="text-sm text-gray-600">
+            Trang {currentPage + 1}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={listings.length < pageSize}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${listings.length < pageSize
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            Trang sau
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Marketplace;
-

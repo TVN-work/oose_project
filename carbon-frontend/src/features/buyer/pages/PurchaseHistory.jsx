@@ -1,105 +1,197 @@
 import { useState, useMemo } from 'react';
-import { Download, RefreshCw, Eye, CreditCard, CheckCircle, Clock, XCircle, Search, RotateCcw, Calendar, BarChart3 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { buyerService } from '../../../services/buyer/buyerService';
+import {
+  Download,
+  RefreshCw,
+  Eye,
+  CreditCard,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Search,
+  RotateCcw,
+  Calendar,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { useTransactions, useTransactionUtils } from '../../../hooks/useTransaction';
+import { TRANSACTION_STATUSES } from '../../../services/transaction/transactionService';
+import { useAuth } from '../../../context/AuthContext';
 import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
-import { formatCurrency, formatCurrencyFromUsd, formatDate, usdToVnd } from '../../../utils';
+import { formatCurrency, formatDate } from '../../../utils';
 
 const PurchaseHistory = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
     timeRange: '',
     status: '',
     priceRange: '',
   });
 
-  // Build query params from filters
+  // Get transaction utilities
+  const { getStatusDisplay, getPaymentMethodDisplay } = useTransactionUtils();
+
+  // Build query params from filters for transactionService.getAllTransactions
   const queryParams = useMemo(() => {
-    const params = {};
-    
+    const params = {
+      buyerId: userId,
+      page: currentPage,
+      entry: pageSize,
+      field: 'createdAt',
+      sort: 'DESC',
+    };
+
+    // Status filter
     if (filters.status) {
       params.status = filters.status;
     }
-    
-    // Price range filter
-    if (filters.priceRange) {
-      if (filters.priceRange === 'under-1000') {
-        params.maxPrice = 1000;
-      } else if (filters.priceRange === '1000-5000') {
-        params.minPrice = 1000;
-        params.maxPrice = 5000;
-      } else if (filters.priceRange === '5000-10000') {
-        params.minPrice = 5000;
-        params.maxPrice = 10000;
-      } else if (filters.priceRange === 'over-10000') {
-        params.minPrice = 10000;
-      }
-    }
-    
+
+    // Price range filter (VND)
+    // Note: amount filter in API is exact match, so we can't use range
+    // For now, we'll filter on client side after fetching
+
     return params;
-  }, [filters]);
+  }, [userId, currentPage, pageSize, filters.status]);
 
-  // Fetch purchase history from database
-  const { data: purchaseHistoryData, isLoading, error, refetch } = useQuery({
-    queryKey: ['buyer', 'purchase-history', queryParams],
-    queryFn: () => buyerService.getPurchaseHistory(queryParams),
-    staleTime: 30000, // 30 seconds
-  });
+  // Fetch transactions from API using useTransactions hook with buyerId filter
+  const {
+    data: transactionsData,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useTransactions(queryParams);
 
-  // Transform transactions to display format
+  // Process transactions data
   const transactions = useMemo(() => {
-    if (!purchaseHistoryData?.data) return [];
-    
-    return purchaseHistoryData.data.map(tx => {
-      const date = new Date(tx.created_at);
-      const USD_TO_VND_RATE = 25000;
-      const amountInVnd = (tx.amount || 0) * USD_TO_VND_RATE;
-      const pricePerCredit = tx.credit > 0 ? (tx.amount || 0) / tx.credit : 0;
+    const data = Array.isArray(transactionsData) ? transactionsData : [];
+
+    // Apply client-side price range filter if needed
+    let filteredData = data;
+    if (filters.priceRange) {
+      filteredData = data.filter((tx) => {
+        const amount = tx.amount || 0;
+        switch (filters.priceRange) {
+          case 'under-500k':
+            return amount < 500000;
+          case '500k-1m':
+            return amount >= 500000 && amount < 1000000;
+          case '1m-5m':
+            return amount >= 1000000 && amount < 5000000;
+          case 'over-5m':
+            return amount >= 5000000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filteredData.map((tx) => {
+      const createdDate = new Date(tx.createdAt);
+      const pricePerCredit = tx.credit > 0 ? tx.amount / tx.credit : 0;
       const co2Saved = (tx.credit || 0) * 0.1; // Estimate: 1 credit ≈ 0.1 ton CO2
-      
-      // Determine transaction type
-      const listing = tx.listing;
-      const type = listing?.listing_type === 'auction' ? 'Đấu giá' : 'Mua tín chỉ';
-      
-      // Map status
-      const statusMap = {
-        'COMPLETED': 'success',
-        'completed': 'success',
-        'PENDING_PAYMENT': 'pending',
-        'pending': 'pending',
-        'PAYMENT_PROCESSING': 'pending',
-        'CANCELLED': 'failed',
-        'cancelled': 'failed',
-        'FAILED': 'failed',
-        'failed': 'failed',
-      };
-      const status = statusMap[tx.status?.toUpperCase()] || 'pending';
-      
+
       return {
         id: tx.id,
-        date: formatDate(tx.created_at),
-        time: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        seller: tx.seller?.full_name || 'Unknown',
-        vehicle: 'Electric Vehicle', // Can be enhanced with vehicle data
+        date: formatDate(tx.createdAt),
+        time: createdDate.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        sellerId: tx.sellerId,
+        listingId: tx.listingId,
         credits: tx.credit || 0,
         co2Saved: parseFloat(co2Saved.toFixed(2)),
-        value: amountInVnd,
+        amount: tx.amount || 0,
         pricePerCredit: pricePerCredit,
-        status: status,
-        type: type,
+        status: tx.status,
+        paymentMethod: tx.paymentMethod,
+        paidAt: tx.paidAt,
         transaction: tx,
       };
     });
-  }, [purchaseHistoryData]);
+  }, [transactionsData, filters.priceRange]);
 
-  // Calculate summary stats (must be before early returns)
+  // Calculate summary stats
   const summary = useMemo(() => {
-    const total = transactions.length;
-    const success = transactions.filter(t => t.status === 'success').length;
-    const pending = transactions.filter(t => t.status === 'pending').length;
-    const failed = transactions.filter(t => t.status === 'failed').length;
-    return { total, success, pending, failed };
-  }, [transactions]);
+    const data = Array.isArray(transactionsData) ? transactionsData : [];
+    const total = data.length;
+    const success = data.filter(
+      (t) => t.status === TRANSACTION_STATUSES.SUCCESS
+    ).length;
+    const pending = data.filter(
+      (t) => t.status === TRANSACTION_STATUSES.PENDING_PAYMENT
+    ).length;
+    const failed = data.filter(
+      (t) =>
+        t.status === TRANSACTION_STATUSES.FAILED ||
+        t.status === TRANSACTION_STATUSES.CANCELED
+    ).length;
+    const totalAmount = data
+      .filter((t) => t.status === TRANSACTION_STATUSES.SUCCESS)
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalCredits = data
+      .filter((t) => t.status === TRANSACTION_STATUSES.SUCCESS)
+      .reduce((sum, t) => sum + (t.credit || 0), 0);
+    return { total, success, pending, failed, totalAmount, totalCredits };
+  }, [transactionsData]);
+
+  // Handle pagination
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (transactions.length === pageSize) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Get status badge
+  const getStatusBadge = (status) => {
+    const display = getStatusDisplay(status);
+    const colorMap = {
+      yellow: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        icon: Clock,
+      },
+      green: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        icon: CheckCircle,
+      },
+      red: {
+        bg: 'bg-red-100',
+        text: 'text-red-800',
+        icon: XCircle,
+      },
+      gray: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-800',
+        icon: Clock,
+      },
+    };
+
+    const colorInfo = colorMap[display.color] || colorMap.gray;
+    const Icon = colorInfo.icon;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorInfo.bg} ${colorInfo.text}`}
+      >
+        <Icon className="w-3 h-3 mr-1" />
+        {display.text}
+      </span>
+    );
+  };
 
   if (isLoading) {
     return <Loading />;
@@ -109,7 +201,15 @@ const PurchaseHistory = () => {
     return (
       <div className="max-w-7xl mx-auto p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-          <p className="text-red-600">Không thể tải lịch sử mua hàng. Vui lòng thử lại sau.</p>
+          <p className="text-red-600">
+            Không thể tải lịch sử mua hàng. Vui lòng thử lại sau.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );
@@ -132,46 +232,29 @@ const PurchaseHistory = () => {
   };
 
   const handleApplyFilters = () => {
+    setCurrentPage(0);
     refetch();
-    toast.success(`🔍 Đã áp dụng bộ lọc. Tìm thấy ${transactions.length} giao dịch phù hợp!`);
+    toast.success('🔍 Đã áp dụng bộ lọc!');
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ timeRange: '', status: '', priceRange: '' });
+    setCurrentPage(0);
+    refetch();
+    toast.success('🔄 Đã đặt lại tất cả bộ lọc về mặc định!');
   };
 
   const handleQuickFilter = (type) => {
-    const filterNames = {
-      today: 'Hôm nay',
-      week: 'Tuần này',
-      success: 'Thành công',
-      pending: 'Đang xử lý',
-    };
-    toast.success(`🏷️ Đã lọc theo: ${filterNames[type]}`);
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'success':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Thành công
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" />
-            Đang xử lý
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle className="w-3 h-3 mr-1" />
-            Thất bại
-          </span>
-        );
-      default:
-        return null;
+    if (type === 'success') {
+      setFilters((prev) => ({ ...prev, status: TRANSACTION_STATUSES.SUCCESS }));
+    } else if (type === 'pending') {
+      setFilters((prev) => ({
+        ...prev,
+        status: TRANSACTION_STATUSES.PENDING_PAYMENT,
+      }));
     }
+    setCurrentPage(0);
+    setTimeout(() => refetch(), 100);
   };
 
   return (
@@ -218,69 +301,82 @@ const PurchaseHistory = () => {
             <Search className="w-5 h-5 mr-3" />
             Lọc giao dịch
           </h3>
-          <button
-            onClick={() => {
-              setFilters({ timeRange: '', status: '', priceRange: '' });
-              toast.success('🔄 Đã đặt lại tất cả bộ lọc về mặc định!');
-            }}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Đặt lại bộ lọc
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`}
+              />
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Đặt lại bộ lọc
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng thời gian</label>
-            <select
-              value={filters.timeRange}
-              onChange={(e) => setFilters({ ...filters, timeRange: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Tất cả thời gian</option>
-              <option value="7days">7 ngày qua</option>
-              <option value="30days">30 ngày qua</option>
-              <option value="3months">3 tháng qua</option>
-              <option value="6months">6 tháng qua</option>
-              <option value="1year">1 năm qua</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trạng thái
+            </label>
             <select
               value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, status: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="success">Thành công</option>
-              <option value="pending">Đang xử lý</option>
-              <option value="failed">Thất bại</option>
-              <option value="cancelled">Đã hủy</option>
+              <option value={TRANSACTION_STATUSES.SUCCESS}>Thành công</option>
+              <option value={TRANSACTION_STATUSES.PENDING_PAYMENT}>
+                Chờ thanh toán
+              </option>
+              <option value={TRANSACTION_STATUSES.FAILED}>Thất bại</option>
+              <option value={TRANSACTION_STATUSES.CANCELED}>Đã hủy</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng giá</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Khoảng giá
+            </label>
             <select
               value={filters.priceRange}
-              onChange={(e) => setFilters({ ...filters, priceRange: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, priceRange: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Tất cả mức giá</option>
-              <option value="under-1000">Dưới {formatCurrencyFromUsd(1000)}</option>
-              <option value="1000-3000">{formatCurrencyFromUsd(1000)} - {formatCurrencyFromUsd(3000)}</option>
-              <option value="3000-5000">{formatCurrencyFromUsd(3000)} - {formatCurrencyFromUsd(5000)}</option>
-              <option value="over-5000">Trên {formatCurrencyFromUsd(5000)}</option>
+              <option value="under-500k">Dưới 500.000đ</option>
+              <option value="500k-1m">500.000đ - 1.000.000đ</option>
+              <option value="1m-5m">1.000.000đ - 5.000.000đ</option>
+              <option value="over-5m">Trên 5.000.000đ</option>
             </select>
           </div>
 
-          <div className="flex items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tổng chi tiêu
+            </label>
+            <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+              <span className="text-green-700 font-semibold">
+                {formatCurrency(summary.totalAmount)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-end gap-2">
             <button
               onClick={handleApplyFilters}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               🔍 Áp dụng
             </button>
@@ -290,20 +386,6 @@ const PurchaseHistory = () => {
         {/* Quick Filters */}
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="text-sm text-gray-600 mr-2">Lọc nhanh:</span>
-          <button
-            onClick={() => handleQuickFilter('today')}
-            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs hover:bg-blue-200 transition-colors flex items-center gap-1"
-          >
-            <Calendar className="w-3 h-3" />
-            Hôm nay
-          </button>
-          <button
-            onClick={() => handleQuickFilter('week')}
-            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs hover:bg-green-200 transition-colors flex items-center gap-1"
-          >
-            <BarChart3 className="w-3 h-3" />
-            Tuần này
-          </button>
           <button
             onClick={() => handleQuickFilter('success')}
             className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs hover:bg-emerald-200 transition-colors flex items-center gap-1"
@@ -316,7 +398,7 @@ const PurchaseHistory = () => {
             className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs hover:bg-yellow-200 transition-colors flex items-center gap-1"
           >
             <Clock className="w-3 h-3" />
-            Đang xử lý
+            Chờ thanh toán
           </button>
         </div>
       </div>
@@ -361,13 +443,13 @@ const PurchaseHistory = () => {
                   Ngày giao dịch
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Người bán
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Số tín chỉ
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Giá trị
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Thanh toán
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Trạng thái
@@ -382,86 +464,125 @@ const PurchaseHistory = () => {
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center">
                     <div className="text-6xl mb-4">📋</div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">Chưa có giao dịch nào</h3>
-                    <p className="text-gray-600">Bạn chưa mua tín chỉ carbon nào. Hãy khám phá marketplace để bắt đầu!</p>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                      Chưa có giao dịch nào
+                    </h3>
+                    <p className="text-gray-600">
+                      Bạn chưa mua tín chỉ carbon nào. Hãy khám phá marketplace
+                      để bắt đầu!
+                    </p>
                   </td>
                 </tr>
               ) : (
-                transactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-blue-600 font-bold text-sm">TX</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-gray-800">{tx.id}</div>
-                        <div className="text-xs text-gray-500">{tx.type}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-800">{tx.date}</div>
-                    <div className="text-xs text-gray-500">{tx.time}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
-                        <span className="text-green-600 text-xs">🚗</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-800">{tx.seller}</div>
-                        <div className="text-xs text-gray-500">{tx.vehicle}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-800">{tx.credits} tín chỉ</div>
-                    <div className="text-xs text-gray-500">{tx.co2Saved} tấn CO2</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-bold ${
-                      tx.status === 'failed' ? 'text-red-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-green-600'
-                    }`}>
-                      {tx.value > 0 ? formatCurrency(tx.value) : '0 VNĐ'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {tx.value > 0 ? `${formatCurrencyFromUsd(tx.pricePerCredit)}/tín chỉ` : 'Giao dịch thất bại'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(tx.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => handleViewDetails(tx.id)}
-                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium flex items-center mx-auto"
+                transactions.map((tx) => {
+                  const paymentDisplay = getPaymentMethodDisplay(
+                    tx.paymentMethod
+                  );
+                  return (
+                    <tr
+                      key={tx.id}
+                      className="hover:bg-gray-50 transition-colors"
                     >
-                      <Eye className="w-3 h-3 mr-1" />
-                      Chi tiết
-                    </button>
-                  </td>
-                </tr>
-              )))}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-blue-600 font-bold text-sm">
+                              TX
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-gray-800">
+                              {tx.id?.slice(0, 8)}...
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Listing: {tx.listingId?.slice(0, 8)}...
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-800">{tx.date}</div>
+                        <div className="text-xs text-gray-500">{tx.time}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-gray-800">
+                          {tx.credits} tín chỉ
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ~{tx.co2Saved} tấn CO2
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-green-600">
+                          {formatCurrency(tx.amount)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatCurrency(tx.pricePerCredit)}/tín chỉ
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${paymentDisplay.color}-100 text-${paymentDisplay.color}-800`}
+                        >
+                          {paymentDisplay.text}
+                        </span>
+                        {tx.paidAt && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {formatDate(tx.paidAt)}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(tx.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => handleViewDetails(tx.id)}
+                          className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium flex items-center mx-auto"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Chi tiết
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Table Footer */}
+        {/* Table Footer with Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Hiển thị {transactions.length} trong tổng số {summary.total} giao dịch
+              Hiển thị {transactions.length} giao dịch - Trang {currentPage + 1}
             </div>
             <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-                ← Trước
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 0}
+                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition-colors ${currentPage === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                  }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Trước
               </button>
-              <span className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm">1</span>
-              <span className="px-3 py-1 text-gray-600 text-sm">2</span>
-              <span className="px-3 py-1 text-gray-600 text-sm">3</span>
-              <button className="px-3 py-1 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-                Sau →
+              <span className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm">
+                {currentPage + 1}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={transactions.length < pageSize}
+                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition-colors ${transactions.length < pageSize
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                  }`}
+              >
+                Sau
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>

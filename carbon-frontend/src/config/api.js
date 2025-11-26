@@ -16,6 +16,12 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: '/auth/change-password',
   },
 
+  // User Service - User Data
+  USER: {
+    USERS: '/users',
+    USER_BY_ID: '/users/:id',
+  },
+
   // Vehicle Service - EV Trip Data Management
   VEHICLE: {
     // Vehicle Types (vehicle_type table)

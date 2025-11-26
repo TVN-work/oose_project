@@ -31,9 +31,9 @@ const BuyerLayout = () => {
   };
 
   const menuItems = [
-    { path: '/buyer/dashboard', icon: LayoutDashboard, label: 'Tổng quan', badge: 'New' },
-    { path: '/buyer/marketplace', icon: ShoppingCart, label: 'Marketplace', badge: '125 listings' },
-    { path: '/buyer/certificates', icon: Award, label: 'Chứng nhận', badge: 3 },
+    { path: '/buyer/dashboard', icon: LayoutDashboard, label: 'Tổng quan'},
+    { path: '/buyer/marketplace', icon: ShoppingCart, label: 'Giao dịch' },
+    // { path: '/buyer/certificates', icon: Award, label: 'Chứng nhận', badge: 3 },
     { path: '/buyer/purchase-history', icon: CreditCard, label: 'Lịch sử giao dịch' },
     { path: '/buyer/settings', icon: Settings, label: 'Cài đặt' },
   ];

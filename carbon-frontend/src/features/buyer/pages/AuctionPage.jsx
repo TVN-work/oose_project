@@ -1,64 +1,83 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check, Info, Lock } from 'lucide-react';
-import { useAuction, usePlaceBid } from '../../../hooks/useBuyer';
+import { ArrowLeft, Gavel, Clock, TrendingUp, Users, Award, Check, Info, Lock, Loader2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import marketService, { LISTING_STATUSES } from '../../../services/market/marketService';
+import bidService from '../../../services/bid/bidService';
 import Modal from '../../../components/common/Modal';
 import Loading from '../../../components/common/Loading';
 import toast from 'react-hot-toast';
-import { formatCurrencyFromUsd, usdToVnd } from '../../../utils';
+import { useAuth } from '../../../context/AuthContext';
+import { formatCurrency } from '../../../utils';
 
 const AuctionPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const countdownIntervalRef = useRef(null);
 
-  // Fetch auction data from database
-  const { data: auctionDataFromDB, isLoading, error, refetch } = useAuction(id);
-  const placeBidMutation = usePlaceBid();
+  // Fetch listing data from database
+  const { data: listingData, isLoading, error, refetch } = useQuery({
+    queryKey: ['listing', id],
+    queryFn: () => marketService.getListingById(id),
+    enabled: !!id,
+  });
 
-  // Get current user ID to check if user is winner
-  const currentUserId = localStorage.getItem('currentUserId') || 'buyer-user-id';
+  // Place bid mutation
+  const placeBidMutation = useMutation({
+    mutationFn: (bidData) => bidService.createBid(bidData),
+    onSuccess: () => {
+      toast.success('✓ Đặt giá thành công!');
+      setBidAmount('');
+      refetch(); // Refresh listing data
+      queryClient.invalidateQueries({ queryKey: ['listing', id] });
+    },
+    onError: (error) => {
+      toast.error('❌ Lỗi: ' + (error.response?.data?.message || 'Không thể đặt giá'));
+    },
+  });
 
-  // Process auction data from database
-  const auctionData = useMemo(() => {
-    if (!auctionDataFromDB) return null;
-    
-    const endTime = new Date(auctionDataFromDB.endTime);
-    const now = new Date();
-    const isEnded = now >= endTime || auctionDataFromDB.isEnded;
-    
-    // Get current user's bids
-    const userBids = auctionDataFromDB.bids?.filter(b => b.bidderId === currentUserId) || [];
-    const highestUserBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount)) : null;
-    const userIsWinning = isEnded && highestUserBid === auctionDataFromDB.currentPrice;
-    
-    // Format bid history with winning status
-    const bidHistory = (auctionDataFromDB.bids || []).map((bid, index) => {
-      const isWinning = index === 0 && bid.amount === auctionDataFromDB.currentPrice;
-      const date = new Date(bid.createdAt);
-      return {
-        id: bid.id,
-        bidder: bid.bidder,
-        amount: bid.amount,
-        time: date.toLocaleTimeString('vi-VN', { hour12: false }),
-        isWinning: isWinning,
-      };
-    });
-    
-    return {
-      ...auctionDataFromDB,
-      endTime: endTime,
-      isEnded: isEnded,
-      userBids: userBids,
-      userIsWinning: userIsWinning,
-      bidHistory: bidHistory,
-    };
-  }, [auctionDataFromDB, currentUserId]);
+  // Get current user ID from auth
+  const currentUserId = user?.id;
 
   const [bidAmount, setBidAmount] = useState('');
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [showEndModal, setShowEndModal] = useState(false);
+
+  // Process listing data
+  const auctionData = useMemo(() => {
+    if (!listingData) return null;
+
+    const endTime = new Date(listingData.endTime);
+    const now = new Date();
+    const isEnded = now >= endTime || listingData.status === LISTING_STATUSES.ENDED || listingData.status === LISTING_STATUSES.SOLD;
+
+    // Get highest bid as current price
+    const highestBid = marketService.getHighestBid(listingData.bidResponseList || []);
+    const currentPrice = highestBid ? highestBid.amount : listingData.pricePerCredit;
+
+    // Format bid history
+    const bidHistory = (listingData.bidResponseList || []).map((bid, index) => {
+      return {
+        id: bid.id || index,
+        bidder: bid.bidderName,
+        amount: bid.amount,
+        time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+        isWinning: index === 0,
+      };
+    });
+
+    return {
+      ...listingData,
+      endTime: endTime,
+      isEnded: isEnded,
+      currentPrice: currentPrice,
+      highestBid: highestBid,
+      bidHistory: bidHistory,
+      totalBids: marketService.countBids(listingData.bidResponseList),
+    };
+  }, [listingData]);
 
   // Countdown timer
   useEffect(() => {
@@ -121,17 +140,17 @@ const AuctionPage = () => {
     const minBid = auctionData.currentPrice + 0.5;
 
     if (!bidValue || bidValue <= auctionData.currentPrice) {
-      toast.error(`❌ Giá đặt phải cao hơn giá hiện tại (${formatCurrencyFromUsd(auctionData.currentPrice)})`);
+      toast.error(`❌ Giá đặt phải cao hơn giá hiện tại (${formatCurrency(auctionData.currentPrice)})`);
       return;
     }
 
     try {
       await placeBidMutation.mutateAsync({
-        auctionId: id,
+        bidderId: currentUserId,
+        bidderName: user?.fullName || user?.username,
+        listingId: id,
         bidAmount: bidValue,
       });
-      setBidAmount('');
-      refetch(); // Refresh auction data
     } catch (error) {
       // Error is handled by mutation
     }
@@ -204,18 +223,14 @@ const AuctionPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mr-4">
-                      {auctionData.seller?.full_name?.charAt(0) || 'T'}
+                      S
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800">{auctionData.seller?.full_name || 'Unknown'}</h2>
+                      <h2 className="text-2xl font-bold text-gray-800">Người bán</h2>
                       <div className="flex items-center mt-1 space-x-4">
                         <div className="flex items-center text-green-600">
                           <Check className="mr-1 w-4 h-4" />
                           <span className="font-medium">Đã xác minh</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <span className="mr-1">📍</span>
-                          <span className="font-medium">Hà Nội</span>
                         </div>
                       </div>
                     </div>
@@ -244,7 +259,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Giá khởi điểm</span>
                         <span className="text-2xl font-bold text-green-600">
-                          {formatCurrencyFromUsd(auctionData.startingPrice)}
+                          {formatCurrency(auctionData.pricePerCredit)}
                         </span>
                       </div>
                     </div>
@@ -256,7 +271,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Giá hiện tại</span>
                         <span className="text-3xl font-bold text-red-600">
-                          {formatCurrencyFromUsd(auctionData.currentPrice)}
+                          {formatCurrency(auctionData.currentPrice)}
                         </span>
                       </div>
                     </div>
@@ -265,7 +280,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700 font-medium">Tổng giá trị</span>
                         <span className="text-2xl font-bold text-purple-600">
-                          {formatCurrencyFromUsd(totalValue)}
+                          {formatCurrency(auctionData.currentPrice * auctionData.quantity)}
                         </span>
                       </div>
                     </div>
@@ -313,8 +328,8 @@ const AuctionPage = () => {
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-white p-3 rounded-lg">
-                      <div className="text-sm text-gray-600">🚗 Xe: {auctionData.vehicle?.license_plate || 'Electric Vehicle'}</div>
-                      <div className="text-sm text-gray-600">🌱 Giảm: {(auctionData.quantity * 0.1).toFixed(1)} tấn CO2</div>
+                      <div className="text-sm text-gray-600">🚗 Loại: {auctionData.type}</div>
+                      <div className="text-sm text-gray-600">🌱 Giảm: {(auctionData.quantity * 0.15).toFixed(2)} tấn CO2</div>
                     </div>
                     <div className="bg-white p-3 rounded-lg">
                       <div className="text-sm text-gray-600">🏆 Chuẩn: VCS Verified</div>
@@ -339,11 +354,10 @@ const AuctionPage = () => {
                     auctionData.bidHistory.map((bid, index) => (
                       <div
                         key={bid.id}
-                        className={`p-4 rounded-lg transition-all border-l-4 ${
-                          bid.isWinning
-                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-green-500'
-                            : 'bg-gray-50 border-l-transparent hover:border-l-blue-500 hover:bg-gray-100'
-                        }`}
+                        className={`p-4 rounded-lg transition-all border-l-4 ${bid.isWinning
+                          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-green-500'
+                          : 'bg-gray-50 border-l-transparent hover:border-l-blue-500 hover:bg-gray-100'
+                          }`}
                       >
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
@@ -359,7 +373,7 @@ const AuctionPage = () => {
                             <div
                               className={`text-xl font-bold ${bid.isWinning ? 'text-green-600' : 'text-gray-800'}`}
                             >
-                              {formatCurrencyFromUsd(bid.amount)}
+                              {formatCurrency(bid.amount)}
                             </div>
                             {bid.isWinning && (
                               <div className="text-sm text-green-600 font-medium">🏆 Đang dẫn đầu</div>
@@ -382,9 +396,8 @@ const AuctionPage = () => {
           <div className="space-y-6">
             {/* Bid Form */}
             <div
-              className={`bg-white rounded-xl shadow-sm sticky top-6 ${
-                auctionData.isEnded ? 'opacity-80' : ''
-              }`}
+              className={`bg-white rounded-xl shadow-sm sticky top-6 ${auctionData.isEnded ? 'opacity-80' : ''
+                }`}
             >
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
@@ -396,7 +409,7 @@ const AuctionPage = () => {
                 <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">Giá hiện tại cao nhất</div>
-                    <div className="text-3xl font-bold text-blue-600">{formatCurrencyFromUsd(auctionData.currentPrice)}</div>
+                    <div className="text-3xl font-bold text-blue-600">{formatCurrency(auctionData.currentPrice)}</div>
                     <div className="text-sm text-gray-600 mt-1">
                       bởi {auctionData.bidHistory?.find((b) => b.isWinning)?.bidder || 'Chưa có'}
                     </div>
@@ -405,21 +418,21 @@ const AuctionPage = () => {
 
                 {/* Bid Input */}
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (USD)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Giá đặt mới (VND)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">$</span>
+                    <span className="absolute left-4 top-4 text-gray-500 text-lg font-bold">₫</span>
                     <input
                       type="number"
                       value={bidAmount}
-                      onChange={(e) => updateBidCalculation(e.target.value)}
+                      onChange={(e) => setBidAmount(e.target.value)}
                       step="0.50"
-                      min={minBid}
+                      min={auctionData.currentPrice + 0.5}
                       disabled={auctionData.isEnded || placeBidMutation.isPending}
-                      placeholder={minBid.toFixed(2)}
+                      placeholder={(auctionData.currentPrice + 0.5).toFixed(2)}
                       className="w-full pl-8 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
-                  <div className="text-xs text-gray-500 mt-2">Giá tối thiểu: {formatCurrencyFromUsd(minBid)} (cao hơn {formatCurrencyFromUsd(0.50)})</div>
+                  <div className="text-xs text-gray-500 mt-2">Giá tối thiểu: {formatCurrency(auctionData.currentPrice + 0.5)} (cao hơn {formatCurrency(0.50)})</div>
                 </div>
 
                 {/* Quick Bid Buttons */}
@@ -427,11 +440,11 @@ const AuctionPage = () => {
                   {[0.5, 1.0, 2.0].map((amount) => (
                     <button
                       key={amount}
-                      onClick={() => quickBid(amount)}
+                      onClick={() => setBidAmount((parseFloat(bidAmount) || auctionData.currentPrice) + amount)}
                       disabled={auctionData.isEnded || placeBidMutation.isPending}
                       className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      +{formatCurrencyFromUsd(amount)}
+                      +{formatCurrency(amount)}
                     </button>
                   ))}
                 </div>
@@ -442,7 +455,7 @@ const AuctionPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Giá mỗi tín chỉ:</span>
                       <span className="font-semibold text-gray-800">
-                        {formatCurrencyFromUsd(parseFloat(bidAmount) || auctionData.currentPrice)}
+                        {formatCurrency(parseFloat(bidAmount) || auctionData.currentPrice)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -453,7 +466,7 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-bold text-gray-800">Tổng nếu thắng:</span>
                         <span className="text-xl font-bold text-blue-600">
-                          {formatCurrencyFromUsd(totalIfWin)}
+                          {formatCurrency((parseFloat(bidAmount) || auctionData.currentPrice) * auctionData.quantity)}
                         </span>
                       </div>
                     </div>
@@ -461,21 +474,43 @@ const AuctionPage = () => {
                 </div>
 
                 {/* Bid Button */}
+                {auctionData.isEnded && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-4">
+                    <p className="text-red-700 font-semibold text-center">⏰ Đấu giá đã kết thúc</p>
+                  </div>
+                )}
+
+                {!auctionData.isEnded && (!bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice) && (
+                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-4">
+                    <p className="text-yellow-700 font-semibold text-sm text-center">
+                      ⚠️ {!bidAmount ? 'Nhập giá đặt' : 'Giá phải cao hơn ' + formatCurrency(auctionData.currentPrice)}
+                    </p>
+                  </div>
+                )}
+
                 <button
                   onClick={placeBid}
                   disabled={auctionData.isEnded || placeBidMutation.isPending || !bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 mb-4 ${
-                    auctionData.isEnded || placeBidMutation.isPending || !bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice
-                      ? 'bg-gray-400 text-white cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg text-white'
-                  }`}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform mb-4 ${auctionData.isEnded
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : (!bidAmount || parseFloat(bidAmount) <= auctionData.currentPrice)
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                        : placeBidMutation.isPending
+                          ? 'bg-blue-500 text-white cursor-not-allowed'
+                          : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 hover:shadow-lg text-white hover:scale-105'
+                    }`}
                 >
                   {placeBidMutation.isPending ? (
-                    '⏳ Đang xử lý...'
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
+                      Đang xử lý...
+                    </>
                   ) : auctionData.isEnded ? (
                     '⏰ Đấu giá đã kết thúc'
+                  ) : !bidAmount ? (
+                    '📝 Nhập giá trước khi đặt'
                   ) : (
-                    '🔨 Đặt giá'
+                    '🔨 Đặt giá ngay'
                   )}
                 </button>
 
@@ -507,20 +542,20 @@ const AuctionPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Số lượt đặt giá:</span>
-                    <span className="font-semibold">{auctionData.totalBids || 0}</span>
+                    <span className="font-semibold">{auctionData?.totalBids || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Người tham gia:</span>
-                    <span className="font-semibold">{auctionData.participants || 0} người</span>
+                    <span className="font-semibold">{new Set(auctionData?.bidResponseList?.map(b => b.bidderName)).size || 0} người</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tăng giá trung bình:</span>
-                    <span className="font-semibold text-green-600">{formatCurrencyFromUsd(0.75)}</span>
+                    <span className="font-semibold text-green-600">{formatCurrency(0.75)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Thời gian bắt đầu:</span>
+                    <span className="text-gray-600">Thời gian kết thúc:</span>
                     <span className="font-semibold">
-                      {auctionData.endTime ? new Date(new Date(auctionData.endTime).getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleString('vi-VN', {
+                      {auctionData?.endTime ? auctionData.endTime.toLocaleString('vi-VN', {
                         day: '2-digit',
                         month: '2-digit',
                         hour: '2-digit',
@@ -540,15 +575,14 @@ const AuctionPage = () => {
                   Giá của bạn
                 </h3>
                 <div className="space-y-2">
-                  {auctionData.userBids && auctionData.userBids.length > 0 ? (
-                    auctionData.userBids.map((bid) => {
-                      const date = new Date(bid.createdAt);
-                      const isWinning = bid.amount === auctionData.currentPrice && auctionData.isEnded;
+                  {auctionData?.bidResponseList && auctionData.bidResponseList.length > 0 ? (
+                    auctionData.bidResponseList.map((bid, index) => {
+                      const isWinning = index === 0;
                       return (
                         <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                           <div>
-                            <div className="font-semibold text-gray-800">{formatCurrencyFromUsd(bid.amount)}</div>
-                            <div className="text-sm text-gray-600">{date.toLocaleTimeString('vi-VN', { hour12: false })}</div>
+                            <div className="font-semibold text-gray-800">{formatCurrency(bid.amount)}</div>
+                            <div className="text-sm text-gray-600">{bid.bidderName}</div>
                           </div>
                           <div className={`text-sm font-medium ${isWinning ? 'text-green-600' : 'text-gray-500'}`}>
                             {isWinning ? '🏆 Đang dẫn đầu' : '📉 Bị vượt qua'}
@@ -557,7 +591,7 @@ const AuctionPage = () => {
                       );
                     })
                   ) : (
-                    <div className="text-sm text-gray-500 text-center py-4">Bạn chưa đặt giá nào</div>
+                    <div className="text-sm text-gray-500 text-center py-4">Chưa có lượt đặt giá nào</div>
                   )}
                 </div>
               </div>
@@ -567,16 +601,15 @@ const AuctionPage = () => {
       </div>
 
       {/* Auction End Modal */}
-      <Modal 
-        isOpen={showEndModal} 
-        onClose={() => setShowEndModal(false)} 
+      <Modal
+        isOpen={showEndModal}
+        onClose={() => setShowEndModal(false)}
         title={auctionData?.userIsWinning ? 'Chúc mừng!' : 'Đấu giá đã kết thúc'}
       >
         <div className="text-center">
           <div
-            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              auctionData?.userIsWinning ? 'bg-green-100' : 'bg-gray-100'
-            }`}
+            className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${auctionData?.userIsWinning ? 'bg-green-100' : 'bg-gray-100'
+              }`}
           >
             <span className="text-4xl">{auctionData?.userIsWinning ? '🎉' : '😔'}</span>
           </div>
@@ -593,7 +626,7 @@ const AuctionPage = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">{auctionData?.userIsWinning ? 'Giá thắng:' : 'Giá thắng cuộc:'}</span>
                 <span className={`font-bold ${auctionData?.userIsWinning ? 'text-green-600' : 'text-gray-800'}`}>
-                  {formatCurrencyFromUsd(auctionData?.currentPrice || 0)}
+                  {formatCurrency(auctionData?.currentPrice || 0)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -604,7 +637,7 @@ const AuctionPage = () => {
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-lg font-bold">Tổng thanh toán:</span>
                   <span className="text-lg font-bold text-green-600">
-                    {formatCurrencyFromUsd(totalValue)}
+                    {formatCurrency(totalValue)}
                   </span>
                 </div>
               )}

@@ -45,6 +45,7 @@ import Certificates from '../features/buyer/pages/Certificates';
 import BuyerSettings from '../features/buyer/pages/Settings';
 import Checkout from '../features/buyer/pages/Checkout';
 import AuctionPage from '../features/buyer/pages/AuctionPage';
+import PaymentCallback from '../features/buyer/pages/PaymentCallback';
 
 // Verifier pages
 import VerifierDashboard from '../features/verifier/pages/Dashboard';
@@ -188,6 +189,10 @@ const createRouter = () => createBrowserRouter(
         {
           path: 'auction/:id',
           element: <AuctionPage />,
+        },
+        {
+          path: 'payment/callback',
+          element: <PaymentCallback />,
         },
         {
           path: 'purchase-history',
