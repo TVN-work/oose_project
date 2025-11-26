@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { 
-  Award, 
-  CheckCircle, 
-  FileText, 
+import {
+  Award,
+  CheckCircle,
+  FileText,
   FileCheck,
   User,
   Car,
@@ -36,10 +36,10 @@ const IssueCredits = () => {
   // Fetch approved requests ready for credit issuance
   const { data: requestsData, isLoading, refetch } = useVerificationRequests({ status: 'approved' });
   const approvedRequests = requestsData || [];
-  
+
   // Filter out requests that might already have credits issued
   const readyForIssuance = approvedRequests.filter(r => r.status === 'approved');
-  
+
   const issueMutation = useIssueCredits();
 
   // Calculate stats
@@ -57,22 +57,22 @@ const IssueCredits = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!creditAmount || parseFloat(creditAmount) <= 0) {
       newErrors.creditAmount = 'Số lượng tín chỉ phải lớn hơn 0';
     }
-    
+
     if (parseFloat(creditAmount) > parseFloat(selectedProfile.credits || selectedProfile.creditAmount || 0) * 1.1) {
       newErrors.creditAmount = 'Số lượng tín chỉ không được vượt quá 110% số lượng dự kiến';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const confirmIssuance = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedProfile) return;
 
     if (!validateForm()) {
@@ -82,7 +82,7 @@ const IssueCredits = () => {
 
     try {
       const amount = parseFloat(creditAmount);
-      
+
       await issueMutation.mutateAsync({
         requestId: selectedProfile.id,
         creditData: {
@@ -90,7 +90,7 @@ const IssueCredits = () => {
           notes: notes,
         },
       });
-      
+
       toast.success(`Phát hành thành công! ${formatNumber(amount)} tín chỉ đã được cấp cho ${selectedProfile.owner || selectedProfile.evOwner}.`);
       setShowIssuanceForm(false);
       setNotes('');
@@ -213,7 +213,7 @@ const IssueCredits = () => {
                 {readyForIssuance.map((profile) => (
                   <tr key={profile.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-4">
-                      <span className="font-mono text-sm bg-green-100 px-2 py-1 rounded">#{profile.id}</span>
+                      <span className="font-mono text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">#{profile.id}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center">
@@ -379,11 +379,10 @@ const IssueCredits = () => {
                     setErrors({ ...errors, creditAmount: '' });
                   }
                 }}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.creditAmount
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 ${errors.creditAmount
                     ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                }`}
+                  }`}
                 placeholder="Nhập số lượng tín chỉ"
               />
               {errors.creditAmount && (
@@ -478,7 +477,7 @@ const IssueCredits = () => {
                 {recentlyIssued.map((credit) => (
                   <tr key={credit.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-4">
-                      <span className="font-mono text-sm bg-green-100 px-2 py-1 rounded">#{credit.id}</span>
+                      <span className="font-mono text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">#{credit.id}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center">

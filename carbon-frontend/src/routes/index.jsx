@@ -51,6 +51,8 @@ import PaymentCallback from '../features/buyer/pages/PaymentCallback';
 import VerifierDashboard from '../features/verifier/pages/Dashboard';
 import VerificationRequests from '../features/verifier/pages/VerificationRequests';
 import IssueCredits from '../features/verifier/pages/IssueCredits';
+import VerifierTransactions from '../features/verifier/pages/Transactions';
+import VerifierListings from '../features/verifier/pages/Listings';
 import VerifierReports from '../features/verifier/pages/Reports';
 import VerifierSettings from '../features/verifier/pages/Settings';
 
@@ -60,6 +62,8 @@ import AdminUsers from '../features/admin/pages/Users';
 import AdminTransactions from '../features/admin/pages/Transactions';
 import AdminListings from '../features/admin/pages/Listings';
 import AdminWallets from '../features/admin/pages/Wallets';
+import AdminCarbonCredits from '../features/admin/pages/CarbonCredits';
+import AdminVehicleTypes from '../features/admin/pages/VehicleTypes';
 import AdminReports from '../features/admin/pages/Reports';
 import AdminSettings from '../features/admin/pages/Settings';
 // import TransactionManagement from '../features/admin/pages/TransactionManagement';
@@ -234,6 +238,14 @@ const createRouter = () => createBrowserRouter(
           element: <IssueCredits />,
         },
         {
+          path: 'transactions',
+          element: <VerifierTransactions />,
+        },
+        {
+          path: 'listings',
+          element: <VerifierListings />,
+        },
+        {
           path: 'reports',
           element: <VerifierReports />,
         },
@@ -275,6 +287,14 @@ const createRouter = () => createBrowserRouter(
         {
           path: 'wallets',
           element: <AdminWallets />,
+        },
+        {
+          path: 'carbon-credits',
+          element: <AdminCarbonCredits />,
+        },
+        {
+          path: 'vehicle-types',
+          element: <AdminVehicleTypes />,
         },
         {
           path: 'reports',

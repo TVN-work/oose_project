@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { 
-  FileCheck, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Search, 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  FileCheck,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Search,
   Filter,
   RotateCcw,
   Calendar,
@@ -25,68 +26,130 @@ import {
   Battery,
   MapPin,
   FileImage,
-  Info
+  Info,
+  ExternalLink
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import Modal from '../../../components/common/Modal';
-import { useVerificationRequests } from '../../../hooks/useVerifier';
-import { useApproveRequest, useRejectRequest, useValidateEmissionData } from '../../../hooks/useVerifier';
 import Loading from '../../../components/common/Loading';
-import { formatNumber, formatCurrency } from '../../../utils';
+import Alert from '../../../components/common/Alert';
+import { useAlert } from '../../../hooks/useAlert';
+import verificationService, { VERIFICATION_TYPES, VERIFICATION_STATUSES } from '../../../services/verification/verificationService';
+import userService from '../../../services/user/userService';
 
 const VerificationRequests = () => {
   const [filters, setFilters] = useState({
     status: '',
-    date: '',
+    type: '',
+    page: 0,
+    entry: 10,
   });
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'trip', 'vehicle', 'documents'
+  const [note, setNote] = useState('');
+
+  const queryClient = useQueryClient();
+  const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
 
   // Fetch verification requests from API
-  const { data: requestsData, isLoading, refetch } = useVerificationRequests(filters);
-  const requests = requestsData || [];
-  
-  const approveMutation = useApproveRequest();
-  const rejectMutation = useRejectRequest();
-  const validateMutation = useValidateEmissionData();
+  const { data: requestsData, isLoading, refetch } = useQuery({
+    queryKey: ['verification-requests', filters],
+    queryFn: () => verificationService.getAllVerificationRequests(filters),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const requests = Array.isArray(requestsData) ? requestsData : (requestsData?.content || []);
+
+  // Fetch user names for all unique userIds
+  const userIds = [...new Set(requests.map(r => r.userId).filter(Boolean))];
+  const userQueries = userIds.map(userId => ({
+    queryKey: ['user', userId],
+    queryFn: () => userService.getUserById(userId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!userId,
+  }));
+
+  const { data: usersData } = useQuery({
+    queryKey: ['users-batch', userIds.join(',')],
+    queryFn: async () => {
+      const results = await Promise.all(
+        userIds.map(id => userService.getUserById(id).catch(() => null))
+      );
+      return results;
+    },
+    enabled: userIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Create user map for quick lookup
+  const userMap = {};
+  if (usersData) {
+    usersData.forEach((user, index) => {
+      if (user) {
+        userMap[userIds[index]] = user;
+      }
+    });
+  }
+
+  // Approve mutation
+  const approveMutation = useMutation({
+    mutationFn: ({ requestId, note }) =>
+      verificationService.updateVerificationRequest(requestId, { status: 'APPROVED', note }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['verification-requests'] });
+      showAlert('Đã duyệt yêu cầu thành công!', 'success');
+      setShowDetailModal(false);
+      setSelectedRequest(null);
+      setNote('');
+    },
+    onError: (error) => {
+      showAlert(error.message || 'Lỗi khi duyệt yêu cầu', 'error');
+    },
+  });
+
+  // Reject mutation
+  const rejectMutation = useMutation({
+    mutationFn: ({ requestId, note }) =>
+      verificationService.updateVerificationRequest(requestId, { status: 'REJECTED', note }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['verification-requests'] });
+      showAlert('Đã từ chối yêu cầu!', 'success');
+      setShowRejectModal(false);
+      setShowDetailModal(false);
+      setRejectionReason('');
+      setSelectedRequest(null);
+    },
+    onError: (error) => {
+      showAlert(error.message || 'Lỗi khi từ chối yêu cầu', 'error');
+    },
+  });
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value, page: 0 }));
   };
 
   const applyFilters = () => {
     refetch();
-    toast.success('Đã áp dụng bộ lọc');
+    showAlert('Đã áp dụng bộ lọc', 'info');
   };
 
   const resetFilters = () => {
-    setFilters({ status: '', date: '' });
+    setFilters({ status: '', type: '', page: 0, entry: 10 });
     refetch();
-    toast.success('Đã đặt lại bộ lọc');
+    showAlert('Đã đặt lại bộ lọc', 'info');
   };
 
   const viewDetail = (request) => {
     setSelectedRequest(request);
     setShowDetailModal(true);
-    setActiveTab('overview');
+    setNote(request.note || '');
   };
 
   const handleApprove = async (requestId) => {
-    if (window.confirm(`Bạn có chắc chắn muốn phê duyệt yêu cầu ${requestId}?`)) {
-      try {
-        await approveMutation.mutateAsync({ requestId });
-        refetch();
-        if (showDetailModal) {
-          setShowDetailModal(false);
-          setSelectedRequest(null);
-        }
-      } catch (error) {
-        // Error is handled by the hook
-      }
+    if (window.confirm(`Bạn có chắc chắn muốn phê duyệt yêu cầu này?`)) {
+      approveMutation.mutate({ requestId, note });
     }
   };
 
@@ -97,35 +160,32 @@ const VerificationRequests = () => {
 
   const confirmReject = async () => {
     if (!rejectionReason.trim()) {
-      toast.error('Vui lòng nhập lý do từ chối');
+      showAlert('Vui lòng nhập lý do từ chối', 'error');
       return;
     }
-
-    try {
-      await rejectMutation.mutateAsync({ 
-        requestId: selectedRequest.id, 
-        rejectionReason: rejectionReason 
-      });
-      refetch();
-      setShowRejectModal(false);
-      setShowDetailModal(false);
-      setRejectionReason('');
-      setSelectedRequest(null);
-    } catch (error) {
-      // Error is handled by the hook
-    }
+    rejectMutation.mutate({
+      requestId: selectedRequest.id,
+      note: rejectionReason
+    });
   };
 
-  const handleValidateEmission = async (requestId) => {
-    try {
-      await validateMutation.mutateAsync({ 
-        requestId, 
-        validationData: {} 
-      });
-      toast.success('Đã kiểm tra dữ liệu phát thải');
-    } catch (error) {
-      // Error is handled by the hook
+  // Format datetime from "HH:MM DD-MM-YYYY" format
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    // If already in "HH:MM DD-MM-YYYY" format, return as-is
+    if (dateString.includes(' ') && dateString.split(' ').length === 2) {
+      return dateString;
     }
+    // Try to parse ISO format
+    try {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleString('vi-VN');
+      }
+    } catch (e) {
+      // ignore
+    }
+    return dateString;
   };
 
   if (isLoading) {
@@ -133,19 +193,44 @@ const VerificationRequests = () => {
   }
 
   const getStatusBadge = (status) => {
+    const upperStatus = status?.toUpperCase();
     const badges = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      approved: 'bg-green-100 text-green-800 border-green-300',
-      rejected: 'bg-red-100 text-red-800 border-red-300',
+      PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      APPROVED: 'bg-green-100 text-green-800 border-green-300',
+      REJECTED: 'bg-red-100 text-red-800 border-red-300',
+      CANCELLED: 'bg-gray-100 text-gray-800 border-gray-300',
     };
     const labels = {
-      pending: 'Chờ duyệt',
-      approved: 'Đã duyệt',
-      rejected: 'Từ chối',
+      PENDING: 'Chờ xác minh',
+      APPROVED: 'Đã duyệt',
+      REJECTED: 'Từ chối',
+      CANCELLED: 'Đã hủy',
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badges[status] || badges.pending}`}>
-        {labels[status] || labels.pending}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badges[upperStatus] || badges.PENDING}`}>
+        {labels[upperStatus] || labels.PENDING}
+      </span>
+    );
+  };
+
+  const getTypeBadge = (type) => {
+    const upperType = type?.toUpperCase();
+    const badges = {
+      VEHICLE: 'bg-blue-100 text-blue-800 border-blue-300',
+      JOURNEY: 'bg-purple-100 text-purple-800 border-purple-300',
+    };
+    const labels = {
+      VEHICLE: 'Duyệt xe',
+      JOURNEY: 'Phát hành tín chỉ',
+    };
+    const icons = {
+      VEHICLE: <Car className="w-3 h-3 mr-1" />,
+      JOURNEY: <Route className="w-3 h-3 mr-1" />,
+    };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border inline-flex items-center ${badges[upperType] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+        {icons[upperType]}
+        {labels[upperType] || type || 'N/A'}
       </span>
     );
   };
@@ -153,13 +238,24 @@ const VerificationRequests = () => {
   // Stats summary
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => r.status === 'pending').length,
-    approved: requests.filter(r => r.status === 'approved').length,
-    rejected: requests.filter(r => r.status === 'rejected').length,
+    pending: requests.filter(r => r.status?.toUpperCase() === 'PENDING').length,
+    approved: requests.filter(r => r.status?.toUpperCase() === 'APPROVED').length,
+    rejected: requests.filter(r => r.status?.toUpperCase() === 'REJECTED').length,
+    vehicle: requests.filter(r => r.type?.toUpperCase() === 'VEHICLE').length,
+    journey: requests.filter(r => r.type?.toUpperCase() === 'JOURNEY').length,
   };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
+      {/* Alert Component */}
+      <Alert
+        isOpen={!!alertMessage}
+        type={alertType}
+        message={alertMessage}
+        onClose={hideAlert}
+        position="top-right"
+      />
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-green-500 rounded-2xl shadow-xl p-8 text-white">
         <div className="flex items-center justify-between">
@@ -169,49 +265,67 @@ const VerificationRequests = () => {
               Quản lý yêu cầu xác minh
             </h1>
             <p className="text-blue-50 text-lg">
-              Kiểm tra dữ liệu phát thải & hồ sơ tín chỉ carbon
+              Duyệt xe & Phát hành tín chỉ carbon
             </p>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <FileCheck className="w-6 h-6 text-blue-600" />
+      <div className="grid md:grid-cols-6 gap-4">
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <FileCheck className="w-5 h-5 text-blue-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-800 mb-1">{stats.total}</p>
-          <p className="text-sm text-gray-600">Tổng yêu cầu</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.total}</p>
+          <p className="text-xs text-gray-600">Tổng yêu cầu</p>
         </div>
-        <div className="bg-white rounded-xl border-2 border-yellow-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-600" />
+        <div className="bg-white rounded-xl border-2 border-yellow-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-800 mb-1">{stats.pending}</p>
-          <p className="text-sm text-gray-600">Chờ duyệt</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.pending}</p>
+          <p className="text-xs text-gray-600">Chờ xác minh</p>
         </div>
-        <div className="bg-white rounded-xl border-2 border-green-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+        <div className="bg-white rounded-xl border-2 border-green-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-800 mb-1">{stats.approved}</p>
-          <p className="text-sm text-gray-600">Đã duyệt</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.approved}</p>
+          <p className="text-xs text-gray-600">Đã duyệt</p>
         </div>
-        <div className="bg-white rounded-xl border-2 border-red-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-              <XCircle className="w-6 h-6 text-red-600" />
+        <div className="bg-white rounded-xl border-2 border-red-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-red-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-800 mb-1">{stats.rejected}</p>
-          <p className="text-sm text-gray-600">Từ chối</p>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.rejected}</p>
+          <p className="text-xs text-gray-600">Từ chối</p>
+        </div>
+        <div className="bg-white rounded-xl border-2 border-blue-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Car className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.vehicle}</p>
+          <p className="text-xs text-gray-600">Duyệt xe</p>
+        </div>
+        <div className="bg-white rounded-xl border-2 border-purple-200 shadow-sm p-4 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Route className="w-5 h-5 text-purple-600" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 mb-1">{stats.journey}</p>
+          <p className="text-xs text-gray-600">Phát hành TC</p>
         </div>
       </div>
 
@@ -221,24 +335,27 @@ const VerificationRequests = () => {
           <div className="flex items-center gap-3 flex-wrap">
             <Filter className="w-5 h-5 text-gray-500" />
             <select
+              name="type"
+              value={filters.type}
+              onChange={handleFilterChange}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+            >
+              <option value="">Tất cả loại</option>
+              <option value="VEHICLE">Duyệt xe</option>
+              <option value="JOURNEY">Phát hành tín chỉ</option>
+            </select>
+            <select
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="pending">Chờ duyệt</option>
-              <option value="approved">Đã duyệt</option>
-              <option value="rejected">Từ chối</option>
+              <option value="PENDING">Chờ xác minh</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Từ chối</option>
+              <option value="CANCELLED">Đã hủy</option>
             </select>
-            <input
-              type="date"
-              name="date"
-              value={filters.date}
-              onChange={handleFilterChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-              placeholder="Lọc theo ngày"
-            />
             <button
               onClick={applyFilters}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center text-sm font-semibold"
@@ -259,22 +376,38 @@ const VerificationRequests = () => {
 
       {/* Requests Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-          <FileCheck className="w-5 h-5 mr-2" />
-          Danh sách yêu cầu ({requests.length})
-        </h3>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center">
+            <FileCheck className="w-5 h-5 mr-2" />
+            Danh sách yêu cầu ({requestsData?.totalElements || requests.length})
+          </h3>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Hiển thị:</label>
+            <select
+              value={filters.entry}
+              onChange={(e) => setFilters(prev => ({ ...prev, entry: Number(e.target.value), page: 0 }))}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm text-gray-600">mục/trang</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="w-full" style={{ minWidth: '1400px' }}>
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Mã hồ sơ</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">EV Owner</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Phương tiện</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Ngày gửi</th>
-                <th className="text-right py-3 px-4 font-semibold text-gray-700 text-sm">Số tín chỉ</th>
-                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm">Trạng thái</th>
-                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm">Hành động</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '160px' }}>Mã yêu cầu</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '160px' }}>Loại</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '300px' }}>Tiêu đề</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '220px' }}>Người yêu cầu</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '180px' }}>Ngày tạo</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '140px' }}>Trạng thái</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap" style={{ minWidth: '180px' }}>Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -284,7 +417,7 @@ const VerificationRequests = () => {
                     <FileCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 font-medium">Chưa có yêu cầu nào</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      {filters.status || filters.date
+                      {filters.status || filters.type
                         ? 'Không tìm thấy yêu cầu phù hợp với bộ lọc'
                         : 'Yêu cầu xác minh sẽ xuất hiện khi EV Owner gửi hồ sơ'}
                     </p>
@@ -292,69 +425,74 @@ const VerificationRequests = () => {
                 </tr>
               ) : (
                 requests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50 transition">
-                    <td className="py-3 px-4">
-                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                        #{request.id}
+                  <tr
+                    key={request.id}
+                    className="hover:bg-gray-50 transition cursor-pointer border-b border-gray-100 last:border-b-0"
+                    onClick={() => viewDetail(request)}
+                  >
+                    <td className="py-3 px-4" style={{ minWidth: '160px' }}>
+                      <span className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200 whitespace-nowrap inline-block">
+                        {request.id?.substring(0, 12)}...
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                    <td className="py-3 px-4 whitespace-nowrap" style={{ minWidth: '160px' }}>
+                      {getTypeBadge(request.type)}
+                    </td>
+                    <td className="py-3 px-4" style={{ minWidth: '300px' }}>
+                      <div className="text-sm text-gray-800 whitespace-nowrap" title={request.title}>
+                        {request.title || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4" style={{ minWidth: '220px' }}>
+                      <div className="flex items-center whitespace-nowrap">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
                           <User className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
                           <p className="font-semibold text-gray-800 text-sm">
-                            {request.owner || request.evOwner || 'N/A'}
+                            {userMap[request.userId]?.fullName || userMap[request.userId]?.username || 'Đang tải...'}
                           </p>
-                          <p className="text-xs text-gray-500">{request.ownerEmail || ''}</p>
+                          <p className="text-xs text-gray-500">
+                            {userMap[request.userId]?.email || ''}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center">
-                        <Car className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-800">{request.vehicle || request.vehicleName || 'N/A'}</span>
-                      </div>
+                    <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap" style={{ minWidth: '180px' }}>
+                      {formatDateTime(request.createdAt)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {request.date || (request.createdAt ? new Date(request.createdAt).toLocaleDateString('vi-VN') : 'N/A')}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="font-bold text-blue-600">
-                        {formatNumber(request.credits || request.creditAmount || 0)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3 px-4 text-center whitespace-nowrap" style={{ minWidth: '140px' }}>
                       {getStatusBadge(request.status)}
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-3 px-4" style={{ minWidth: '180px' }}>
+                      <div className="flex flex-col items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        {/* Nút Xem ở trên cùng */}
                         <button
                           onClick={() => viewDetail(request)}
-                          className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center"
+                          className="bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors text-xs flex items-center whitespace-nowrap"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
-                          Xem
+                          <Eye className="w-3.5 h-3.5 mr-1" />
+                          Xem chi tiết
                         </button>
-                        {request.status === 'pending' && (
-                          <>
+                        {/* 2 nút Duyệt/Từ chối ở dưới */}
+                        {request.status?.toUpperCase() === 'PENDING' && (
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => handleApprove(request.id)}
                               disabled={approveMutation.isPending}
-                              className="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center disabled:opacity-50"
+                              className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors text-xs flex items-center disabled:opacity-50 whitespace-nowrap"
                             >
-                              <CheckCircle className="w-4 h-4 mr-1" />
+                              <CheckCircle className="w-3 h-3 mr-1" />
                               Duyệt
                             </button>
                             <button
                               onClick={() => handleReject(request.id)}
-                              className="bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
+                              className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors text-xs flex items-center whitespace-nowrap"
                             >
-                              <XCircle className="w-4 h-4 mr-1" />
+                              <XCircle className="w-3 h-3 mr-1" />
                               Từ chối
                             </button>
-                          </>
+                          </div>
                         )}
                       </div>
                     </td>
@@ -364,292 +502,267 @@ const VerificationRequests = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {(requestsData?.totalPages > 1 || requests.length > 0) && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
+            <div className="text-sm text-gray-600">
+              Hiển thị {requests.length > 0 ? filters.page * filters.entry + 1 : 0} - {Math.min((filters.page + 1) * filters.entry, requestsData?.totalElements || requests.length)} trong tổng số {requestsData?.totalElements || requests.length} yêu cầu
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, page: 0 }))}
+                disabled={filters.page === 0}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                «
+              </button>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
+                disabled={filters.page === 0}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                ‹ Trước
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const totalPages = requestsData?.totalPages || Math.ceil(requests.length / filters.entry) || 1;
+                  const currentPage = filters.page;
+                  const pages = [];
+
+                  let startPage = Math.max(0, currentPage - 2);
+                  let endPage = Math.min(totalPages - 1, currentPage + 2);
+
+                  if (currentPage < 2) {
+                    endPage = Math.min(totalPages - 1, 4);
+                  }
+                  if (currentPage > totalPages - 3) {
+                    startPage = Math.max(0, totalPages - 5);
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => setFilters(prev => ({ ...prev, page: i }))}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition ${currentPage === i
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  }
+                  return pages;
+                })()}
+              </div>
+
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={filters.page >= (requestsData?.totalPages || Math.ceil(requests.length / filters.entry)) - 1}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Sau ›
+              </button>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, page: (requestsData?.totalPages || Math.ceil(requests.length / filters.entry)) - 1 }))}
+                disabled={filters.page >= (requestsData?.totalPages || Math.ceil(requests.length / filters.entry)) - 1}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Enhanced Detail Modal */}
-      <Modal 
-        isOpen={showDetailModal} 
+      <Modal
+        isOpen={showDetailModal}
         onClose={() => {
           setShowDetailModal(false);
           setSelectedRequest(null);
-          setActiveTab('overview');
-        }} 
+          setNote('');
+        }}
         title="Chi tiết yêu cầu xác minh"
         size="large"
       >
         {selectedRequest && (
           <div className="space-y-6">
-            {/* Tabs */}
-            <div className="border-b border-gray-200">
-              <div className="flex space-x-4">
-                {[
-                  { id: 'overview', label: 'Tổng quan', icon: Info },
-                  { id: 'trip', label: 'Dữ liệu hành trình', icon: Route },
-                  { id: 'vehicle', label: 'Thông tin xe', icon: Car },
-                  { id: 'documents', label: 'Tài liệu', icon: FileImage },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center px-4 py-2 border-b-2 transition-colors ${
-                        activeTab === tab.id
-                          ? 'border-blue-600 text-blue-600 font-semibold'
-                          : 'border-transparent text-gray-600 hover:text-gray-800'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {tab.label}
-                    </button>
-                  );
-                })}
+            {/* Header with Type Badge */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {getTypeBadge(selectedRequest.type)}
+                {getStatusBadge(selectedRequest.status)}
               </div>
             </div>
 
-            {/* Tab Content */}
-            <div className="max-h-[60vh] overflow-y-auto">
-              {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  {/* Request Info Grid */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <FileText className="w-4 h-4 mr-1" />
-                        Mã hồ sơ
-                      </label>
-                      <p className="font-mono text-sm bg-white px-2 py-1 rounded border">#{selectedRequest.id}</p>
+            {/* Main Content */}
+            <div className="max-h-[60vh] overflow-y-auto space-y-6">
+              {/* Request Info Grid */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Mã yêu cầu
+                  </label>
+                  <p className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-200 break-all">{selectedRequest.id}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Mã tham chiếu
+                  </label>
+                  <p className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-200 break-all">{selectedRequest.referenceId || 'N/A'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Ngày tạo
+                  </label>
+                  <p className="text-gray-800">{formatDateTime(selectedRequest.createdAt)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Ngày cập nhật
+                  </label>
+                  <p className="text-gray-800">{formatDateTime(selectedRequest.updatedAt)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <User className="w-4 h-4 mr-1" />
+                    Người yêu cầu
+                  </label>
+                  <div className="flex items-center mt-2">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <User className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        Ngày gửi
-                      </label>
-                      <p className="text-gray-800">
-                        {selectedRequest.date || (selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN') : 'N/A')}
+                    <div>
+                      <p className="text-gray-800 font-semibold">
+                        {userMap[selectedRequest.userId]?.fullName || userMap[selectedRequest.userId]?.username || 'Đang tải...'}
                       </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <User className="w-4 h-4 mr-1" />
-                        EV Owner
-                      </label>
-                      <p className="text-gray-800 font-semibold">{selectedRequest.owner || selectedRequest.evOwner || 'N/A'}</p>
-                      {selectedRequest.ownerEmail && (
-                        <p className="text-xs text-gray-500 mt-1">{selectedRequest.ownerEmail}</p>
-                      )}
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        Trạng thái
-                      </label>
-                      {getStatusBadge(selectedRequest.status)}
-                    </div>
-                  </div>
-
-                  {/* Key Metrics */}
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <Award className="w-5 h-5 text-blue-600" />
-                        <span className="text-2xl font-bold text-blue-600">
-                          {formatNumber(selectedRequest.credits || selectedRequest.creditAmount || 0)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700">Tín chỉ dự kiến</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-2 border-green-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <Globe className="w-5 h-5 text-green-600" />
-                        <span className="text-2xl font-bold text-green-600">
-                          {selectedRequest.co2Saved || selectedRequest.co2Reduced || 'N/A'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700">CO₂ giảm phát thải</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <Route className="w-5 h-5 text-purple-600" />
-                        <span className="text-2xl font-bold text-purple-600">
-                          {selectedRequest.mileage || selectedRequest.distance || 'N/A'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700">Quãng đường</p>
+                      <p className="text-xs text-gray-500">{userMap[selectedRequest.userId]?.email || ''}</p>
+                      <p className="text-xs text-gray-400 font-mono">ID: {selectedRequest.userId}</p>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {activeTab === 'trip' && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-gray-800 flex items-center">
-                    <Route className="w-5 h-5 mr-2" />
-                    Thông tin hành trình
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Route className="w-4 h-4 mr-1" />
-                        Quãng đường (km)
-                      </label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {formatNumber(selectedRequest.distance || selectedRequest.mileage || 0)}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Battery className="w-4 h-4 mr-1" />
-                        Năng lượng tiêu thụ (kWh)
-                      </label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {formatNumber(selectedRequest.energyUsed || 0)}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Gauge className="w-4 h-4 mr-1" />
-                        Tốc độ trung bình (km/h)
-                      </label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {formatNumber(selectedRequest.avgSpeed || selectedRequest.averageSpeed || 0)}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Globe className="w-4 h-4 mr-1" />
-                        CO₂ giảm (tấn)
-                      </label>
-                      <p className="text-lg font-semibold text-green-600">
-                        {selectedRequest.co2Saved || selectedRequest.co2Reduced || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  {selectedRequest.note && (
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
-                      <p className="text-sm text-gray-700">{selectedRequest.note}</p>
-                    </div>
-                  )}
+              {/* Title and Description */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Tiêu đề
+                  </label>
+                  <p className="text-gray-800 font-semibold">{selectedRequest.title || 'N/A'}</p>
                 </div>
-              )}
-
-              {activeTab === 'vehicle' && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-gray-800 flex items-center">
-                    <Car className="w-5 h-5 mr-2" />
-                    Thông tin phương tiện
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên xe</label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {selectedRequest.vehicle || selectedRequest.vehicleName || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Biển số</label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {selectedRequest.licensePlate || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Số khung (VIN)</label>
-                      <p className="text-sm font-mono text-gray-800">
-                        {selectedRequest.vin || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Hãng/Model</label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {selectedRequest.manufacturer || 'N/A'} {selectedRequest.model || ''}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Tổng quãng đường</label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {formatNumber(selectedRequest.totalMileage || selectedRequest.mileage || 0)} km
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Ngày đăng ký</label>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {selectedRequest.registrationDate || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <Info className="w-4 h-4 mr-1" />
+                    Mô tả
+                  </label>
+                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{selectedRequest.description || 'Không có mô tả'}</p>
                 </div>
-              )}
+              </div>
 
-              {activeTab === 'documents' && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-gray-800 flex items-center">
-                    <FileImage className="w-5 h-5 mr-2" />
-                    Tài liệu đính kèm
-                  </h4>
-                  {selectedRequest.documentUrl || selectedRequest.certificateImageUrl ? (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {[selectedRequest.documentUrl, selectedRequest.certificateImageUrl]
-                        .filter(Boolean)
-                        .map((url, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Tài liệu {index + 1}</span>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Tải xuống
-                              </a>
-                            </div>
-                            <div className="bg-white rounded border border-gray-200 p-2">
-                              <img
-                                src={url}
-                                alt={`Document ${index + 1}`}
-                                className="w-full h-48 object-contain rounded"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.nextSibling.style.display = 'block';
-                                }}
-                              />
-                              <div className="hidden text-center text-gray-500 text-sm py-8">
-                                <FileImage className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                                <p>Không thể hiển thị hình ảnh</p>
-                              </div>
-                            </div>
+              {/* Documents */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <FileImage className="w-4 h-4 mr-1" />
+                  Tài liệu đính kèm
+                </label>
+                {selectedRequest.documentUrl && selectedRequest.documentUrl.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {selectedRequest.documentUrl.map((url, index) => (
+                      <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Tài liệu {index + 1}</span>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Xem
+                          </a>
+                        </div>
+                        <div className="bg-gray-100 rounded border border-gray-200 p-2">
+                          <img
+                            src={url}
+                            alt={`Document ${index + 1}`}
+                            className="w-full h-32 object-contain rounded"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div className="hidden flex-col items-center justify-center text-gray-500 text-sm py-4">
+                            <FileImage className="w-8 h-8 mb-2 text-gray-300" />
+                            <p className="text-xs">Không thể hiển thị</p>
                           </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <FileImage className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">Chưa có tài liệu đính kèm</p>
-                    </div>
-                  )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-white rounded-lg border border-dashed border-gray-300">
+                    <FileImage className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">Chưa có tài liệu đính kèm</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Note */}
+              {selectedRequest.status?.toUpperCase() === 'PENDING' ? (
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Ghi chú xác minh
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    rows="3"
+                    placeholder="Nhập ghi chú khi duyệt hoặc từ chối..."
+                  />
                 </div>
-              )}
+              ) : selectedRequest.note ? (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    Ghi chú xác minh
+                  </label>
+                  <p className="text-gray-700 text-sm bg-white p-3 rounded border">{selectedRequest.note}</p>
+                </div>
+              ) : null}
             </div>
 
             {/* Action Buttons */}
-            {selectedRequest.status === 'pending' && (
+            {selectedRequest.status?.toUpperCase() === 'PENDING' && (
               <div className="flex space-x-3 pt-4 border-t">
-                <button
-                  onClick={() => handleValidateEmission(selectedRequest.id)}
-                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center"
-                >
-                  <Globe className="w-4 h-4 mr-2" />
-                  Kiểm tra dữ liệu phát thải
-                </button>
                 <button
                   onClick={() => handleApprove(selectedRequest.id)}
                   disabled={approveMutation.isPending}
                   className="flex-1 bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Duyệt yêu cầu
+                  {approveMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Duyệt yêu cầu
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => handleReject(selectedRequest.id)}
@@ -666,12 +779,12 @@ const VerificationRequests = () => {
       </Modal>
 
       {/* Reject Modal */}
-      <Modal 
-        isOpen={showRejectModal} 
+      <Modal
+        isOpen={showRejectModal}
         onClose={() => {
           setShowRejectModal(false);
           setRejectionReason('');
-        }} 
+        }}
         title="Từ chối yêu cầu xác minh"
       >
         <div className="space-y-4">

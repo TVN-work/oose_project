@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  Receipt, 
-  Download, 
-  Filter, 
-  Eye, 
-  XCircle, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Receipt,
+  Download,
+  Filter,
+  Eye,
+  XCircle,
+  CheckCircle2,
+  Clock,
   X,
   ArrowUpRight,
   Calendar,
@@ -37,18 +37,18 @@ const TransactionHistory = () => {
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  
+
   // Set current user ID in localStorage for mock database
   useEffect(() => {
     if (user?.id) {
       localStorage.setItem('currentUserId', user.id);
     }
   }, [user]);
-  
+
   // Fetch transactions where current user is SELLER (from database)
   const { data: transactionsData, isLoading, refetch } = useQuery({
     queryKey: ['evOwner', 'transactions'],
@@ -57,24 +57,24 @@ const TransactionHistory = () => {
     refetchOnMount: 'always',
     refetchInterval: 5000, // Auto-refetch every 5 seconds to catch new transactions
   });
-  
+
   const transactions = transactionsData?.data || transactionsData || [];
-  
+
   // Listen for transaction creation events
   useEffect(() => {
     const handleTransactionCreated = () => {
       // Refetch transactions when a new transaction is created
       refetch();
     };
-    
+
     // Listen for custom event when transaction is created
     window.addEventListener('transaction-created', handleTransactionCreated);
-    
+
     return () => {
       window.removeEventListener('transaction-created', handleTransactionCreated);
     };
   }, [refetch]);
-  
+
   // Cancel transaction mutation
   const cancelMutation = useMutation({
     mutationFn: (transactionId) => evOwnerService.cancelTransaction(transactionId),
@@ -86,7 +86,7 @@ const TransactionHistory = () => {
       showAlert(error.message || 'Lỗi khi hủy giao dịch', 'error');
     },
   });
-  
+
   // Complete transaction mutation
   const completeMutation = useMutation({
     mutationFn: (transactionId) => evOwnerService.completeTransaction(transactionId),
@@ -98,37 +98,37 @@ const TransactionHistory = () => {
       showAlert(error.message || 'Lỗi khi hoàn tất giao dịch', 'error');
     },
   });
-  
+
   // Handle cancel transaction
   const handleCancelTransaction = async (transaction) => {
     if (!confirm(`Bạn có chắc muốn hủy giao dịch ${transaction.id.substring(0, 8)}?`)) return;
-    
-    const canCancel = transaction.status === TRANSACTION_STATUS.PENDING || 
-                     transaction.status === TRANSACTION_STATUS.PAYMENT_PROCESSING;
-    
+
+    const canCancel = transaction.status === TRANSACTION_STATUS.PENDING ||
+      transaction.status === TRANSACTION_STATUS.PAYMENT_PROCESSING;
+
     if (!canCancel) {
       showAlert('Chỉ có thể hủy giao dịch đang chờ thanh toán hoặc đang xử lý!', 'error');
       return;
     }
-    
+
     cancelMutation.mutate(transaction.id);
   };
-  
+
   // Handle complete transaction
   const handleCompleteTransaction = async (transaction) => {
     if (!confirm(`Bạn có chắc muốn hoàn tất giao dịch ${transaction.id.substring(0, 8)}?`)) return;
-    
+
     const canComplete = transaction.status === TRANSACTION_STATUS.PAYMENT_PROCESSING ||
-                       transaction.status === TRANSACTION_STATUS.PENDING;
-    
+      transaction.status === TRANSACTION_STATUS.PENDING;
+
     if (!canComplete) {
       showAlert('Chỉ có thể hoàn tất giao dịch đang xử lý!', 'error');
       return;
     }
-    
+
     completeMutation.mutate(transaction.id);
   };
-  
+
   // Handle view details
   const handleViewDetails = async (transaction) => {
     try {
@@ -141,100 +141,100 @@ const TransactionHistory = () => {
       setShowDetailModal(true);
     }
   };
-  
+
   if (isLoading) {
     return <Loading />;
   }
-  
+
   // Calculate summary
   const summary = [
-    { 
-      label: 'Tổng giao dịch', 
+    {
+      label: 'Tổng giao dịch',
       value: transactions.length,
       color: 'blue',
       icon: Receipt,
     },
-    { 
-      label: 'Hoàn thành', 
-      value: transactions.filter(tx => 
-        tx.status === TRANSACTION_STATUS.COMPLETED || 
+    {
+      label: 'Hoàn thành',
+      value: transactions.filter(tx =>
+        tx.status === TRANSACTION_STATUS.COMPLETED ||
         tx.status?.toUpperCase() === 'COMPLETED'
       ).length,
       color: 'green',
       icon: CheckCircle2,
     },
-    { 
-      label: 'Đang xử lý', 
+    {
+      label: 'Đang xử lý',
       value: transactions.filter(tx => {
         const status = (tx.status || '').toUpperCase();
-        return status === TRANSACTION_STATUS.PENDING || 
-               status === TRANSACTION_STATUS.PAYMENT_PROCESSING ||
-               status === 'PENDING';
+        return status === TRANSACTION_STATUS.PENDING ||
+          status === TRANSACTION_STATUS.PAYMENT_PROCESSING ||
+          status === 'PENDING';
       }).length,
       color: 'yellow',
       icon: Clock,
     },
-    { 
-      label: 'Đã hủy', 
-      value: transactions.filter(tx => 
-        tx.status === TRANSACTION_STATUS.CANCELLED || 
+    {
+      label: 'Đã hủy',
+      value: transactions.filter(tx =>
+        tx.status === TRANSACTION_STATUS.CANCELLED ||
         tx.status?.toUpperCase() === 'CANCELLED'
       ).length,
       color: 'red',
       icon: XCircle,
     },
   ];
-  
+
   const handleExport = () => {
     showAlert('Đang xuất file Excel...', 'info', 2000);
     setTimeout(() => {
       showAlert('Đã xuất file Excel thành công!', 'success');
     }, 2000);
   };
-  
+
   // Filter transactions by status only (all are sell transactions)
   const filteredTransactions = transactions.filter(tx => {
     if (!statusFilter) return true;
     const txStatus = (tx.status || '').toUpperCase();
     return txStatus === statusFilter;
   });
-  
+
   // Get status badge
   const getStatusBadge = (status) => {
     const statusUpper = (status || TRANSACTION_STATUS.PENDING).toUpperCase();
     const label = TRANSACTION_STATUS_LABELS[statusUpper] || 'Chờ xử lý';
-    
+
     const configs = {
-      [TRANSACTION_STATUS.COMPLETED]: { 
-        label, 
-        color: 'bg-green-100 text-green-700', 
-        icon: CheckCircle2 
+      [TRANSACTION_STATUS.COMPLETED]: {
+        label,
+        color: 'bg-green-100 text-green-700',
+        icon: CheckCircle2
       },
-      [TRANSACTION_STATUS.PAYMENT_PROCESSING]: { 
-        label, 
-        color: 'bg-blue-100 text-blue-700', 
-        icon: Clock 
+      [TRANSACTION_STATUS.PAYMENT_PROCESSING]: {
+        label,
+        color: 'bg-blue-100 text-blue-700',
+        icon: Clock
       },
-      [TRANSACTION_STATUS.PENDING]: { 
-        label, 
-        color: 'bg-yellow-100 text-yellow-700', 
-        icon: Clock 
+      [TRANSACTION_STATUS.PENDING]: {
+        label,
+        color: 'bg-yellow-100 text-yellow-700',
+        icon: Clock
       },
-      [TRANSACTION_STATUS.CANCELLED]: { 
-        label, 
-        color: 'bg-red-100 text-red-700', 
-        icon: XCircle 
+      [TRANSACTION_STATUS.CANCELLED]: {
+        label,
+        color: 'bg-red-100 text-red-700',
+        icon: XCircle
       },
-      [TRANSACTION_STATUS.FAILED]: { 
-        label, 
-        color: 'bg-gray-100 text-gray-700', 
-        icon: XCircle 
+      [TRANSACTION_STATUS.FAILED]: {
+        label,
+        color: 'bg-gray-100 text-gray-700',
+        icon: XCircle
       },
     };
-    
+
     const config = configs[statusUpper] || configs[TRANSACTION_STATUS.PENDING];
     const Icon = config.icon;
-    
+
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
         <Icon className="w-3 h-3 mr-1" />
@@ -242,7 +242,7 @@ const TransactionHistory = () => {
       </span>
     );
   };
-  
+
   // Get transaction type badge (always SELL for EV Owner)
   const getTypeBadge = () => {
     return (
@@ -252,36 +252,36 @@ const TransactionHistory = () => {
       </span>
     );
   };
-  
+
   // Check if transaction can be cancelled
   const canCancel = (tx) => {
     const status = (tx.status || '').toUpperCase();
-    return status === TRANSACTION_STATUS.PENDING || 
-           status === TRANSACTION_STATUS.PAYMENT_PROCESSING;
+    return status === TRANSACTION_STATUS.PENDING ||
+      status === TRANSACTION_STATUS.PAYMENT_PROCESSING;
   };
-  
+
   // Check if transaction can be completed
   const canComplete = (tx) => {
     const status = (tx.status || '').toUpperCase();
     return status === TRANSACTION_STATUS.PAYMENT_PROCESSING ||
-           status === TRANSACTION_STATUS.PENDING;
+      status === TRANSACTION_STATUS.PENDING;
   };
-  
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Alert Messages */}
       {alertMessage && (
-        <Alert 
+        <Alert
           key={`alert-${alertMessage}`}
-          variant={alertType} 
-          dismissible 
+          variant={alertType}
+          dismissible
           position="toast"
           onDismiss={hideAlert}
         >
           {alertMessage}
         </Alert>
       )}
-      
+
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Quản lý giao dịch</h1>
@@ -289,7 +289,7 @@ const TransactionHistory = () => {
           Theo dõi, hủy, hoặc hoàn tất tất cả giao dịch của bạn
         </p>
       </div>
-      
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {summary.map((item, index) => {
@@ -299,9 +299,9 @@ const TransactionHistory = () => {
             yellow: 'bg-yellow-500 text-white',
             red: 'bg-red-500 text-white',
           };
-          
+
           const Icon = item.icon;
-          
+
           return (
             <div
               key={index}
@@ -334,7 +334,7 @@ const TransactionHistory = () => {
               <option value={TRANSACTION_STATUS.CANCELLED}>Đã hủy</option>
               <option value={TRANSACTION_STATUS.FAILED}>Thất bại</option>
             </select>
-            
+
           </div>
 
           <button
@@ -353,7 +353,7 @@ const TransactionHistory = () => {
           <Receipt className="w-5 h-5 mr-2" />
           Danh sách giao dịch ({filteredTransactions.length})
         </h3>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -376,7 +376,7 @@ const TransactionHistory = () => {
                     <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 font-medium">Chưa có giao dịch nào</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      {statusFilter 
+                      {statusFilter
                         ? 'Không tìm thấy giao dịch phù hợp với bộ lọc'
                         : 'Giao dịch sẽ xuất hiện khi có người mua tín chỉ của bạn'}
                     </p>
@@ -386,14 +386,14 @@ const TransactionHistory = () => {
                 filteredTransactions.map((tx) => {
                   const date = new Date(tx.created_at || tx.createdAt);
                   const buyer = tx.buyer || { full_name: tx.buyer_name, email: tx.buyer_email };
-                  
+
                   return (
                     <tr key={tx.id} className="hover:bg-gray-50 transition">
                       <td className="py-3 px-4">
                         {getTypeBadge()}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                        <span className="font-mono text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">
                           #{(tx.id || '').substring(0, 8)}
                         </span>
                       </td>
@@ -477,14 +477,14 @@ const TransactionHistory = () => {
           </table>
         </div>
       </div>
-      
+
       {/* Transaction Detail Modal */}
       {showDetailModal && selectedTransaction && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={() => setShowDetailModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -496,14 +496,14 @@ const TransactionHistory = () => {
                   Mã: #{selectedTransaction.id?.substring(0, 8) || 'N/A'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowDetailModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             {/* Modal Content */}
             <div className="p-6 space-y-6">
               {/* Transaction Type & Status */}
@@ -515,7 +515,7 @@ const TransactionHistory = () => {
                   {getStatusBadge(selectedTransaction.status)}
                 </div>
               </div>
-              
+
               {/* Transaction Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -528,7 +528,7 @@ const TransactionHistory = () => {
                       .toLocaleString('vi-VN')}
                   </p>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-gray-600 mb-2">
                     <CreditCard className="w-4 h-4" />
@@ -539,7 +539,7 @@ const TransactionHistory = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Buyer Info */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 text-gray-600 mb-3">
@@ -553,7 +553,7 @@ const TransactionHistory = () => {
                   {selectedTransaction.buyer?.email || selectedTransaction.buyer_email || 'N/A'}
                 </p>
               </div>
-              
+
               {/* Amount & Credit */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
@@ -562,7 +562,7 @@ const TransactionHistory = () => {
                     {(selectedTransaction.credit || 0).toFixed(2)}
                   </p>
                 </div>
-                
+
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <div className="text-sm text-gray-600 mb-2">Tổng tiền</div>
                   <p className="text-2xl font-bold text-blue-600">
@@ -570,7 +570,7 @@ const TransactionHistory = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Payment URL if exists */}
               {selectedTransaction.payment_url && (
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
@@ -578,7 +578,7 @@ const TransactionHistory = () => {
                     <FileText className="w-4 h-4" />
                     <span className="text-sm font-medium">Link thanh toán</span>
                   </div>
-                  <a 
+                  <a
                     href={selectedTransaction.payment_url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -588,7 +588,7 @@ const TransactionHistory = () => {
                   </a>
                 </div>
               )}
-              
+
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-gray-200">
                 {canComplete(selectedTransaction) && (

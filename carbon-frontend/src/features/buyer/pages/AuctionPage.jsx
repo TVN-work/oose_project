@@ -72,7 +72,7 @@ const AuctionPage = () => {
 
     // Get bids from separate API call (sorted by amount desc)
     console.log('🔍 bidsData:', bidsData);
-    
+
     // Handle both array response and paginated response
     const bidsList = Array.isArray(bidsData) ? bidsData : (bidsData?.content || []);
     console.log('📊 bidsList:', bidsList);

@@ -1,35 +1,18 @@
 import { useState, useMemo } from 'react';
-import {
-  Receipt,
-  Search,
-  Filter,
-  Download,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-  X,
-  Calendar,
-  CreditCard,
-  Hash,
-  FileText,
-  Edit2,
-  Save,
-  Users,
-} from 'lucide-react';
+import { Receipt, Search, Filter, Download, Eye, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, User, X, Calendar, CreditCard, Hash, FileText, Edit2, Save } from 'lucide-react';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import transactionService from '../../../services/transaction/transactionService';
 import userService from '../../../services/user/userService';
-import { formatCurrency } from '../../../utils';
+import { formatCurrency, formatDate } from '../../../utils';
 import Loading from '../../../components/common/Loading';
 import Alert from '../../../components/common/Alert';
 import { useAlert } from '../../../hooks/useAlert';
 
 /**
- * Transactions Management Page for Admin
+ * Transactions Management Page for Verifier
  * View and manage all platform transactions
  */
-const TransactionsPage = () => {
+const Transactions = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('ALL');
@@ -39,37 +22,17 @@ const TransactionsPage = () => {
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
-  // User search states
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-
   const queryClient = useQueryClient();
   const { alertMessage, alertType, showAlert, hideAlert } = useAlert();
 
-  // Fetch users for search dropdown
-  const { data: searchUsers, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users', 'search', userSearchTerm],
-    queryFn: () => userService.getAllUsers({
-      page: 0,
-      entry: 20,
-      fullName: userSearchTerm || undefined,
-    }),
-    enabled: userSearchTerm.length >= 1,
-    staleTime: 30000,
-  });
-
-  const userSearchResults = Array.isArray(searchUsers) ? searchUsers : (searchUsers?.content || searchUsers?.data || []);
-
-  // Fetch transactions with userId filter
+  // Fetch transactions
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ['transactions', 'admin', page, pageSize, statusFilter, paymentMethodFilter, selectedUserId],
+    queryKey: ['transactions', 'verifier', page, pageSize, statusFilter, paymentMethodFilter],
     queryFn: () => transactionService.getAllTransactions({
       page,
       entry: pageSize,
       status: statusFilter !== 'ALL' ? statusFilter : undefined,
       paymentMethod: paymentMethodFilter !== 'ALL' ? paymentMethodFilter : undefined,
-      buyerId: selectedUserId || undefined,
       field: 'createdAt',
       sort: 'DESC',
     }),
@@ -112,7 +75,8 @@ const TransactionsPage = () => {
   const updateStatusMutation = useMutation({
     mutationFn: ({ transactionId, status }) => transactionService.updateTransactionStatus(transactionId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries(['transactions', 'admin']);
+      // Refetch transactions
+      queryClient.invalidateQueries(['transactions', 'verifier']);
       setIsEditingStatus(false);
       setSelectedTransaction(null);
       showAlert('Cập nhật trạng thái thành công!', 'success');
@@ -141,21 +105,6 @@ const TransactionsPage = () => {
     });
   };
 
-  // Handler for selecting user from dropdown
-  const handleSelectUser = (user) => {
-    setSelectedUserId(user.id);
-    setUserSearchTerm(user.fullName || user.username || user.email || '');
-    setShowUserDropdown(false);
-    setPage(0);
-  };
-
-  // Handler for clearing user filter
-  const handleClearUserFilter = () => {
-    setSelectedUserId(null);
-    setUserSearchTerm('');
-    setPage(0);
-  };
-
   // Helper to get user display name
   const getUserDisplay = (userId) => {
     if (!userId) return 'N/A';
@@ -166,19 +115,21 @@ const TransactionsPage = () => {
     return userId.substring(0, 8) + '...';
   };
 
-  // Helper to format datetime
+  // Helper to format datetime - handles both ISO and pre-formatted strings
   const formatDateTime = (dateString) => {
     if (!dateString) return { date: 'N/A', time: 'N/A' };
 
+    // Check if it's already formatted as "HH:MM DD-MM-YYYY"
     if (typeof dateString === 'string' && dateString.includes('-') && dateString.includes(':')) {
       const parts = dateString.split(' ');
       if (parts.length >= 2) {
-        const time = parts[0];
-        const datePart = parts[1];
+        const time = parts[0]; // "07:23"
+        const datePart = parts[1]; // "26-11-2025"
         return { date: datePart, time: time };
       }
     }
 
+    // Fallback to Date parsing for ISO format
     try {
       const date = new Date(dateString);
       return {
@@ -279,7 +230,7 @@ const TransactionsPage = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-            <Receipt className="mr-3 text-green-600" />
+            <Receipt className="mr-3 text-blue-600" />
             Quản lý giao dịch
           </h1>
           <p className="text-gray-600 mt-1">Theo dõi và quản lý tất cả giao dịch trên nền tảng</p>
@@ -331,80 +282,17 @@ const TransactionsPage = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* User Search with Dropdown */}
-          <div className="md:col-span-2 relative">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-gray-400" />
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Tìm người dùng theo tên..."
-                  value={userSearchTerm}
-                  onChange={(e) => {
-                    setUserSearchTerm(e.target.value);
-                    setShowUserDropdown(true);
-                    if (!e.target.value) {
-                      setSelectedUserId(null);
-                    }
-                  }}
-                  onFocus={() => setShowUserDropdown(true)}
-                  className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                {(userSearchTerm || selectedUserId) && (
-                  <button
-                    onClick={handleClearUserFilter}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* User Dropdown */}
-            {showUserDropdown && userSearchTerm && userSearchResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {isLoadingUsers ? (
-                  <div className="p-3 text-center text-gray-500">Đang tìm kiếm...</div>
-                ) : (
-                  userSearchResults.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleSelectUser(user)}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          {user.fullName || user.username || 'N/A'}
-                        </p>
-                        <p className="text-xs text-gray-500">{user.email || user.phoneNumber || ''}</p>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-
-            {selectedUserId && (
-              <p className="text-xs text-green-600 mt-1">Đang lọc giao dịch của người dùng đã chọn</p>
-            )}
-          </div>
-
-          {/* Transaction ID Search */}
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Tìm mã GD..."
+                placeholder="Tìm theo ID giao dịch, người mua, người bán..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -414,7 +302,7 @@ const TransactionsPage = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="ALL">Tất cả trạng thái</option>
               <option value="SUCCESS">Thành công</option>
@@ -429,7 +317,7 @@ const TransactionsPage = () => {
             <select
               value={paymentMethodFilter}
               onChange={(e) => setPaymentMethodFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="ALL">Tất cả phương thức</option>
               <option value="WALLET">Ví điện tử</option>
@@ -454,7 +342,7 @@ const TransactionsPage = () => {
                 setPageSize(parseInt(e.target.value));
                 setPage(0);
               }}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-sm"
+              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -606,8 +494,8 @@ const TransactionsPage = () => {
                         key={i}
                         onClick={() => setPage(i)}
                         className={`px-3 py-1.5 rounded-lg text-sm transition ${currentPage === i
-                          ? 'bg-green-600 text-white font-semibold'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                            ? 'bg-blue-600 text-white font-semibold'
+                            : 'border border-gray-300 hover:bg-gray-50'
                           }`}
                       >
                         {i + 1}
@@ -644,14 +532,14 @@ const TransactionsPage = () => {
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <Receipt className="w-6 h-6 text-green-600" />
+                <Receipt className="w-6 h-6 text-blue-600" />
                 Chi tiết giao dịch
               </h2>
               <div className="flex items-center gap-2">
                 {!isEditingStatus ? (
                   <button
                     onClick={handleEditStatus}
-                    className="p-2 hover:bg-green-50 rounded-lg transition text-green-600"
+                    className="p-2 hover:bg-blue-50 rounded-lg transition text-blue-600"
                     title="Chỉnh sửa trạng thái"
                   >
                     <Edit2 className="w-5 h-5" />
@@ -681,11 +569,11 @@ const TransactionsPage = () => {
             {/* Modal Content */}
             <div className="p-6 space-y-6">
               {/* Transaction ID & Status */}
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Mã giao dịch</p>
-                    <p className="text-lg font-mono font-bold text-green-600">
+                    <p className="text-lg font-mono font-bold text-blue-600">
                       {selectedTransaction.id}
                     </p>
                   </div>
@@ -694,7 +582,7 @@ const TransactionsPage = () => {
                       <select
                         value={newStatus}
                         onChange={(e) => setNewStatus(e.target.value)}
-                        className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold"
+                        className="px-3 py-2 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                       >
                         <option value="PENDING_PAYMENT">Chờ thanh toán</option>
                         <option value="SUCCESS">Thành công</option>
@@ -763,7 +651,7 @@ const TransactionsPage = () => {
               {/* Transaction Details */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-green-600" />
+                  <FileText className="w-5 h-5 text-blue-600" />
                   Thông tin giao dịch
                 </h3>
 
@@ -823,7 +711,7 @@ const TransactionsPage = () => {
                   setSelectedTransaction(null);
                   setIsEditingStatus(false);
                 }}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
               >
                 Đóng
               </button>
@@ -835,4 +723,4 @@ const TransactionsPage = () => {
   );
 };
 
-export default TransactionsPage;
+export default Transactions;
